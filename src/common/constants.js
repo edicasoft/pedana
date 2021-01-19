@@ -1,4 +1,4 @@
-const cells = [
+const leftPlatformCells = [
   {
     x: -61,
     y: 195,
@@ -11,6 +11,8 @@ const cells = [
     x: -26,
     y: -255,
   },
+];
+const rightPlatformCells = [
   {
     x: 61,
     y: 195,
@@ -24,4 +26,5 @@ const cells = [
     y: -255,
   },
 ];
-export { cells };
+const canvasSmoothCoef = 0.5;
+export { leftPlatformCells, rightPlatformCells, canvasSmoothCoef };
