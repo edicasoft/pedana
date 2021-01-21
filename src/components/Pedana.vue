@@ -25,7 +25,10 @@ export default Vue.extend({
     width: 600,
     height: 600,
     zoom: 1,
-    //weights: [0, 0, 0, 0, 0, 0],
+    //****IDEAL WEIGHTS****
+    //  leftWeights: [11.1, 11.1, 11.1],
+    //rightWeights: [11.1, 11.1, 11.1],
+
     leftWeights: [11.6, 12.1, 7.9],
     rightWeights: [13.2, 14.1, 7.7],
   }),
@@ -71,6 +74,12 @@ export default Vue.extend({
         this.cells,
         this.weights
       );
+    },
+    idealBarycenterLeft() {
+      return { x: -102.3333 };
+    },
+    idealBarycenterRight() {
+      return { x: 102.3333 };
     },
   },
   mounted() {
@@ -203,11 +212,11 @@ export default Vue.extend({
     },
     drawLeftBarycenter() {
       const { x, y } = this.leftBarycenterCoordinates;
-      this.drawBarycenter(x, y, "yellow");
+      this.drawBarycenter(x, y, "gold");
     },
     drawRightBarycenter() {
       const { x, y } = this.rightBarycenterCoordinates;
-      this.drawBarycenter(x, y, "yellow");
+      this.drawBarycenter(x, y, "gold");
     },
     drawBarycentersLine() {
       this.canvas.beginPath();
@@ -223,24 +232,52 @@ export default Vue.extend({
       this.canvas.stroke();
       this.canvas.closePath();
     },
+    drawLine(point1, point2, color) {
+      console.log(point1, point2);
+      this.canvas.beginPath();
+      this.canvas.strokeStyle = color;
+      this.canvas.moveTo(point1.x, point1.y);
+      this.canvas.lineTo(point2.x, point2.y);
+      this.canvas.stroke();
+      this.canvas.closePath();
+    },
+    drawIdealBarycenters() {
+      const lineLength = 250;
+      const leftX = this.idealBarycenterLeft.x;
+      this.drawLine(
+        { x: leftX, y: -lineLength },
+        { x: leftX, y: lineLength },
+        "gold"
+      );
+
+      const rightX = this.idealBarycenterRight.x;
+      this.drawLine(
+        { x: rightX, y: -lineLength },
+        { x: rightX, y: lineLength },
+        "gold"
+      );
+    },
     //TODO::helper
     drawBarycenter(x, y, color) {
+      const radius = 10;
+      this.canvas.save();
       this.canvas.fillStyle = color;
       this.canvas.beginPath();
       this.canvas.shadowBlur = 5;
       this.canvas.shadowOffsetX = 0;
       this.canvas.shadowOffsetY = 1;
       this.canvas.shadowColor = "black";
-      this.canvas.arc(x, y, 15, 0, 2 * Math.PI);
+      this.canvas.arc(x, y, radius, 0, 2 * Math.PI);
       this.canvas.fill();
       this.canvas.closePath();
+      this.canvas.restore();
     },
     displayWeights() {
       this.canvas.fillStyle = "black";
       this.canvas.font = "18px Arial";
+      this.canvas.save();
 
       for (let i = 0; i < this.cells.length; i++) {
-        this.canvas.save();
         let x = this.width / 2 + this.cells[i].x;
         let y = this.height / 2 - this.cells[i].y;
 
@@ -274,6 +311,7 @@ export default Vue.extend({
       this.drawGeneralBarycenter();
       this.drawLeftBarycenter();
       this.drawRightBarycenter();
+      this.drawIdealBarycenters();
     },
   },
 });
