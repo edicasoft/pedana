@@ -27,4 +27,12 @@ const rightPlatformCells = [
   },
 ];
 const canvasSmoothCoef = 0.5;
-export { leftPlatformCells, rightPlatformCells, canvasSmoothCoef };
+const idealBarycenterLeftX = -102.3333;
+const idealBarycenterRightX = 102.3333;
+export {
+  leftPlatformCells,
+  rightPlatformCells,
+  canvasSmoothCoef,
+  idealBarycenterLeftX,
+  idealBarycenterRightX,
+};

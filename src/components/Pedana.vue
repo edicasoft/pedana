@@ -10,11 +10,15 @@
 
 <script lang="ts">
 // @ts-nocheck
+import { Barycenter } from "@/entities/Barycenter";
+import { total } from "@/common/helpers";
 import Vue from "vue";
 import {
   leftPlatformCells,
   rightPlatformCells,
   canvasSmoothCoef,
+  idealBarycenterLeftX,
+  idealBarycenterRightX,
 } from "@/common/constants";
 const arrowLength = 5;
 
@@ -31,6 +35,10 @@ export default Vue.extend({
 
     leftWeights: [11.6, 12.1, 7.9],
     rightWeights: [13.2, 14.1, 7.7],
+
+    generalBarycenter: null,
+    leftBarycenter: null,
+    rightBarycenter: null,
   }),
   computed: {
     cells() {
@@ -40,52 +48,22 @@ export default Vue.extend({
       return this.leftWeights.concat(this.rightWeights);
     },
     totalWeight() {
-      return this.total(this.weights);
+      return total(this.weights);
     },
     leftPlatformTotalWeight() {
-      return this.total(this.leftWeights);
+      return total(this.leftWeights);
     },
     rightPlatformTotalWeight() {
-      return this.total(this.rightWeights);
-    },
-    leftBarycenterCoordinates() {
-      return this.calculateBarycenterCoordinates(
-        this.leftPlatformTotalWeight,
-        leftPlatformCells,
-        this.leftWeights
-      );
-    },
-    rightBarycenterCoordinates() {
-      console.log(
-        "getRightBarycenterCoordinates",
-        this.rightPlatformTotalWeight,
-        rightPlatformCells,
-        this.rightWeights
-      );
-      return this.calculateBarycenterCoordinates(
-        this.rightPlatformTotalWeight,
-        rightPlatformCells,
-        this.rightWeights
-      );
-    },
-    generalBarycenterCoordinates() {
-      return this.calculateBarycenterCoordinates(
-        this.totalWeight,
-        this.cells,
-        this.weights
-      );
-    },
-    idealBarycenterLeft() {
-      return { x: -102.3333 };
-    },
-    idealBarycenterRight() {
-      return { x: 102.3333 };
+      return total(this.rightWeights);
     },
   },
   mounted() {
     const c = document.getElementById("myCanvas");
     this.canvas = c.getContext("2d");
-    this.draw();
+    this.generalBarycenter = new Barycenter(this.cells, "red");
+    this.leftBarycenter = new Barycenter(leftPlatformCells, "gold");
+    this.rightBarycenter = new Barycenter(rightPlatformCells, "gold");
+    this.update();
   },
   methods: {
     drawArrowhead(from, to, radius) {
@@ -120,18 +98,11 @@ export default Vue.extend({
 
       this.canvas.fill();
     },
-    //TODO::helper
-    total(arr) {
-      return arr.reduce((total, val) => total + val, 0);
-    },
     drawXAxis() {
-      this.canvas.strokeStyle = "#000000";
       const y = this.height / 2 + canvasSmoothCoef;
       const from = { x: 0, y };
       const to = { x: this.width - arrowLength, y };
-      this.canvas.moveTo(from.x, from.y);
-      this.canvas.lineTo(to.x, to.y);
-      this.canvas.stroke();
+      this.drawLine(from, to, "black");
 
       this.drawArrowhead(from, to, arrowLength);
 
@@ -140,13 +111,10 @@ export default Vue.extend({
       this.canvas.fillText("X", to.x - 3, to.y - 8);
     },
     drawYAxis() {
-      this.canvas.strokeStyle = "#000000";
       const x = this.width / 2 + canvasSmoothCoef;
       const from = { x, y: 0 + arrowLength };
       const to = { x, y: this.height };
-      this.canvas.moveTo(from.x, from.y);
-      this.canvas.lineTo(to.x, to.y);
-      this.canvas.stroke();
+      this.drawLine(from, to, "black");
 
       this.drawArrowhead(to, from, arrowLength);
 
@@ -181,59 +149,10 @@ export default Vue.extend({
       this.canvas.strokeStyle = "blue";
       this.canvas.stroke();
     },
-    calculateBarycenterCoordinates(totalWeight, cells, weights) {
-      let x = 0;
-      let y = 0;
-
-      if (totalWeight > 0) {
-        const sumX = this.calculateSum("x", cells, weights);
-        x = sumX / totalWeight;
-
-        const sumY = this.calculateSum("y", cells, weights);
-        y = sumY / totalWeight;
-      }
-      console.log("calculateBarycenterCoordinates", x, y);
-      return { x, y };
-    },
-    //TODO::helper
-    calculateSum(coordinateName, cells, weights) {
-      console.log("calculateSum", coordinateName);
-      let sum = 0;
-      for (let i = 0; i < cells.length; i++) {
-        console.log(cells[i], weights[i]);
-        sum += cells[i][coordinateName] * weights[i];
-      }
-      console.log("sum", sum);
-      return sum;
-    },
-    drawGeneralBarycenter() {
-      const { x, y } = this.generalBarycenterCoordinates;
-      this.drawBarycenter(x, y, "red");
-    },
-    drawLeftBarycenter() {
-      const { x, y } = this.leftBarycenterCoordinates;
-      this.drawBarycenter(x, y, "gold");
-    },
-    drawRightBarycenter() {
-      const { x, y } = this.rightBarycenterCoordinates;
-      this.drawBarycenter(x, y, "gold");
-    },
-    drawBarycentersLine() {
-      this.canvas.beginPath();
-      this.canvas.strokeStyle = "red";
-      this.canvas.moveTo(
-        this.leftBarycenterCoordinates.x,
-        this.leftBarycenterCoordinates.y
-      );
-      this.canvas.lineTo(
-        this.rightBarycenterCoordinates.x,
-        this.rightBarycenterCoordinates.y
-      );
-      this.canvas.stroke();
-      this.canvas.closePath();
+    connectBarycenters() {
+      this.drawLine(this.leftBarycenter, this.rightBarycenter, "red");
     },
     drawLine(point1, point2, color) {
-      console.log(point1, point2);
       this.canvas.beginPath();
       this.canvas.strokeStyle = color;
       this.canvas.moveTo(point1.x, point1.y);
@@ -241,36 +160,13 @@ export default Vue.extend({
       this.canvas.stroke();
       this.canvas.closePath();
     },
-    drawIdealBarycenters() {
+    markIdealBarycenters() {
       const lineLength = 250;
-      const leftX = this.idealBarycenterLeft.x;
-      this.drawLine(
-        { x: leftX, y: -lineLength },
-        { x: leftX, y: lineLength },
-        "gold"
-      );
+      let x = idealBarycenterLeftX;
+      this.drawLine({ x, y: -lineLength }, { x, y: lineLength }, "gold");
 
-      const rightX = this.idealBarycenterRight.x;
-      this.drawLine(
-        { x: rightX, y: -lineLength },
-        { x: rightX, y: lineLength },
-        "gold"
-      );
-    },
-    //TODO::helper
-    drawBarycenter(x, y, color) {
-      const radius = 10;
-      this.canvas.save();
-      this.canvas.fillStyle = color;
-      this.canvas.beginPath();
-      this.canvas.shadowBlur = 5;
-      this.canvas.shadowOffsetX = 0;
-      this.canvas.shadowOffsetY = 1;
-      this.canvas.shadowColor = "black";
-      this.canvas.arc(x, y, radius, 0, 2 * Math.PI);
-      this.canvas.fill();
-      this.canvas.closePath();
-      this.canvas.restore();
+      x = idealBarycenterRightX;
+      this.drawLine({ x, y: -lineLength }, { x, y: lineLength }, "gold");
     },
     displayWeights() {
       this.canvas.fillStyle = "black";
@@ -294,24 +190,28 @@ export default Vue.extend({
       }
       this.canvas.restore();
     },
-    draw() {
+    update() {
       this.displayWeights();
 
       this.drawXAxis();
       this.drawYAxis();
-      // this.canvas.rotate((-6 * Math.PI) / 180);
 
       this.canvas.translate(this.width / 2, this.height / 2);
       this.canvas.scale(1, -1);
 
       this.drawLeftPlatform();
       this.drawRightPlatform();
-      this.drawBarycentersLine();
 
-      this.drawGeneralBarycenter();
-      this.drawLeftBarycenter();
-      this.drawRightBarycenter();
-      this.drawIdealBarycenters();
+      this.generalBarycenter.move(this.weights);
+      this.leftBarycenter.move(this.leftWeights);
+      this.rightBarycenter.move(this.rightWeights);
+      this.connectBarycenters();
+
+      this.leftBarycenter.draw(this.canvas);
+      this.generalBarycenter.draw(this.canvas);
+      this.rightBarycenter.draw(this.canvas);
+
+      this.markIdealBarycenters();
     },
   },
 });
