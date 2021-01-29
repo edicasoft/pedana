@@ -8,7 +8,7 @@
 
 <script lang="ts">
 import Vue from "vue";
-import Pedana from "./components/Pedana.vue";
+import Pedana from "./components/pedana/Pedana.vue";
 
 export default Vue.extend({
   name: "App",

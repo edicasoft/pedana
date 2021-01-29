@@ -1,6 +1,6 @@
 const radius = 10;
 import { Point } from "@/entities/Point";
-export class Barycenter {
+export default class Barycenter {
   x: number;
   y: number;
   color: string;
