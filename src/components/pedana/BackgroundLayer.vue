@@ -9,7 +9,7 @@ import {
   rightPlatformCells,
   canvasSmoothCoef,
   idealBarycenterLeftX,
-  idealBarycenterRightX,
+  idealBarycenterRightX
 } from "@/common/constants.js";
 const arrowLength = 5;
 const cells = leftPlatformCells.concat(rightPlatformCells);
@@ -35,7 +35,7 @@ export default Vue.extend({
 
       c.drawText("X", {
         x: to.x - 3,
-        y: to.y - 8,
+        y: to.y - 8
       });
     },
     drawYAxis(): void {
@@ -47,7 +47,7 @@ export default Vue.extend({
       c.drawArrowhead(to, from, arrowLength);
       c.drawText("Y", {
         x: from.x + 7,
-        y: from.y + 5,
+        y: from.y + 5
       });
     },
     drawLeftPlatform() {
@@ -86,7 +86,7 @@ export default Vue.extend({
       ctx.restore();
       this.drawXAxis();
       this.drawYAxis();
-    },
-  },
+    }
+  }
 });
 </script>

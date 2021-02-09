@@ -1,5 +1,8 @@
+import Barycenter from "@/entities/Barycenter";
+import { leftPlatformCells, rightPlatformCells } from "@/common/constants.js";
+
 const state = {
-  measurements: [
+  data: [
     [8.75, 9.8046875, 11.4453125, 10.46875, 11.6796875, 14.94140625],
     [8.7890625, 9.90234375, 11.5234375, 10.4296875, 11.640625, 14.8828125],
     [8.828125, 9.9609375, 11.50390625, 10.37109375, 11.6015625, 14.78515625],
@@ -18,7 +21,7 @@ const state = {
       11.19140625,
       10.52734375,
       11.77734375,
-      14.90234375,
+      14.90234375
     ],
     [8.7890625, 9.94140625, 11.171875, 10.52734375, 11.77734375, 14.86328125],
     [8.7890625, 9.94140625, 11.2109375, 10.546875, 11.81640625, 14.90234375],
@@ -318,7 +321,7 @@ const state = {
       10.52734375,
       10.91796875,
       11.23046875,
-      13.18359375,
+      13.18359375
     ],
     [10.546875, 11.09375, 10.0390625, 11.03515625, 11.34765625, 12.94921875],
     [10.56640625, 11.09375, 9.6875, 11.26953125, 11.5625, 12.79296875],
@@ -335,7 +338,7 @@ const state = {
       7.75390625,
       13.33984375,
       13.33984375,
-      11.73828125,
+      11.73828125
     ],
     [10.3125, 10.546875, 7.75390625, 13.41796875, 13.37890625, 11.54296875],
     [10.4296875, 10.72265625, 8.046875, 13.30078125, 13.203125, 11.5234375],
@@ -352,16 +355,65 @@ const state = {
     [12.20703125, 12.578125, 11.42578125, 10.56640625, 10.64453125, 9.90234375],
     [12.55859375, 12.91015625, 11.40625, 10.48828125, 10.46875, 9.47265625],
     [12.59765625, 12.98828125, 11.03515625, 10.6640625, 10.390625, 9.16015625],
-    [12.734375, 13.18359375, 11.0546875, 10.6640625, 10.390625, 8.96484375],
+    [12.734375, 13.18359375, 11.0546875, 10.6640625, 10.390625, 8.96484375]
   ],
-  currentMeasurment: [11.6, 12.1, 7.9, 13.2, 14.1, 7.7],
+  measurements: [],
+  currentMeasurment: [],
+  generalBarycenterCoordinates: [],
+  generalBarycenter: new Barycenter(
+    leftPlatformCells.concat(rightPlatformCells),
+    "red"
+  ),
+  leftBarycenter: new Barycenter(leftPlatformCells, "gold"),
+  rightBarycenter: new Barycenter(rightPlatformCells, "gold")
 };
 const getters = {
   leftWeights: state => state.currentMeasurment.slice(0, 3),
   rightWeights: state => state.currentMeasurment.slice(3, 6)
 };
+const mutations = {
+  CLEAR_MEASUREMENTS(state) {
+    state.measurements = [];
+  },
+  ADD_GENERAL_BARYCENTER(state, data) {
+    state.generalBarCoordinates.push(data);
+  },
+  SET_CURRENT_MEASUREMENT(state, data) {
+    state.currentMeasurment = data;
+  },
+  ADD_MEASUREMENT(state, data) {
+    state.generalBarycenter.move(data);
+    state.leftBarycenter.move(data.slice(0, 3));
+    state.rightBarycenter.move(data.slice(3, 6));
+    const general = {
+      x: state.generalBarycenter.x,
+      y: state.generalBarycenter.y
+    };
+    state.generalBarycenterCoordinates.push(general);
+    // state.measurements.push({
+    //   data: data,
+    //   general
+    // });
+  }
+};
+const actions = {
+  getMeasurement({ commit, state }) {
+    commit("CLEAR_MEASUREMENTS");
+    return new Promise((resolve, reject) => {
+      state.data.forEach(item => {
+        setTimeout(() => {
+          commit("SET_CURRENT_MEASUREMENT", item);
+          commit("ADD_MEASUREMENT", item);
+        }, 1000);
+      });
+      resolve(true);
+    });
+  }
+};
 export default {
   state,
   getters,
-  namespaced: true,
+  actions,
+  mutations,
+  namespaced: true
 };

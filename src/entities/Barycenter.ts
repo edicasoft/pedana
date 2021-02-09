@@ -15,10 +15,10 @@ export default class Barycenter {
     const totalWeight = weights.reduce((total: number, val) => total + val, 0);
     if (totalWeight > 0) {
       const sumX = this.calculateWeightenedSum("x", weights);
-      this.x = sumX / totalWeight;
+      this.x = Math.round((sumX / totalWeight + Number.EPSILON) * 100) / 100;
 
       const sumY = this.calculateWeightenedSum("y", weights);
-      this.y = sumY / totalWeight;
+      this.y = Math.round((sumY / totalWeight + Number.EPSILON) * 100) / 100;
     }
   }
   draw(ctx: CanvasRenderingContext2D) {
