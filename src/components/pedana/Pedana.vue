@@ -9,7 +9,7 @@
         <v-sheet :width="width">
           <div class="d-flex justify-space-around align-center">
             <div class="text-left w-100">
-              Left: <b>{{ toFixed2(leftPlatformTotalWeight) }}</b>
+              Left: <b>{{ displayNumber(leftPlatformTotalWeight) }}</b>
             </div>
             <div class="d-flex align-items-center align-center">
               <v-icon
@@ -20,7 +20,7 @@
               </v-icon>
 
               <div class="text-center w-100">
-                Total: <b>{{ toFixed2(totalWeight) }}</b>
+                Total: <b>{{ displayNumber(totalWeight) }}</b>
               </div>
               <v-icon
                 large
@@ -32,25 +32,28 @@
             </div>
 
             <div class="text-right w-100">
-              Right: <b>{{ toFixed2(rightPlatformTotalWeight) }}</b>
+              Right: <b>{{ displayNumber(rightPlatformTotalWeight) }}</b>
             </div>
           </div>
         </v-sheet>
       </v-col>
       <v-col>
-        <main-chart></main-chart>
+        <main-chart v-if="weights.length"></main-chart>
       </v-col>
     </v-row>
   </v-container>
 </template>
 
 <script lang="ts">
-import Barycenter from "@/entities/Barycenter";
 import { Cell } from "@/entities/Cell";
 import Canvas from "@/entities/Canvas";
-import { total, toFixed2 } from "@/common/helpers";
+import { total, displayNumber } from "@/common/helpers";
 import Vue from "vue";
-import { leftPlatformCells, rightPlatformCells } from "@/common/constants.js";
+import {
+  leftPlatformCells,
+  rightPlatformCells,
+  images
+} from "@/common/constants.js";
 import { mapState, mapGetters, mapActions } from "vuex";
 import BackgroundLayer from "@/components/pedana/BackgroundLayer.vue";
 import MainChart from "@/components/charts/MainChart.vue";
@@ -68,7 +71,8 @@ export default Vue.extend({
   data: () => ({
     width: 600,
     height: 600,
-    zoom: 1
+    zoom: 1,
+    error: false
     //****IDEAL WEIGHTS****
     //  leftWeights: [11.1, 11.1, 11.1],
     //rightWeights: [11.1, 11.1, 11.1],
@@ -89,12 +93,9 @@ export default Vue.extend({
       "generalBarycenter",
       "leftBarycenter",
       "rightBarycenter",
-      "generalBarycenterCoordinates"
+      "weights"
     ]),
 
-    weights(): number[] {
-      return this.leftWeights.concat(this.rightWeights);
-    },
     totalWeight(): number {
       return total(this.weights);
     },
@@ -105,39 +106,38 @@ export default Vue.extend({
       return total(this.rightWeights);
     }
   },
+  //TODO::rewrite this? 1) move 2) add to the store 3) draw
   watch: {
-    generalBarycenterCoordinates(val) {
+    weights(val) {
       // console.log(val);
-      // this.update();
+      if (val && val.length && !this.error) {
+        requestAnimationFrame(() => {
+          this.update();
+        });
+      }
     }
   },
-  async mounted() {
-    c = new Canvas("barycenters-layer", 600, 600);
+  destroyed() {
+    c.clear();
+  },
+  mounted() {
+    console.log("mounted");
+    c = new Canvas("barycenters-layer", 600, 600, images);
     ctx = c.ctx;
-    try {
-      const res = await this.getMeasurement();
-      window.addEventListener("load", () => {
-        this.update();
-      });
-    } catch (e) {
-      console.log(e);
-    }
-
-    // (function() {
-    //   const requestAnimationFrame =
-    //     window.requestAnimationFrame ||
-    //     window.mozRequestAnimationFrame ||
-    //     window.webkitRequestAnimationFrame ||
-    //     window.msRequestAnimationFrame;
-
-    //   window.requestAnimationFrame = requestAnimationFrame;
-
-    //   const cvs = new CVS();
-    // })();
+    c.preloadImages(this.onReady);
   },
   methods: {
-    toFixed2,
+    async onReady() {
+      try {
+        const res = await this.getMeasurement();
+        console.log("onReady");
+      } catch (e) {
+        console.error(e);
+      }
+    },
+    displayNumber,
     ...mapActions("pedana", ["getMeasurement"]),
+
     connectBarycenters() {
       c.drawLine(this.leftBarycenter, this.rightBarycenter, "red");
     },
@@ -146,10 +146,12 @@ export default Vue.extend({
       ctx.fillStyle = "black";
       ctx.font = "16px Arial";
       ctx.save();
-
       for (let i = 0; i < cells.length; i++) {
-        const cell = new Cell(cells[i], this.weights[i]);
-        cell.draw(ctx, this.totalWeight);
+        //TODO::check values
+        this.$nextTick(() => {
+          const cell = new Cell(cells[i], this.weights[i]);
+          cell.draw(c, this.totalWeight);
+        });
 
         let x = this.width / 2 + cells[i].x;
         let y = this.height / 2 - cells[i].y;
@@ -161,35 +163,36 @@ export default Vue.extend({
           y -= 20;
         }
         if (cells[i].x < 0) {
-          x -= 30;
+          x -= 40;
           if (cells[i].y < 0) x -= 20;
         }
-        ctx.fillText(this.toFixed2(this.weights[i]).toString(), x, y);
+        ctx.fillText(this.displayNumber(this.weights[i]).toString(), x, y);
       }
       ctx.restore();
     },
     update(): void {
-      c.clear();
-      this.displayWeights();
+      try {
+        c.clear();
+        this.displayWeights();
 
-      c.transdormCoordinates();
+        c.transdormCoordinates();
 
-      // this.drawLeftPlatform();
-      // this.drawRightPlatform();
+        // this.drawLeftPlatform();
+        // this.drawRightPlatform();
 
-      //  this.generalBarycenter.move(this.weights);
-      // this.leftBarycenter.move(this.leftWeights);
-      // this.rightBarycenter.move(this.rightWeights);
+        //  this.generalBarycenter.move(this.weights);
+        // this.leftBarycenter.move(this.leftWeights);
+        // this.rightBarycenter.move(this.rightWeights);
 
-      this.connectBarycenters();
-      console.log("draw");
-      this.leftBarycenter.draw(ctx);
-      this.generalBarycenter.draw(ctx);
-      this.rightBarycenter.draw(ctx);
-
-      // requestAnimationFrame(() => {
-      //   this.update();
-      // });
+        this.connectBarycenters();
+        console.log("draw");
+        this.leftBarycenter.draw(ctx);
+        this.generalBarycenter.draw(ctx);
+        this.rightBarycenter.draw(ctx);
+      } catch (e) {
+        this.error = true;
+        console.error(e);
+      }
     }
   }
 });

@@ -1,4 +1,6 @@
 import { Point } from "@/entities/Point";
+import Canvas from "@/entities/Canvas";
+
 const size = 30;
 export class Cell {
   x: number;
@@ -10,19 +12,20 @@ export class Cell {
     this.weight = weight;
   }
 
-  draw(ctx: CanvasRenderingContext2D, totalWeight: number) {
-    const image = new Image();
+  draw(c: Canvas, totalWeight: number) {
     const deviation = this.getDeviation(totalWeight);
-    image.src = `img/triangle-${deviation.color}.png`;
-    const angle = deviation.direction === "up" ? 180 : 0;
-    image.onload = () => {
-      ctx.save();
-      ctx.translate(this.x, this.y);
-      ctx.rotate((angle * Math.PI) / 180);
 
-      ctx.drawImage(image, -size / 2, -size / 2, size, size);
-      ctx.restore();
-    };
+    const image = c.images.get(
+      `img/triangle-${deviation.color}.png`
+    ) as HTMLImageElement;
+
+    const angle = deviation.direction === "up" ? 180 : 0;
+    c.ctx.save();
+    c.ctx.translate(this.x, this.y);
+    c.ctx.rotate((angle * Math.PI) / 180);
+
+    c.ctx.drawImage(image, -size / 2, -size / 2, size, size);
+    c.ctx.restore();
   }
   getDeviation(
     totalWeight: number

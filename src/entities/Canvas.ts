@@ -4,13 +4,20 @@ export default class Canvas {
   ctx: CanvasRenderingContext2D;
   width: number;
   height: number;
-  center: Point;
-  constructor(id: string, width: number, height: number) {
-    this.center = { x: 0, y: 0 };
+  center: Point = { x: 0, y: 0 };
+  sources: Array<string>;
+  images: Map<string, HTMLImageElement> = new Map();
+  constructor(
+    id: string,
+    width: number,
+    height: number,
+    sources?: Array<string>
+  ) {
     this.canvas = document.getElementById(id) as HTMLCanvasElement;
     this.ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
     this.width = width;
     this.height = height;
+    this.sources = sources || [];
 
     this.canvas.width = this.width;
     this.canvas.height = this.height;
@@ -80,5 +87,22 @@ export default class Canvas {
     this.ctx.closePath();
 
     this.ctx.fill();
+  }
+  preloadImages(callback) {
+    let loadedImages = 0;
+    this.sources.forEach(src => {
+      const image = new Image();
+      image.src = src;
+      image.onload = () => {
+        console.log("loaded", src);
+        this.images.set(src, image);
+        if (++loadedImages >= this.sources.length) {
+          callback();
+        }
+      };
+      image.onerror = () => {
+        console.error(src);
+      };
+    });
   }
 }

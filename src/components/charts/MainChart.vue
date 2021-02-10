@@ -48,6 +48,15 @@ export default Vue.extend({
           //     data: [this.getRandomInt(), this.getRandomInt()]
           //   },
           {
+            label: "Left Barycenter",
+            borderColor: "blue",
+            pointBackgroundColor: "blue",
+            pointRadius: 0,
+            fill: false,
+            data: this.leftBarycenterCoordinates,
+            borderWidth: 1
+          },
+          {
             label: "General Barycenter",
             borderColor: "red",
             pointBackgroundColor: "red",
@@ -72,7 +81,10 @@ export default Vue.extend({
     }
   },
   computed: {
-    ...mapState("pedana", ["generalBarycenterCoordinates"])
+    ...mapState("pedana", [
+      "generalBarycenterCoordinates",
+      "leftBarycenterCoordinates"
+    ])
   }
 });
 </script>
