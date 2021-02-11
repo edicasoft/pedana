@@ -38,10 +38,24 @@
           </div>
         </v-sheet>
 
-        <v-sheet>
-          <v-btn @click="start" color="primary" small class="mt-5">{{
-            isProcessing || readingsIdx > 0 ? "Stop" : "Start"
-          }}</v-btn>
+        <v-sheet v-if="readingData.length" class="mt-5">
+          <v-btn icon @click="back" :disabled="readingsIdx <= 0"
+            ><v-icon>mdi-step-backward</v-icon></v-btn
+          >
+
+          <v-btn @click="start" icon>
+            <v-icon>{{
+              isProcessing && readingsIdx > 0 ? "mdi-pause" : "mdi-play"
+            }}</v-icon>
+          </v-btn>
+
+          <v-btn
+            icon
+            @click="next"
+            :disabled="readingsIdx >= readingData.length - 1"
+            ><v-icon>mdi-step-forward</v-icon></v-btn
+          >
+          {{ readingsIdx }}
         </v-sheet>
       </v-col>
       <v-col>
@@ -97,7 +111,9 @@ export default Vue.extend({
       "red"
     ),
     leftBarycenter: new Barycenter(leftPlatformCells, "gold"),
-    rightBarycenter: new Barycenter(rightPlatformCells, "gold")
+    rightBarycenter: new Barycenter(rightPlatformCells, "gold"),
+    readingData: data,
+    isEndReading: false
   }),
   computed: {
     ...mapGetters("pedana", ["leftWeights", "rightWeights"]),
@@ -128,46 +144,75 @@ export default Vue.extend({
   mounted() {
     c = new Canvas("barycenters-layer", 600, 600, images);
     ctx = c.ctx;
-    c.preloadImages(this.onReady);
+    c.preloadImages(this.play);
   },
   methods: {
+    displayNumber,
+    ...mapActions("pedana", [
+      "getMeasurements",
+      "addToHistory",
+      "readFromData",
+      "rewindData"
+    ]),
+
+    back() {
+      if (this.readingsIdx <= 0) return;
+      this.pause();
+      this.readingsIdx--;
+      this.getPrevReadings();
+    },
+    next() {
+      if (this.readingsIdx >= this.readingData.length - 1) return;
+      this.pause();
+      this.readingsIdx++;
+      this.getReadings();
+    },
     pause() {
       this.isProcessing = false;
+      this.play();
+    },
+    restart() {
+      this.readingsIdx = 0;
+      this.isEndReading = false;
     },
     start() {
+      if (this.isEndReading) this.restart();
       this.isProcessing = !this.isProcessing;
-      this.onReady();
+      this.play();
     },
-    async onReady() {
+    async getPrevReadings() {
+      const res = await this.rewindData(this.readingsIdx);
+
+      if (res && res.length && !this.error) {
+        requestAnimationFrame(() => {
+          this.update();
+        });
+      }
+    },
+    async getReadings() {
+      const res = await this.readFromData(this.readingData[this.readingsIdx]);
+
+      if (res && res.length && !this.error) {
+        requestAnimationFrame(() => {
+          this.update();
+        });
+      }
+    },
+    async play() {
       try {
         if (!this.isProcessing) return;
-
-        const res = await this.readFromData(data[this.readingsIdx]);
-
-        if (res && res.length && !this.error) {
-          requestAnimationFrame(() => {
-            this.update();
-          });
-        }
-        console.log(this.readingsIdx);
-        if (this.readingsIdx < data.length - 1) {
+        await this.getReadings();
+        if (this.readingsIdx < this.readingData.length - 1) {
           this.readingsIdx++;
-          this.onReady();
+          this.play();
         } else {
           this.isProcessing = false;
-          this.readingsIdx = 0;
+          this.isEndReading = true;
         }
       } catch (e) {
         console.error(e);
       }
     },
-    displayNumber,
-    ...mapActions("pedana", [
-      "getMeasurements",
-      "addToHistory",
-      "readFromData"
-    ]),
-
     connectBarycenters() {
       c.drawLine(this.leftBarycenter, this.rightBarycenter, "red");
     },
@@ -193,7 +238,7 @@ export default Vue.extend({
           y -= 20;
         }
         if (cells[i].x < 0) {
-          x -= 40;
+          x -= 30;
           if (cells[i].y < 0) x -= 20;
         }
         ctx.fillText(this.displayNumber(this.weights[i]).toString(), x, y);
