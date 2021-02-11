@@ -88,7 +88,7 @@ export default class Canvas {
 
     this.ctx.fill();
   }
-  preloadImages(callback) {
+  preloadImages(callback?) {
     let loadedImages = 0;
     this.sources.forEach(src => {
       const image = new Image();
@@ -96,7 +96,7 @@ export default class Canvas {
       image.onload = () => {
         console.log("loaded", src);
         this.images.set(src, image);
-        if (++loadedImages >= this.sources.length) {
+        if (callback && ++loadedImages >= this.sources.length) {
           callback();
         }
       };

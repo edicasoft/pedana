@@ -1,7 +1,7 @@
 <template>
   <div class="small">
     <line-chart
-      v-if="generalBarycenterCoordinates.length"
+      v-if="generalBarycenterHistory.length"
       :chart-data="datacollection"
       :options="options"
     ></line-chart>
@@ -42,18 +42,13 @@ export default Vue.extend({
       this.datacollection = {
         labels: [""],
         datasets: [
-          //   {
-          //     label: "Left Barycenter",
-          //     backgroundColor: "blue",
-          //     data: [this.getRandomInt(), this.getRandomInt()]
-          //   },
           {
             label: "Left Barycenter",
             borderColor: "blue",
             pointBackgroundColor: "blue",
             pointRadius: 0,
             fill: false,
-            data: this.leftBarycenterCoordinates,
+            data: this.leftBarycenterHistory,
             borderWidth: 1
           },
           {
@@ -62,28 +57,33 @@ export default Vue.extend({
             pointBackgroundColor: "red",
             pointRadius: 0,
             fill: false,
-            data: this.generalBarycenterCoordinates,
+            data: this.generalBarycenterHistory,
+            borderWidth: 1
+          },
+          {
+            label: "Right Barycenter",
+            borderColor: "blue",
+            pointBackgroundColor: "blue",
+            pointRadius: 0,
+            fill: false,
+            data: this.rightBarycenterHistory,
             borderWidth: 1
           }
-          //   {
-          //     label: "Right Barycenter",
-          //     backgroundColor: "blue",
-          //     data: [this.getRandomInt(), this.getRandomInt()]
-          //   }
         ]
       };
     }
   },
   //TODO::write getter with set get
   watch: {
-    generalBarycenterCoordinates() {
+    generalBarycenterHistory() {
       this.fillData();
     }
   },
   computed: {
     ...mapState("pedana", [
-      "generalBarycenterCoordinates",
-      "leftBarycenterCoordinates"
+      "generalBarycenterHistory",
+      "leftBarycenterHistory",
+      "rightBarycenterHistory"
     ])
   }
 });

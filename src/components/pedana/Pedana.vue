@@ -6,6 +6,7 @@
           <canvas id="barycenters-layer"> </canvas>
           <BackgroundLayer :width="width" :height="height" />
         </v-sheet>
+
         <v-sheet :width="width">
           <div class="d-flex justify-space-around align-center">
             <div class="text-left w-100">
@@ -36,9 +37,15 @@
             </div>
           </div>
         </v-sheet>
+
+        <v-sheet>
+          <v-btn @click="start" color="primary" small class="mt-5">{{
+            isProcessing || readingsIdx > 0 ? "Stop" : "Start"
+          }}</v-btn>
+        </v-sheet>
       </v-col>
       <v-col>
-        <main-chart v-if="weights.length"></main-chart>
+        <main-chart></main-chart>
       </v-col>
     </v-row>
   </v-container>
@@ -47,12 +54,15 @@
 <script lang="ts">
 import { Cell } from "@/entities/Cell";
 import Canvas from "@/entities/Canvas";
+import Barycenter from "@/entities/Barycenter";
+
 import { total, displayNumber } from "@/common/helpers";
 import Vue from "vue";
 import {
   leftPlatformCells,
   rightPlatformCells,
-  images
+  images,
+  data
 } from "@/common/constants.js";
 import { mapState, mapGetters, mapActions } from "vuex";
 import BackgroundLayer from "@/components/pedana/BackgroundLayer.vue";
@@ -72,7 +82,9 @@ export default Vue.extend({
     width: 600,
     height: 600,
     zoom: 1,
-    error: false
+    error: false,
+    isProcessing: false,
+    readingsIdx: 0,
     //****IDEAL WEIGHTS****
     //  leftWeights: [11.1, 11.1, 11.1],
     //rightWeights: [11.1, 11.1, 11.1],
@@ -80,21 +92,16 @@ export default Vue.extend({
     // leftWeights: [11.6, 12.1, 7.9],
     // rightWeights: [13.2, 14.1, 7.7],
 
-    // generalBarycenter: new Barycenter(
-    //   leftPlatformCells.concat(rightPlatformCells),
-    //   "red"
-    // ),
-    // leftBarycenter: new Barycenter(leftPlatformCells, "gold"),
-    // rightBarycenter: new Barycenter(rightPlatformCells, "gold")
+    generalBarycenter: new Barycenter(
+      leftPlatformCells.concat(rightPlatformCells),
+      "red"
+    ),
+    leftBarycenter: new Barycenter(leftPlatformCells, "gold"),
+    rightBarycenter: new Barycenter(rightPlatformCells, "gold")
   }),
   computed: {
     ...mapGetters("pedana", ["leftWeights", "rightWeights"]),
-    ...mapState("pedana", [
-      "generalBarycenter",
-      "leftBarycenter",
-      "rightBarycenter",
-      "weights"
-    ]),
+    ...mapState("pedana", ["weights"]),
 
     totalWeight(): number {
       return total(this.weights);
@@ -106,37 +113,60 @@ export default Vue.extend({
       return total(this.rightWeights);
     }
   },
-  //TODO::rewrite this? 1) move 2) add to the store 3) draw
-  watch: {
-    weights(val) {
-      // console.log(val);
-      if (val && val.length && !this.error) {
-        requestAnimationFrame(() => {
-          this.update();
-        });
-      }
-    }
-  },
+  // watch: {
+  //   weights(val) {
+  //     if (val && val.length && !this.error) {
+  //       requestAnimationFrame(() => {
+  //         this.update();
+  //       });
+  //     }
+  //   }
+  // },
   destroyed() {
     c.clear();
   },
   mounted() {
-    console.log("mounted");
     c = new Canvas("barycenters-layer", 600, 600, images);
     ctx = c.ctx;
     c.preloadImages(this.onReady);
   },
   methods: {
+    pause() {
+      this.isProcessing = false;
+    },
+    start() {
+      this.isProcessing = !this.isProcessing;
+      this.onReady();
+    },
     async onReady() {
       try {
-        const res = await this.getMeasurement();
-        console.log("onReady");
+        if (!this.isProcessing) return;
+
+        const res = await this.readFromData(data[this.readingsIdx]);
+
+        if (res && res.length && !this.error) {
+          requestAnimationFrame(() => {
+            this.update();
+          });
+        }
+        console.log(this.readingsIdx);
+        if (this.readingsIdx < data.length - 1) {
+          this.readingsIdx++;
+          this.onReady();
+        } else {
+          this.isProcessing = false;
+          this.readingsIdx = 0;
+        }
       } catch (e) {
         console.error(e);
       }
     },
     displayNumber,
-    ...mapActions("pedana", ["getMeasurement"]),
+    ...mapActions("pedana", [
+      "getMeasurements",
+      "addToHistory",
+      "readFromData"
+    ]),
 
     connectBarycenters() {
       c.drawLine(this.leftBarycenter, this.rightBarycenter, "red");
@@ -172,20 +202,31 @@ export default Vue.extend({
     },
     update(): void {
       try {
+        console.log("update");
         c.clear();
         this.displayWeights();
 
         c.transdormCoordinates();
 
-        // this.drawLeftPlatform();
-        // this.drawRightPlatform();
+        this.generalBarycenter.move(this.weights);
+        this.leftBarycenter.move(this.leftWeights);
+        this.rightBarycenter.move(this.rightWeights);
 
-        //  this.generalBarycenter.move(this.weights);
-        // this.leftBarycenter.move(this.leftWeights);
-        // this.rightBarycenter.move(this.rightWeights);
+        const general = {
+          x: this.generalBarycenter.x,
+          y: this.generalBarycenter.y
+        };
+        const left = {
+          x: this.leftBarycenter.x,
+          y: this.leftBarycenter.y
+        };
+        const right = {
+          x: this.rightBarycenter.x,
+          y: this.rightBarycenter.y
+        };
+        this.addToHistory({ general, left, right });
 
         this.connectBarycenters();
-        console.log("draw");
         this.leftBarycenter.draw(ctx);
         this.generalBarycenter.draw(ctx);
         this.rightBarycenter.draw(ctx);
