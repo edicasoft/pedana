@@ -66,6 +66,8 @@
 </template>
 
 <script lang="ts">
+//TODO::move player to separate component
+//ts for store files
 import { Cell } from "@/entities/Cell";
 import Canvas from "@/entities/Canvas";
 import Barycenter from "@/entities/Barycenter";
@@ -115,6 +117,14 @@ export default Vue.extend({
     readingData: data,
     isEndReading: false
   }),
+  destroyed() {
+    c.clear();
+  },
+  mounted() {
+    c = new Canvas("barycenters-layer", 600, 600, images);
+    ctx = c.ctx;
+    c.preloadImages(this.play);
+  },
   computed: {
     ...mapGetters("pedana", ["leftWeights", "rightWeights"]),
     ...mapState("pedana", ["weights"]),
@@ -138,14 +148,7 @@ export default Vue.extend({
   //     }
   //   }
   // },
-  destroyed() {
-    c.clear();
-  },
-  mounted() {
-    c = new Canvas("barycenters-layer", 600, 600, images);
-    ctx = c.ctx;
-    c.preloadImages(this.play);
-  },
+
   methods: {
     displayNumber,
     ...mapActions("pedana", [
@@ -174,6 +177,11 @@ export default Vue.extend({
     restart() {
       this.readingsIdx = 0;
       this.isEndReading = false;
+      this.$store.commit("pedana/CLEAR_HISTORY");
+      this.generalBarycenter.reset();
+      this.leftBarycenter.reset();
+      this.rightBarycenter.reset();
+      c.clear();
     },
     start() {
       if (this.isEndReading) this.restart();
@@ -197,17 +205,47 @@ export default Vue.extend({
           this.update();
         });
       }
+      return res;
     },
     async play() {
       try {
         if (!this.isProcessing) return;
-        await this.getReadings();
-        if (this.readingsIdx < this.readingData.length - 1) {
-          this.readingsIdx++;
-          this.play();
+        if (this.readingsIdx < this.readingData.length) {
+          const res = await this.readFromData(
+            this.readingData[this.readingsIdx]
+          );
+
+          if (res && res.length && !this.error) {
+            requestAnimationFrame(() => {
+              this.update();
+              this.readingsIdx++;
+              this.play();
+            });
+          }
         } else {
+          console.log("end", this.readingsIdx);
           this.isProcessing = false;
           this.isEndReading = true;
+          console.log(
+            "A mmq. General: ",
+            this.generalBarycenter.calculateAMmq().toFixed(2)
+          );
+          console.log(
+            "VarV. General: ",
+            this.generalBarycenter.calculateVelocityVariation().toFixed(2)
+          );
+          // console.log(
+          //   "R.For. Left: ",
+          //   this.leftBarycenter.calculateRForma().toFixed(2)
+          // );
+          // console.log(
+          //   "R.For. Right: ",
+          //   this.rightBarycenter.calculateRForma().toFixed(2)
+          // );
+          console.log(
+            "R.For. General: ",
+            this.generalBarycenter.calculateRForma().toFixed(2)
+          );
         }
       } catch (e) {
         console.error(e);
@@ -222,7 +260,6 @@ export default Vue.extend({
       ctx.font = "16px Arial";
       ctx.save();
       for (let i = 0; i < cells.length; i++) {
-        //TODO::check values
         this.$nextTick(() => {
           const cell = new Cell(cells[i], this.weights[i]);
           cell.draw(c, this.totalWeight);
@@ -247,7 +284,7 @@ export default Vue.extend({
     },
     update(): void {
       try {
-        console.log("update");
+        //        console.log("update");
         c.clear();
         this.displayWeights();
 

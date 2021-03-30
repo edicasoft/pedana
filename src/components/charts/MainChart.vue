@@ -12,10 +12,8 @@
 import Vue from "vue";
 import { mapState } from "vuex";
 import LineChart from "@/common/LineChart.js";
-interface User {
-  labels: Array<string>;
-  datasets: Array<object>;
-}
+import { ChartData } from "chart.js";
+
 export default Vue.extend({
   name: "MainChart",
   components: {
@@ -23,7 +21,7 @@ export default Vue.extend({
   },
   data() {
     return {
-      datacollection: {} as User,
+      datacollection: {} as ChartData,
       options: {
         responsive: true,
         scales: {

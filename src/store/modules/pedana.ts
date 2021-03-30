@@ -12,10 +12,10 @@ const getters = {
   rightWeights: state => state.weights.slice(3, 6)
 };
 const mutations = {
-  REWIND(state, idx) {
+  REWIND(state, idx: number) {
     state.weights = state.weightsHistory[idx];
     state.weightsHistory.length = idx + 1;
-    console.log("weightsHistory", state.weightsHistory);
+    // console.log("weightsHistory", state.weightsHistory);
     state.generalBarycenterHistory.length = idx + 1;
     state.leftBarycenterHistory.length = idx + 1;
     state.rightBarycenterHistory.length = idx + 1;
@@ -45,6 +45,7 @@ const actions = {
     commit("REWIND", idx);
     return state.weightsHistory[idx];
   },
+  //TODO::check interval on desktop app
   readFromData({ commit, state }, payload) {
     return new Promise((resolve, reject) => {
       if (timeout) clearTimeout(timeout);
@@ -52,9 +53,9 @@ const actions = {
       timeout = setTimeout(() => {
         commit("SET_WEIGHTS", payload);
         resolve(payload);
-      }, 100);
+      }, 1000 / 900);
       // });
-      console.log("end read data");
+      //console.log("end read data");
     });
   }
   // getMeasurements({ commit }, payload) {
