@@ -75,7 +75,7 @@ export default Vue.extend({
       c.drawLine({ x, y: -lineLength }, { x, y: lineLength }, "orange");
 
       x = idealBarycenterRightX;
-      c.drawLine({ x, y: -lineLength }, { x, y: lineLength }, "gold");
+      c.drawLine({ x, y: -lineLength }, { x, y: lineLength }, "orange");
     },
     draw(): void {
       ctx.save();

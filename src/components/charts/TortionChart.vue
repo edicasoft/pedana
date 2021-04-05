@@ -1,8 +1,8 @@
 <template>
   <v-dialog :value="value" @click:outside="close">
-    <v-card :min-height="800">
-      <v-btn @click="close">Close</v-btn>
+    <v-btn @click="close">Close</v-btn>
 
+    <v-card :min-height="800">
       <div class="small">
         <line-chart
           :chart-data="datacollection"
@@ -10,10 +10,13 @@
         ></line-chart>
       </div>
 
-      <div>
+      <div class="mt-3">
         Angle opposite of X-axis:
+        <strong>{{ oppositeXAngle.toFixed(2) }}</strong>
       </div>
-      <div>Angle next to X-axis:</div>
+      <div>
+        Angle next to X-axis: <strong>{{ nextToXAngle.toFixed(2) }}</strong>
+      </div>
     </v-card>
   </v-dialog>
 </template>
@@ -27,6 +30,10 @@ import {
   leftBarycenter,
   rightBarycenter
 } from "@/common/barycenters.service.js";
+import {
+  idealBarycenterLeftX,
+  idealBarycenterRightX
+} from "@/common/constants.js";
 
 const minHeight = 200;
 const minWidth = 400;
@@ -41,6 +48,10 @@ export default Vue.extend({
   data() {
     return {
       datacollection: {} as ChartData,
+      x1: leftBarycenter.calculateBx(),
+      x2: rightBarycenter.calculateBx(),
+      y1: leftBarycenter.calculateBy(),
+      y2: rightBarycenter.calculateBy(),
       options: {
         responsive: false,
         plugins: {
@@ -58,18 +69,27 @@ export default Vue.extend({
       }
     };
   },
+  computed: {
+    oppositeXAngle(): number {
+      const deltaX = Math.abs(this.x2 - this.x1);
+      const deltaY = Math.abs(this.y2 - this.y1);
+      const sqrt = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
+      const angle = sqrt ? (Math.acos(deltaX / sqrt) * 180) / Math.PI : 0;
+      return this.y2 > this.y1 ? -1 * angle : angle;
+    },
+    nextToXAngle(): number {
+      return 90 - Math.abs(this.oppositeXAngle);
+    }
+  },
   created() {
     this.fillData();
   },
   methods: {
-    close() {
-      this.$emit("update:value", false);
-    },
     fillData() {
-      const x1 = leftBarycenter.Bx;
-      const y1 = leftBarycenter.By;
-      const x2 = rightBarycenter.Bx;
-      const y2 = rightBarycenter.By;
+      this.x1 = leftBarycenter.calculateBx();
+      this.y1 = leftBarycenter.calculateBy();
+      this.x2 = rightBarycenter.calculateBx();
+      this.y2 = rightBarycenter.calculateBy();
       const intersectLineStyle = {
         label: "",
         borderColor: "blue",
@@ -79,18 +99,16 @@ export default Vue.extend({
         borderWidth: 1,
         borderDash: [5, 5, 2, 5]
       };
-      //   const x1 = 500;
-      //   const y1 = -200;
-      //   const x2 = -500;
-      //   const y2 = 70;
-      console.log("fillData", x1, y1);
       const maxY = Math.max(
-        Math.abs(y1) + 20,
+        Math.abs(this.y1) + 20,
         minHeight / 2,
-        Math.abs(y2) + 20
+        Math.abs(this.y2) + 20
       );
-      const maxX = Math.max(Math.abs(x1) + 20, minWidth / 2, Math.abs(x2) + 20);
-      console.log(maxX, maxY);
+      const maxX = Math.max(
+        Math.abs(this.x1) + 20,
+        minWidth / 2,
+        Math.abs(this.x2) + 20
+      );
       const axes = [
         {
           label: "Y",
@@ -129,20 +147,58 @@ export default Vue.extend({
           ]
         }
       ];
+
+      const ideal = [
+        {
+          borderColor: "orange",
+          pointBackgroundColor: "orange",
+          fill: false,
+          borderWidth: 1,
+          pointRadius: 0,
+          data: [
+            {
+              x: idealBarycenterLeftX,
+              y: -maxY
+            },
+            {
+              x: idealBarycenterLeftX,
+              y: maxY
+            }
+          ]
+        },
+        {
+          borderColor: "orange",
+          pointBackgroundColor: "orange",
+          fill: false,
+          borderWidth: 1,
+          pointRadius: 0,
+          data: [
+            {
+              x: idealBarycenterRightX,
+              y: -maxY
+            },
+            {
+              x: idealBarycenterRightX,
+              y: maxY
+            }
+          ]
+        }
+      ];
       this.datacollection = {
         labels: [""],
         datasets: [
           ...axes,
+          ...ideal,
           {
             ...intersectLineStyle,
             data: [
               {
                 x: -20,
-                y: y1
+                y: this.y1
               },
               {
                 x: -maxX,
-                y: y1
+                y: this.y1
               }
             ]
           },
@@ -150,11 +206,11 @@ export default Vue.extend({
             ...intersectLineStyle,
             data: [
               {
-                x: x1,
+                x: this.x1,
                 y: maxY
               },
               {
-                x: x1,
+                x: this.x1,
                 y: -maxY
               }
             ]
@@ -164,11 +220,11 @@ export default Vue.extend({
             data: [
               {
                 x: 20,
-                y: y2
+                y: this.y2
               },
               {
                 x: maxX,
-                y: y2
+                y: this.y2
               }
             ]
           },
@@ -176,11 +232,11 @@ export default Vue.extend({
             ...intersectLineStyle,
             data: [
               {
-                x: x2,
+                x: this.x2,
                 y: maxY
               },
               {
-                x: x2,
+                x: this.x2,
                 y: -maxY
               }
             ]
@@ -194,17 +250,20 @@ export default Vue.extend({
             borderWidth: 1,
             data: [
               {
-                x: x1,
-                y: y1
+                x: this.x1,
+                y: this.y1
               },
               {
-                x: x2,
-                y: y2
+                x: this.x2,
+                y: this.y2
               }
             ]
           }
         ]
       };
+    },
+    close() {
+      this.$emit("update:value", false);
     }
   }
 });

@@ -235,10 +235,6 @@ export default Vue.extend({
           console.log("end", this.readingsIdx);
           this.isProcessing = false;
           this.isEndReading = true;
-          console.log("By Left", leftBarycenter.calculateBy().toFixed(2));
-          console.log("Bx Left", leftBarycenter.calculateBx().toFixed(2));
-          console.log("By Right", rightBarycenter.calculateBy().toFixed(2));
-          console.log("Bx Right", rightBarycenter.calculateBx().toFixed(2));
           console.log(
             "A mmq. General: ",
             generalBarycenter.calculateAMmq().toFixed(2)

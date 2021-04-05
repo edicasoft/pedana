@@ -7,7 +7,6 @@ export default class Barycenter {
   color: string;
   cells: Point[];
   //TODO::add type
-  // history: Array<Record<string, any>>;
   xVals: Array<number>;
   yVals: Array<number>;
   weights: Array<Array<number>>;
@@ -18,7 +17,6 @@ export default class Barycenter {
     this.y = 0;
     this.color = color;
     this.cells = cells;
-    // this.history = [];
     this.xVals = [];
     this.yVals = [];
     this.weights = [];
@@ -33,7 +31,6 @@ export default class Barycenter {
 
       const sumY = this.calculateWeightenedSum("y", weights);
       this.y = Math.round((sumY / totalWeight + Number.EPSILON) * 100) / 100;
-      //this.history.push({ x: this.x, y: this.y, weights });
       this.xVals.push(this.x);
       this.yVals.push(this.y);
       this.weights.push(weights);

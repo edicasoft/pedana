@@ -6,7 +6,3 @@ export const generalBarycenter = new Barycenter(
 );
 export const leftBarycenter = new Barycenter(leftPlatformCells, "gold");
 export const rightBarycenter = new Barycenter(rightPlatformCells, "gold");
-
-export default {
-  generalBarycenter
-};

@@ -46,8 +46,8 @@ const actions = {
     return state.weightsHistory[idx];
   },
   //TODO::check interval on desktop app
-  readFromData({ commit, state }, payload) {
-    return new Promise((resolve, reject) => {
+  readFromData({ commit }, payload) {
+    return new Promise(resolve => {
       if (timeout) clearTimeout(timeout);
       // payload.forEach((item, i) => {
       timeout = setTimeout(() => {
