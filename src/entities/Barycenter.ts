@@ -11,6 +11,8 @@ export default class Barycenter {
   xVals: Array<number>;
   yVals: Array<number>;
   weights: Array<Array<number>>;
+  Bx: number;
+  By: number;
   constructor(cells: Point[], color: string) {
     this.x = 0;
     this.y = 0;
@@ -20,6 +22,8 @@ export default class Barycenter {
     this.xVals = [];
     this.yVals = [];
     this.weights = [];
+    this.Bx = 0;
+    this.By = 0;
   }
   move(weights: number[]) {
     const totalWeight = weights.reduce((total: number, val) => total + val, 0);
@@ -81,27 +85,36 @@ export default class Barycenter {
       }
     }, 0);
   }
-  calculateVelocityVariation() {
-    const count = this.weights.length || 1;
-    const V1 = this.weights.reduce((acc, val, i) => {
-      if (i === 0) return 0;
-      else {
-        const ySquare = Math.pow(this.yVals[i] - this.yVals[i - 1], 2);
-        const xSquare = Math.pow(this.xVals[i] - this.xVals[i - 1], 2);
-        return acc + (Math.sqrt(ySquare + xSquare) * Hz) / count;
-      }
-    }, 0);
+  //VarV. General:  24582.94
 
-    const val = this.weights.reduce((acc, val, i) => {
+  calculateVelocity(fn: Function) {
+    const count = this.weights.length || 1;
+
+    return this.weights.reduce((acc, val, i) => {
       if (i === 0) return 0;
       else {
         const ySquare = Math.pow(this.yVals[i] - this.yVals[i - 1], 2);
         const xSquare = Math.pow(this.xVals[i] - this.xVals[i - 1], 2);
-        const V2 = Math.sqrt(ySquare + xSquare) * Hz;
-        return acc + Math.pow(V2 - V1, 2) / count;
+        const V = Math.sqrt(ySquare + xSquare) * Hz;
+        return acc + fn(V) / count;
       }
     }, 0);
-    return val;
+  }
+  calculateVelocityVariation() {
+    const V1 = this.calculateVelocity((V: number) => V);
+    return this.calculateVelocity((V: number) => Math.pow(V - V1, 2));
+  }
+  calculateBx() {
+    this.Bx = this.weights.length
+      ? this.xVals.reduce((acc, val) => acc + val) / this.weights.length
+      : 0;
+    return this.Bx;
+  }
+  calculateBy() {
+    this.By = this.weights.length
+      ? this.yVals.reduce((acc, val) => acc + val) / this.weights.length
+      : 0;
+    return this.By;
   }
   reset() {
     this.x = 0;

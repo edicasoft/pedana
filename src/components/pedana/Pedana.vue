@@ -21,7 +21,12 @@
               </v-icon>
 
               <div class="text-center w-100">
-                Total: <b>{{ displayNumber(totalWeight) }}</b>
+                Diff:
+                <b>{{
+                  displayNumber(
+                    Math.abs(rightPlatformTotalWeight - leftPlatformTotalWeight)
+                  )
+                }}</b>
               </div>
               <v-icon
                 large
@@ -60,8 +65,10 @@
       </v-col>
       <v-col>
         <main-chart></main-chart>
+        <v-btn @click="showTortionChart = true">Torsion</v-btn>
       </v-col>
     </v-row>
+    <TortionChart v-if="showTortionChart" :value.sync="showTortionChart" />
   </v-container>
 </template>
 
@@ -70,7 +77,6 @@
 //ts for store files
 import { Cell } from "@/entities/Cell";
 import Canvas from "@/entities/Canvas";
-import Barycenter from "@/entities/Barycenter";
 
 import { total, displayNumber } from "@/common/helpers";
 import Vue from "vue";
@@ -83,6 +89,13 @@ import {
 import { mapState, mapGetters, mapActions } from "vuex";
 import BackgroundLayer from "@/components/pedana/BackgroundLayer.vue";
 import MainChart from "@/components/charts/MainChart.vue";
+import {
+  generalBarycenter,
+  leftBarycenter,
+  rightBarycenter
+} from "@/common/barycenters.service.js";
+
+import TortionChart from "@/components/charts/TortionChart.vue";
 
 const cells = leftPlatformCells.concat(rightPlatformCells);
 let c: Canvas;
@@ -92,9 +105,11 @@ export default Vue.extend({
   name: "Pedana",
   components: {
     BackgroundLayer,
-    MainChart
+    MainChart,
+    TortionChart
   },
   data: () => ({
+    showTortionChart: false,
     width: 600,
     height: 600,
     zoom: 1,
@@ -108,12 +123,6 @@ export default Vue.extend({
     // leftWeights: [11.6, 12.1, 7.9],
     // rightWeights: [13.2, 14.1, 7.7],
 
-    generalBarycenter: new Barycenter(
-      leftPlatformCells.concat(rightPlatformCells),
-      "red"
-    ),
-    leftBarycenter: new Barycenter(leftPlatformCells, "gold"),
-    rightBarycenter: new Barycenter(rightPlatformCells, "gold"),
     readingData: data,
     isEndReading: false
   }),
@@ -178,9 +187,9 @@ export default Vue.extend({
       this.readingsIdx = 0;
       this.isEndReading = false;
       this.$store.commit("pedana/CLEAR_HISTORY");
-      this.generalBarycenter.reset();
-      this.leftBarycenter.reset();
-      this.rightBarycenter.reset();
+      generalBarycenter.reset();
+      leftBarycenter.reset();
+      rightBarycenter.reset();
       c.clear();
     },
     start() {
@@ -226,25 +235,29 @@ export default Vue.extend({
           console.log("end", this.readingsIdx);
           this.isProcessing = false;
           this.isEndReading = true;
+          console.log("By Left", leftBarycenter.calculateBy().toFixed(2));
+          console.log("Bx Left", leftBarycenter.calculateBx().toFixed(2));
+          console.log("By Right", rightBarycenter.calculateBy().toFixed(2));
+          console.log("Bx Right", rightBarycenter.calculateBx().toFixed(2));
           console.log(
             "A mmq. General: ",
-            this.generalBarycenter.calculateAMmq().toFixed(2)
+            generalBarycenter.calculateAMmq().toFixed(2)
           );
           console.log(
             "VarV. General: ",
-            this.generalBarycenter.calculateVelocityVariation().toFixed(2)
+            generalBarycenter.calculateVelocityVariation().toFixed(2)
           );
           // console.log(
           //   "R.For. Left: ",
-          //   this.leftBarycenter.calculateRForma().toFixed(2)
+          //   leftBarycenter.calculateRForma().toFixed(2)
           // );
           // console.log(
           //   "R.For. Right: ",
-          //   this.rightBarycenter.calculateRForma().toFixed(2)
+          //   rightBarycenter.calculateRForma().toFixed(2)
           // );
           console.log(
             "R.For. General: ",
-            this.generalBarycenter.calculateRForma().toFixed(2)
+            generalBarycenter.calculateRForma().toFixed(2)
           );
         }
       } catch (e) {
@@ -252,7 +265,7 @@ export default Vue.extend({
       }
     },
     connectBarycenters() {
-      c.drawLine(this.leftBarycenter, this.rightBarycenter, "red");
+      c.drawLine(leftBarycenter, rightBarycenter, "red");
     },
     displayWeights() {
       if (this.weights.length === 0) return;
@@ -290,28 +303,28 @@ export default Vue.extend({
 
         c.transdormCoordinates();
 
-        this.generalBarycenter.move(this.weights);
-        this.leftBarycenter.move(this.leftWeights);
-        this.rightBarycenter.move(this.rightWeights);
+        generalBarycenter.move(this.weights);
+        leftBarycenter.move(this.leftWeights);
+        rightBarycenter.move(this.rightWeights);
 
         const general = {
-          x: this.generalBarycenter.x,
-          y: this.generalBarycenter.y
+          x: generalBarycenter.x,
+          y: generalBarycenter.y
         };
         const left = {
-          x: this.leftBarycenter.x,
-          y: this.leftBarycenter.y
+          x: leftBarycenter.x,
+          y: leftBarycenter.y
         };
         const right = {
-          x: this.rightBarycenter.x,
-          y: this.rightBarycenter.y
+          x: rightBarycenter.x,
+          y: rightBarycenter.y
         };
         this.addToHistory({ general, left, right });
 
         this.connectBarycenters();
-        this.leftBarycenter.draw(ctx);
-        this.generalBarycenter.draw(ctx);
-        this.rightBarycenter.draw(ctx);
+        leftBarycenter.draw(ctx);
+        generalBarycenter.draw(ctx);
+        rightBarycenter.draw(ctx);
       } catch (e) {
         this.error = true;
         console.error(e);
