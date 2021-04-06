@@ -6,7 +6,6 @@ export default class Barycenter {
   y: number;
   color: string;
   cells: Point[];
-  //TODO::add type
   xVals: Array<number>;
   yVals: Array<number>;
   weights: Array<Array<number>>;
@@ -57,16 +56,15 @@ export default class Barycenter {
     return sum;
   }
   calculateRForma() {
+    if (!this.xVals.length || !this.yVals.length) return 0;
     const maxX = Math.max(...this.xVals);
     const minX = Math.min(...this.xVals);
 
     const maxY = Math.max(...this.yVals);
     const minY = Math.min(...this.yVals);
-
     const deltaY = Math.abs(maxY - minY);
     const deltaX = Math.abs(maxX - minX);
-
-    return deltaY === 0 ? 0 : deltaX / deltaY;
+    return deltaX / deltaY;
   }
   calculateAMmq() {
     return this.weights.reduce((acc, val, i) => {

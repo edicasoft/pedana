@@ -1,28 +1,42 @@
 <template>
-  <v-dialog :value="value" @click:outside="close">
-    <v-btn @click="close">Close</v-btn>
-
-    <v-card :min-height="800">
-      <div class="small">
-        <line-chart
-          :chart-data="datacollection"
-          :options="options"
-        ></line-chart>
+  <v-dialog :value="value" @click:outside="close" :max-width="1200">
+    <v-card class="pa-3">
+      <div class="d-flex align-center justify-space-between pb-3">
+        <v-card-title class="pt-0 pb-0">Tortion</v-card-title>
+        <v-btn @click="close" icon>
+          <v-icon color="error">mdi-close-circle</v-icon></v-btn
+        >
       </div>
 
-      <div class="mt-3">
-        Angle opposite of X-axis:
-        <strong>{{ oppositeXAngle.toFixed(2) }}</strong>
-      </div>
-      <div>
-        Angle next to X-axis: <strong>{{ nextToXAngle.toFixed(2) }}</strong>
+      <v-row>
+        <v-col>
+          <line-chart
+            :style="{
+              height: '100vh',
+              position: 'relative',
+              maxHeight: '600px',
+              maxWidth: '1200px'
+            }"
+            :chart-data="datacollection"
+            :options="options"
+          ></line-chart>
+        </v-col>
+      </v-row>
+
+      <div class="pa-5">
+        <div>
+          Angle opposite of X-axis:
+          <strong>{{ oppositeXAngle.toFixed(2) }}</strong>
+        </div>
+        <div>
+          Angle next to X-axis: <strong>{{ nextToXAngle.toFixed(2) }}</strong>
+        </div>
       </div>
     </v-card>
   </v-dialog>
 </template>
 
 <script lang="ts">
-//TODO::move dialog, open in desktop window, reactivity
 import Vue from "vue";
 import LineChart from "@/common/LineChart.js";
 import { ChartData } from "chart.js";
@@ -34,6 +48,7 @@ import {
   idealBarycenterLeftX,
   idealBarycenterRightX
 } from "@/common/constants.js";
+import { mapState } from "vuex";
 
 const minHeight = 200;
 const minWidth = 400;
@@ -53,7 +68,8 @@ export default Vue.extend({
       y1: leftBarycenter.calculateBy(),
       y2: rightBarycenter.calculateBy(),
       options: {
-        responsive: false,
+        maintainAspectRatio: false,
+        responsive: true,
         plugins: {
           legend: false
         },
@@ -70,6 +86,7 @@ export default Vue.extend({
     };
   },
   computed: {
+    ...mapState("pedana", ["weights"]),
     oppositeXAngle(): number {
       const deltaX = Math.abs(this.x2 - this.x1);
       const deltaY = Math.abs(this.y2 - this.y1);
@@ -83,6 +100,11 @@ export default Vue.extend({
   },
   created() {
     this.fillData();
+  },
+  watch: {
+    weights() {
+      this.fillData();
+    }
   },
   methods: {
     fillData() {
@@ -111,7 +133,7 @@ export default Vue.extend({
       );
       const axes = [
         {
-          label: "Y",
+          label: "X",
           borderColor: "black",
           pointBackgroundColor: "black",
           pointRadius: 0,
@@ -129,7 +151,7 @@ export default Vue.extend({
           ]
         },
         {
-          label: "X",
+          label: "Y",
           borderColor: "black",
           pointBackgroundColor: "black",
           fill: false,

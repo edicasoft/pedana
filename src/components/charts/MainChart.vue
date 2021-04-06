@@ -1,6 +1,12 @@
 <template>
   <div class="small">
     <line-chart
+      :style="{
+        height: '100vh',
+        position: 'relative',
+        maxHeight: '600px',
+        maxWidth: '1200px'
+      }"
       v-if="generalBarycenterHistory.length"
       :chart-data="datacollection"
       :options="options"
@@ -24,6 +30,8 @@ export default Vue.extend({
       datacollection: {} as ChartData,
       options: {
         responsive: true,
+        maintainAspectRatio: false,
+
         scales: {
           xAxes: [
             {

@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container fluid>
     <v-row>
       <v-col>
         <v-sheet class="viewport" :width="width" :height="height">
@@ -64,11 +64,38 @@
         </v-sheet>
       </v-col>
       <v-col>
-        <main-chart></main-chart>
-        <v-btn @click="showTortionChart = true">Torsion</v-btn>
+        <div class="d-flex mb-3">
+          <v-btn
+            @click="showTortionChart = true"
+            small
+            color="primary"
+            class="mr-3"
+            >Torsion</v-btn
+          >
+          <v-btn
+            @click="showGeneralChart = true"
+            small
+            color="primary"
+            class="mr-3"
+            >General</v-btn
+          >
+          <v-btn @click="showLeftRightChart = true" small color="primary"
+            >Right & Left</v-btn
+          >
+        </div>
+
+        <MainChart />
       </v-col>
     </v-row>
     <TortionChart v-if="showTortionChart" :value.sync="showTortionChart" />
+    <GeneralBarycenterChart
+      v-if="showGeneralChart"
+      :value.sync="showGeneralChart"
+    />
+    <LeftRightBarycenterChart
+      v-if="showLeftRightChart"
+      :value.sync="showLeftRightChart"
+    />
   </v-container>
 </template>
 
@@ -96,6 +123,8 @@ import {
 } from "@/common/barycenters.service.js";
 
 import TortionChart from "@/components/charts/TortionChart.vue";
+import GeneralBarycenterChart from "@/components/charts/GeneralBarycenterChart.vue";
+import LeftRightBarycenterChart from "@/components/charts/LeftRightBarycenterChart.vue";
 
 const cells = leftPlatformCells.concat(rightPlatformCells);
 let c: Canvas;
@@ -106,10 +135,14 @@ export default Vue.extend({
   components: {
     BackgroundLayer,
     MainChart,
-    TortionChart
+    TortionChart,
+    GeneralBarycenterChart,
+    LeftRightBarycenterChart
   },
   data: () => ({
     showTortionChart: false,
+    showGeneralChart: false,
+    showLeftRightChart: false,
     width: 600,
     height: 600,
     zoom: 1,
@@ -232,29 +265,8 @@ export default Vue.extend({
             });
           }
         } else {
-          console.log("end", this.readingsIdx);
           this.isProcessing = false;
           this.isEndReading = true;
-          console.log(
-            "A mmq. General: ",
-            generalBarycenter.calculateAMmq().toFixed(2)
-          );
-          console.log(
-            "VarV. General: ",
-            generalBarycenter.calculateVelocityVariation().toFixed(2)
-          );
-          // console.log(
-          //   "R.For. Left: ",
-          //   leftBarycenter.calculateRForma().toFixed(2)
-          // );
-          // console.log(
-          //   "R.For. Right: ",
-          //   rightBarycenter.calculateRForma().toFixed(2)
-          // );
-          console.log(
-            "R.For. General: ",
-            generalBarycenter.calculateRForma().toFixed(2)
-          );
         }
       } catch (e) {
         console.error(e);
