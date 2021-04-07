@@ -11,6 +11,10 @@ export default class Barycenter {
   weights: Array<Array<number>>;
   Bx: number;
   By: number;
+  maxY: number;
+  maxX: number;
+  minX: number;
+  minY: number;
   constructor(cells: Point[], color: string) {
     this.x = 0;
     this.y = 0;
@@ -21,6 +25,10 @@ export default class Barycenter {
     this.weights = [];
     this.Bx = 0;
     this.By = 0;
+    this.maxY = 0;
+    this.maxX = 0;
+    this.minY = 0;
+    this.minX = 0;
   }
   move(weights: number[]) {
     const totalWeight = weights.reduce((total: number, val) => total + val, 0);
@@ -62,6 +70,10 @@ export default class Barycenter {
 
     const maxY = Math.max(...this.yVals);
     const minY = Math.min(...this.yVals);
+    this.maxY = maxY;
+    this.maxX = maxX;
+    this.minY = minY;
+    this.minX = minX;
     const deltaY = Math.abs(maxY - minY);
     const deltaX = Math.abs(maxX - minX);
     return deltaX / deltaY;

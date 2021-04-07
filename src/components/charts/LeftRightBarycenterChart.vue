@@ -18,7 +18,7 @@
               width: '570px'
             }"
             :chart-data="datacollectionLeft"
-            :options="options"
+            :options="optionsLeft"
           ></line-chart>
           <div class="pa-3">
             <div>
@@ -40,7 +40,7 @@
               width: '570px'
             }"
             :chart-data="datacollectionRight"
-            :options="options"
+            :options="optionsRight"
           ></line-chart>
           <div class="pa-3">
             <div>
@@ -73,7 +73,35 @@ import {
   idealBarycenterLeftX,
   idealBarycenterRightX
 } from "@/common/constants.js";
-
+const initialOptions = {
+  maintainAspectRatio: true,
+  responsive: true,
+  plugins: {
+    legend: false
+  },
+  scales: {
+    xAxes: [
+      {
+        title: "X",
+        type: "linear",
+        position: "center",
+        ticks: {
+          max: 50,
+          min: 50
+        }
+      }
+    ],
+    yAxes: [
+      {
+        title: "Y",
+        ticks: {
+          max: 50,
+          min: 50
+        }
+      }
+    ]
+  }
+};
 export default Vue.extend({
   name: "LeftRightBarycenterChart",
   props: ["value"],
@@ -95,7 +123,7 @@ export default Vue.extend({
       AmmqR: "",
       VvarR: "",
       RforR: "",
-      options: {
+      optionsLeft: {
         maintainAspectRatio: true,
         responsive: true,
         plugins: {
@@ -106,16 +134,25 @@ export default Vue.extend({
             {
               title: "X",
               type: "linear",
-              position: "center"
+              position: "center",
+              ticks: {
+                max: 50,
+                min: 50
+              }
             }
           ],
           yAxes: [
             {
-              title: "Y"
+              title: "Y",
+              ticks: {
+                max: 50,
+                min: 50
+              }
             }
           ]
         }
-      }
+      },
+      optionsRight: Object.assign({}, initialOptions)
     };
   },
   watch: {
@@ -134,6 +171,33 @@ export default Vue.extend({
     this.fillData();
   },
   methods: {
+    setTicksRange() {
+      this.optionsLeft.scales.xAxes[0].ticks.min = Math.floor(
+        leftBarycenter.minX
+      );
+      this.optionsLeft.scales.xAxes[0].ticks.max = Math.ceil(
+        leftBarycenter.maxX
+      );
+      this.optionsLeft.scales.yAxes[0].ticks.min = Math.floor(
+        leftBarycenter.minY
+      );
+      this.optionsLeft.scales.yAxes[0].ticks.max = Math.ceil(
+        leftBarycenter.maxY
+      );
+
+      this.optionsRight.scales.xAxes[0].ticks.min = Math.floor(
+        rightBarycenter.minX
+      );
+      this.optionsRight.scales.xAxes[0].ticks.max = Math.ceil(
+        rightBarycenter.maxX
+      );
+      this.optionsRight.scales.yAxes[0].ticks.min = Math.floor(
+        rightBarycenter.minY
+      );
+      this.optionsRight.scales.yAxes[0].ticks.max = Math.ceil(
+        rightBarycenter.maxY
+      );
+    },
     fillData() {
       this.AmmqL = leftBarycenter.calculateAMmq().toFixed(2);
       this.VvarL = leftBarycenter.calculateVelocityVariation().toFixed(2);
@@ -163,6 +227,8 @@ export default Vue.extend({
 
       const maxY = Math.max(maxYL, maxYR);
       const maxX = Math.max(maxXL, maxXR);
+
+      this.setTicksRange();
 
       const axesX = [
         {
