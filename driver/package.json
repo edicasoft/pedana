@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "listen": "main.js"
+    "listen": "main.js",
+    "main": "main.js"
   },
   "main": "main.js",
   "dependencies": {
