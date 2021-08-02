@@ -56,13 +56,13 @@ export default class Barycenter {
   drawOld(ctx: CanvasRenderingContext2D) {
     for (let i = 0; i < this.xVals.length; i++) {
       ctx.save();
-      ctx.fillStyle = "#DEB887";
+      ctx.fillStyle = "#C0C0C0";
       ctx.beginPath();
-      ctx.shadowBlur = 2;
+      ctx.shadowBlur = 0;
       ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 1;
-      ctx.shadowColor = "black";
-      ctx.arc(this.xVals[i], this.yVals[i], radius, 0, 2 * Math.PI);
+      ctx.shadowOffsetY = 0;
+      ctx.shadowColor = "#C0C0C0";
+      ctx.arc(this.xVals[i], this.yVals[i], radius / 1.2, 0, 2 * Math.PI);
       ctx.fill();
       ctx.closePath();
       ctx.restore();
