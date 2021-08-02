@@ -41,6 +41,31 @@ export default class Barycenter {
       this.xVals.push(this.x);
       this.yVals.push(this.y);
       this.weights.push(weights);
+      console.log("move", this.xVals, this.weights);
+    }
+  }
+
+  resetDataToIndex(idx: number) {
+    const i = idx < 0 ? 0 : idx;
+    this.xVals.length = i;
+    this.yVals.length = i;
+    this.weights.length = i;
+    console.log("resetDataToIndex", this.weights);
+  }
+
+  drawOld(ctx: CanvasRenderingContext2D) {
+    for (let i = 0; i < this.xVals.length; i++) {
+      ctx.save();
+      ctx.fillStyle = "#DEB887";
+      ctx.beginPath();
+      ctx.shadowBlur = 2;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 1;
+      ctx.shadowColor = "black";
+      ctx.arc(this.xVals[i], this.yVals[i], radius, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.closePath();
+      ctx.restore();
     }
   }
   draw(ctx: CanvasRenderingContext2D) {
@@ -76,7 +101,8 @@ export default class Barycenter {
     this.minX = minX;
     const deltaY = Math.abs(maxY - minY);
     const deltaX = Math.abs(maxX - minX);
-    return deltaX / deltaY;
+    console.log(deltaX, deltaY);
+    return deltaX / deltaY || 0;
   }
   calculateAMmq() {
     return this.weights.reduce((acc, val, i) => {

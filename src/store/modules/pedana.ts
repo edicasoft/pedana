@@ -13,12 +13,14 @@ const getters = {
 };
 const mutations = {
   REWIND(state, idx: number) {
+    //set new weights and weightsHistory
     state.weights = state.weightsHistory[idx];
     state.weightsHistory.length = idx + 1;
-    // console.log("weightsHistory", state.weightsHistory);
-    state.generalBarycenterHistory.length = idx + 1;
-    state.leftBarycenterHistory.length = idx + 1;
-    state.rightBarycenterHistory.length = idx + 1;
+    //move two steps back, because later we will move one step forward with move()
+    // -1 = -2 + 1
+    state.generalBarycenterHistory.length = idx;
+    state.leftBarycenterHistory.length = idx;
+    state.rightBarycenterHistory.length = idx;
   },
   CLEAR_HISTORY(state) {
     state.weights = [];
@@ -30,20 +32,21 @@ const mutations = {
   SET_WEIGHTS(state, data) {
     state.weights = data;
     state.weightsHistory.push(data);
+    console.log("SET_WEIGHTS", state.weightsHistory);
   },
-  ADD_TO_HISTORY(state, { general, left, right }) {
+  ADD_BARYCENTERS_TO_HISTORY(state, { general, left, right }) {
     state.generalBarycenterHistory.push(general);
     state.leftBarycenterHistory.push(left);
     state.rightBarycenterHistory.push(right);
   }
 };
 const actions = {
-  addToHistory({ commit }, payload) {
-    commit("ADD_TO_HISTORY", payload);
+  addBarycentersToHistory({ commit }, payload) {
+    commit("ADD_BARYCENTERS_TO_HISTORY", payload);
   },
   rewindData({ commit, state }, idx) {
     commit("REWIND", idx);
-    return state.weightsHistory[idx];
+    return state.weightsHistory;
   },
   //TODO::check interval on desktop app
   readFromData({ commit }, payload) {
@@ -53,7 +56,7 @@ const actions = {
       timeout = setTimeout(() => {
         commit("SET_WEIGHTS", payload);
         resolve(payload);
-      }, 1000 / 900);
+      }, 1000 / 10);
       // });
       //console.log("end read data");
     });

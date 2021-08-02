@@ -148,14 +148,7 @@ export default Vue.extend({
     zoom: 1,
     error: false,
     isProcessing: false,
-    readingsIdx: 0,
-    //****IDEAL WEIGHTS****
-    //  leftWeights: [11.1, 11.1, 11.1],
-    //rightWeights: [11.1, 11.1, 11.1],
-
-    // leftWeights: [11.6, 12.1, 7.9],
-    // rightWeights: [13.2, 14.1, 7.7],
-
+    readingsIdx: -1,
     readingData: data,
     isEndReading: false
   }),
@@ -195,7 +188,7 @@ export default Vue.extend({
     displayNumber,
     ...mapActions("pedana", [
       "getMeasurements",
-      "addToHistory",
+      "addBarycentersToHistory",
       "readFromData",
       "rewindData"
     ]),
@@ -204,17 +197,19 @@ export default Vue.extend({
       if (this.readingsIdx <= 0) return;
       this.pause();
       this.readingsIdx--;
-      this.getPrevReadings();
+      console.log("readingsIdx", this.readingsIdx);
+      this.rewind();
     },
     next() {
       if (this.readingsIdx >= this.readingData.length - 1) return;
       this.pause();
       this.readingsIdx++;
+      console.log("readingsIdx", this.readingsIdx);
       this.getReadings();
     },
     pause() {
       this.isProcessing = false;
-      this.play();
+      // this.play();
     },
     restart() {
       this.readingsIdx = 0;
@@ -230,10 +225,13 @@ export default Vue.extend({
       this.isProcessing = !this.isProcessing;
       this.play();
     },
-    async getPrevReadings() {
+    async rewind() {
       const res = await this.rewindData(this.readingsIdx);
 
-      if (res && res.length && !this.error) {
+      generalBarycenter.resetDataToIndex(this.readingsIdx);
+      leftBarycenter.resetDataToIndex(this.readingsIdx);
+      rightBarycenter.resetDataToIndex(this.readingsIdx);
+      if (!this.error) {
         requestAnimationFrame(() => {
           this.update();
         });
@@ -252,6 +250,7 @@ export default Vue.extend({
     async play() {
       try {
         if (!this.isProcessing) return;
+        if (this.readingsIdx < 0) this.readingsIdx = 0;
         if (this.readingsIdx < this.readingData.length) {
           const res = await this.readFromData(
             this.readingData[this.readingsIdx]
@@ -274,6 +273,9 @@ export default Vue.extend({
     },
     connectBarycenters() {
       c.drawLine(leftBarycenter, rightBarycenter, "red");
+    },
+    drawHistory() {
+      c.drawLine(leftBarycenter, rightBarycenter, "grey");
     },
     displayWeights() {
       if (this.weights.length === 0) return;
@@ -305,7 +307,6 @@ export default Vue.extend({
     },
     update(): void {
       try {
-        //        console.log("update");
         c.clear();
         this.displayWeights();
 
@@ -314,6 +315,7 @@ export default Vue.extend({
         generalBarycenter.move(this.weights);
         leftBarycenter.move(this.leftWeights);
         rightBarycenter.move(this.rightWeights);
+        console.log("move", this.weights);
 
         const general = {
           x: generalBarycenter.x,
@@ -327,7 +329,11 @@ export default Vue.extend({
           x: rightBarycenter.x,
           y: rightBarycenter.y
         };
-        this.addToHistory({ general, left, right });
+        this.addBarycentersToHistory({ general, left, right });
+
+        leftBarycenter.drawOld(ctx);
+        generalBarycenter.drawOld(ctx);
+        rightBarycenter.drawOld(ctx);
 
         this.connectBarycenters();
         leftBarycenter.draw(ctx);
