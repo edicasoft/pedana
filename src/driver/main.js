@@ -8,7 +8,7 @@ console.log("start");
 // });
 //
 
-function Device() {
+export default function Device() {
   this.isConnected = false;
   this._connecting = false;
   this._callbacks = {
@@ -98,7 +98,8 @@ function Device() {
     };
 
     this.setReadings = readings => {
-      this.latestReadings = readings.split("!").map(s => parseInt(s));
+      const _tmp = readings.split("!").map(s => parseInt(s));
+      this.latestReadings = [_tmp[2], _tmp[0], _tmp[1]];
       if (this.platformCode == "left") {
         device.sendReadings();
       }
@@ -173,22 +174,23 @@ function Device() {
   };
   this.initDevice(); // init
 }
+//******---Example of using----****
 
-const device = new Device();
+// const device = new Device();
 
-device.on("data", data => {
-  console.log("data:", data);
-});
+// device.on("data", data => {
+//   console.log("data:", data);
+// });
 
-device.on("connect", data => {
-  console.log("connect:", data);
-  setTimeout(device.startReading, 2000);
-  setTimeout(device.haltReading, 12000);
-});
+// device.on("connect", data => {
+//   console.log("connect:", data);
+//   setTimeout(device.startReading, 2000);
+//   setTimeout(device.haltReading, 12000);
+// });
 
-device.on("disconnect", data => {
-  console.log("connect:", data);
-});
+// device.on("disconnect", data => {
+//   console.log("connect:", data);
+// });
 
 // async function findDevice() {
 //   console.log("findDevice");

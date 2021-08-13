@@ -1,18 +1,25 @@
+// @ts-nocheck
 "use strict";
 
 import { app, protocol, BrowserWindow } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
+import Device from "@/driver/main.js";
+import pedana from "./store/modules/pedana";
+/*eslint-disable*/
+const ipc = require("electron").ipcMain;
+
 const isDevelopment = process.env.NODE_ENV !== "production";
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true } }
 ]);
+let win = null;
 
 async function createWindow() {
   // Create the browser window.
-  const win = new BrowserWindow({
+  win = new BrowserWindow({
     width: 1400,
     height: 800,
     webPreferences: {
@@ -26,12 +33,31 @@ async function createWindow() {
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL as string);
+
     if (!process.env.IS_TEST) win.webContents.openDevTools();
   } else {
     createProtocol("app");
     // Load the index.html when not in development
     win.loadURL("app://./index.html");
   }
+  const pedana = new Device();
+
+  pedana.on("data", data => {
+    console.log("data:", data);
+    win.webContents.send("data", data);
+  });
+
+  pedana.on("connect", data => {
+    console.log("connect:", data);
+    win.webContents.send("is-connected", true);
+    setTimeout(pedana.startReading, 2000);
+    // setTimeout(pedana.haltReading, 12000);
+  });
+
+  pedana.on("disconnect", data => {
+    win.webContents.send("is-connected", false);
+  });
+  win.webContents.send("is-connected", pedana.isConnected);
 }
 
 // Quit when all windows are closed.
@@ -53,6 +79,8 @@ app.on("activate", () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on("ready", async () => {
+  //TODO::test this
+  console.log("onReady");
   if (isDevelopment && !process.env.IS_TEST) {
     // Install Vue Devtools
     try {

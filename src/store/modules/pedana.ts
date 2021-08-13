@@ -52,27 +52,16 @@ const actions = {
   readFromData({ commit }, payload) {
     return new Promise(resolve => {
       if (timeout) clearTimeout(timeout);
-      // payload.forEach((item, i) => {
       timeout = setTimeout(() => {
         commit("SET_WEIGHTS", payload);
         resolve(payload);
       }, 1000 / 10);
-      // });
       //console.log("end read data");
     });
+  },
+  setMeasurements({ commit }, payload) {
+    commit("SET_WEIGHTS", payload);
   }
-  // getMeasurements({ commit }, payload) {
-  //   return new Promise((resolve, reject) => {
-  //     commit("CLEAR_HISTORY");
-  //     if (timeout) clearTimeout(timeout);
-  //     payload.forEach((item, i) => {
-  //       timeout = setTimeout(() => {
-  //         commit("SET_WEIGHTS", item);
-  //         resolve(item);
-  //       }, i * 100);
-  //     });
-  //   });
-  // }
 };
 export default {
   state,

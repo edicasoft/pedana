@@ -34,6 +34,7 @@ const images = [
   `img/triangle-green.png`,
   "img/triangle-yellow.png"
 ];
+const Hz = 10;
 const data = [
   [8.0859375, 11.54296875, 11.81640625, 11.42578125, 13.0859375, 14.3359375],
   [8.0078125, 11.23046875, 12.67578125, 10.99609375, 12.34375, 14.98046875],
@@ -122,5 +123,6 @@ export {
   idealBarycenterLeftX,
   idealBarycenterRightX,
   images,
-  data
+  data,
+  Hz
 };

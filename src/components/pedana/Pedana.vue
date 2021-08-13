@@ -1,7 +1,76 @@
 <template>
   <v-container fluid>
+    <v-alert
+      v-if="!isConnected && !isReady"
+      type="error"
+      transition="scale-transition"
+    >
+      Please, connect your Pedana.
+    </v-alert>
+    <v-alert v-else-if="!isReady" type="info" transition="scale-transition">
+      Connecting...
+    </v-alert>
+
     <v-row>
       <v-col>
+        <!-- Read from File controls -->
+        <v-sheet v-if="readingData.length" class="mt-5">
+          <v-btn icon @click="back" :disabled="readingsIdx <= 0"
+            ><v-icon>mdi-step-backward</v-icon></v-btn
+          >
+
+          <v-btn @click="start" icon>
+            <v-icon>{{
+              isProcessing && readingsIdx > 0 ? "mdi-pause" : "mdi-play"
+            }}</v-icon>
+          </v-btn>
+
+          <v-btn
+            icon
+            @click="next"
+            :disabled="readingsIdx >= readingData.length - 1"
+            ><v-icon>mdi-step-forward</v-icon></v-btn
+          >
+          {{ readingsIdx }}
+        </v-sheet>
+        <!--  -->
+        <!-- Stream controls -->
+        <v-sheet
+          v-else-if="isReady"
+          max-width="600"
+          class="pa-3 d-flex align-center"
+          rounded
+          color="white"
+        >
+          <v-btn
+            @click="toggleStreaming"
+            class="mx-2"
+            fab
+            dark
+            small
+            color="green"
+          >
+            <v-icon dark>
+              {{ isStreamingPaused ? "mdi-play" : "mdi-pause" }}
+            </v-icon>
+          </v-btn>
+
+          <v-icon color="green" dark>mdi-timer-outline</v-icon>
+          {{ readingsIdx > 0 ? readingsIdx / Hz : 0 }}
+
+          <v-btn
+            v-if="weights.length > 0"
+            @click="restart"
+            color="red"
+            small
+            rounded
+            dark
+            class="ml-auto"
+          >
+            <v-icon dark left>mdi-autorenew</v-icon>
+            Reset
+          </v-btn>
+        </v-sheet>
         <v-sheet class="viewport" :width="width" :height="height">
           <canvas id="barycenters-layer"> </canvas>
           <BackgroundLayer :width="width" :height="height" />
@@ -42,29 +111,13 @@
             </div>
           </div>
         </v-sheet>
-
-        <v-sheet v-if="readingData.length" class="mt-5">
-          <v-btn icon @click="back" :disabled="readingsIdx <= 0"
-            ><v-icon>mdi-step-backward</v-icon></v-btn
-          >
-
-          <v-btn @click="start" icon>
-            <v-icon>{{
-              isProcessing && readingsIdx > 0 ? "mdi-pause" : "mdi-play"
-            }}</v-icon>
-          </v-btn>
-
-          <v-btn
-            icon
-            @click="next"
-            :disabled="readingsIdx >= readingData.length - 1"
-            ><v-icon>mdi-step-forward</v-icon></v-btn
-          >
-          {{ readingsIdx }}
-        </v-sheet>
       </v-col>
-      <v-col>
+
+      <!-- CHARTS -->
+      <v-col v-if="weights.length > 0">
         <div class="d-flex mb-3">
+          <v-icon class="mr-3">mdi-chart-line</v-icon>
+
           <v-btn
             @click="showTortionChart = true"
             small
@@ -82,7 +135,22 @@
           <v-btn @click="showLeftRightChart = true" small color="primary"
             >Right & Left</v-btn
           >
+          <v-menu offset-y class="ml-auto d-flex">
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn color="secondary" v-bind="attrs" v-on="on" small>
+                <v-icon left>mdi-import</v-icon>
+                File
+              </v-btn>
+            </template>
+            <v-list>
+              <v-list-item>
+                <v-list-item-title>Export</v-list-item-title>
+                <v-list-item-title>Import</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
         </div>
+        <!-- ----- -->
 
         <MainChart />
       </v-col>
@@ -111,7 +179,7 @@ import {
   leftPlatformCells,
   rightPlatformCells,
   images,
-  data
+  Hz
 } from "@/common/constants.js";
 import { mapState, mapGetters, mapActions } from "vuex";
 import BackgroundLayer from "@/components/pedana/BackgroundLayer.vue";
@@ -125,6 +193,9 @@ import {
 import TortionChart from "@/components/charts/TortionChart.vue";
 import GeneralBarycenterChart from "@/components/charts/GeneralBarycenterChart.vue";
 import LeftRightBarycenterChart from "@/components/charts/LeftRightBarycenterChart.vue";
+/* eslint-disable */
+const electron = window.require("electron"),
+  ipc = electron.ipcRenderer;
 
 const cells = leftPlatformCells.concat(rightPlatformCells);
 let c: Canvas;
@@ -149,8 +220,13 @@ export default Vue.extend({
     error: false,
     isProcessing: false,
     readingsIdx: -1,
-    readingData: data,
-    isEndReading: false
+    //TODO::read from file
+    readingData: [],
+    isEndReading: false,
+    isConnected: false,
+    isStreamingPaused: true,
+    isReady: false,
+    Hz: Hz
   }),
   destroyed() {
     c.clear();
@@ -159,6 +235,15 @@ export default Vue.extend({
     c = new Canvas("barycenters-layer", 600, 600, images);
     ctx = c.ctx;
     c.preloadImages(this.play);
+    ipc.on("is-connected", (event, args) => {
+      this.isConnected = args;
+      console.log("is-connected", args);
+    });
+    ipc.on("data", (event, args) => {
+      this.isReady = true;
+      if (!this.isStreamingPaused) this.startReading(args);
+      console.log("data", args);
+    });
   },
   computed: {
     ...mapGetters("pedana", ["leftWeights", "rightWeights"]),
@@ -190,7 +275,8 @@ export default Vue.extend({
       "getMeasurements",
       "addBarycentersToHistory",
       "readFromData",
-      "rewindData"
+      "rewindData",
+      "setMeasurements"
     ]),
 
     back() {
@@ -219,6 +305,18 @@ export default Vue.extend({
       leftBarycenter.reset();
       rightBarycenter.reset();
       c.clear();
+    },
+    toggleStreaming() {
+      this.isStreamingPaused = !this.isStreamingPaused;
+    },
+    startReading(data) {
+      this.isStreamingPaused = false;
+
+      this.setMeasurements(data);
+      requestAnimationFrame(() => {
+        this.update();
+        this.readingsIdx++;
+      });
     },
     start() {
       if (this.isEndReading) this.restart();
