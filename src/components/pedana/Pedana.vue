@@ -1,20 +1,13 @@
 <template>
   <v-container fluid>
-    <v-alert
-      v-if="!isConnected && !isReady"
-      type="error"
-      transition="scale-transition"
-    >
-      Please, connect your Pedana.
-    </v-alert>
-    <v-alert v-else-if="!isReady" type="info" transition="scale-transition">
-      Connecting...
-    </v-alert>
+    <not-connected-dialog v-if="!isConnected && !isReady" />
+    <connecting-dialog v-else-if="!isReady" />
+    <import-file-btn @inportedData="onImport" />
 
     <v-row>
       <v-col>
         <!-- Read from File controls -->
-        <v-sheet v-if="readingData.length" class="mt-5">
+        <v-sheet v-if="readingsData.length" class="mt-5">
           <v-btn icon @click="back" :disabled="readingsIdx <= 0"
             ><v-icon>mdi-step-backward</v-icon></v-btn
           >
@@ -28,7 +21,7 @@
           <v-btn
             icon
             @click="next"
-            :disabled="readingsIdx >= readingData.length - 1"
+            :disabled="readingsIdx >= readingsData.length - 1"
             ><v-icon>mdi-step-forward</v-icon></v-btn
           >
           {{ readingsIdx }}
@@ -135,20 +128,6 @@
           <v-btn @click="showLeftRightChart = true" small color="primary"
             >Right & Left</v-btn
           >
-          <v-menu offset-y class="ml-auto d-flex">
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn color="secondary" v-bind="attrs" v-on="on" small>
-                <v-icon left>mdi-import</v-icon>
-                File
-              </v-btn>
-            </template>
-            <v-list>
-              <v-list-item>
-                <v-list-item-title>Export</v-list-item-title>
-                <v-list-item-title>Import</v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-menu>
         </div>
         <!-- ----- -->
 
@@ -193,6 +172,10 @@ import {
 import TortionChart from "@/components/charts/TortionChart.vue";
 import GeneralBarycenterChart from "@/components/charts/GeneralBarycenterChart.vue";
 import LeftRightBarycenterChart from "@/components/charts/LeftRightBarycenterChart.vue";
+
+import NotConnectedDialog from "@/components/dialogs/NotConnectedDialog.vue";
+import ConnectingDialog from "@/components/dialogs/ConnectingDialog.vue";
+import ImportFileBtn from "@/components/file/ImportFileBtn.vue";
 /* eslint-disable */
 const electron = window.require("electron"),
   ipc = electron.ipcRenderer;
@@ -208,7 +191,11 @@ export default Vue.extend({
     MainChart,
     TortionChart,
     GeneralBarycenterChart,
-    LeftRightBarycenterChart
+    LeftRightBarycenterChart,
+    ImportFileBtn,
+    // Dialogs
+    NotConnectedDialog,
+    ConnectingDialog
   },
   data: () => ({
     showTortionChart: false,
@@ -221,7 +208,7 @@ export default Vue.extend({
     isProcessing: false,
     readingsIdx: -1,
     //TODO::read from file
-    readingData: [],
+    readingsData: [],
     isEndReading: false,
     isConnected: false,
     isStreamingPaused: true,
@@ -241,7 +228,7 @@ export default Vue.extend({
     });
     ipc.on("data", (event, args) => {
       this.isReady = true;
-      if (!this.isStreamingPaused) this.startReading(args);
+      if (!this.isStreamingPaused) this.startReadingPedana(args);
       console.log("data", args);
     });
   },
@@ -270,11 +257,22 @@ export default Vue.extend({
   // },
 
   methods: {
+    onImport(data) {
+      this.readingsData = data;
+      console.log(data, data.length);
+      while (this.readingsIdx < this.readingsData.length) {
+        const res = this.setWeights(this.readingsData[this.readingsIdx]);
+
+        this.update();
+        this.readingsIdx++;
+      }
+    },
     displayNumber,
     ...mapActions("pedana", [
       "getMeasurements",
       "addBarycentersToHistory",
-      "readFromData",
+      "setWeights",
+      "simulateReadFromPedana",
       "rewindData",
       "setMeasurements"
     ]),
@@ -287,11 +285,11 @@ export default Vue.extend({
       this.rewind();
     },
     next() {
-      if (this.readingsIdx >= this.readingData.length - 1) return;
+      if (this.readingsIdx >= this.readingsData.length - 1) return;
       this.pause();
       this.readingsIdx++;
       console.log("readingsIdx", this.readingsIdx);
-      this.getReadings();
+      this.getWeights();
     },
     pause() {
       this.isProcessing = false;
@@ -309,7 +307,7 @@ export default Vue.extend({
     toggleStreaming() {
       this.isStreamingPaused = !this.isStreamingPaused;
     },
-    startReading(data) {
+    startReadingPedana(data) {
       this.isStreamingPaused = false;
 
       this.setMeasurements(data);
@@ -335,8 +333,10 @@ export default Vue.extend({
         });
       }
     },
-    async getReadings() {
-      const res = await this.readFromData(this.readingData[this.readingsIdx]);
+    async getWeights() {
+      const res = await this.simulateReadFromPedana(
+        this.readingsData[this.readingsIdx]
+      );
 
       if (res && res.length && !this.error) {
         requestAnimationFrame(() => {
@@ -349,9 +349,9 @@ export default Vue.extend({
       try {
         if (!this.isProcessing) return;
         if (this.readingsIdx < 0) this.readingsIdx = 0;
-        if (this.readingsIdx < this.readingData.length) {
-          const res = await this.readFromData(
-            this.readingData[this.readingsIdx]
+        if (this.readingsIdx < this.readingsData.length) {
+          const res = await this.simulateReadFromPedana(
+            this.readingsData[this.readingsIdx]
           );
 
           if (res && res.length && !this.error) {

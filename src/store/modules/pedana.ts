@@ -48,8 +48,11 @@ const actions = {
     commit("REWIND", idx);
     return state.weightsHistory;
   },
+  setWeights({ commit }, payload) {
+    commit("SET_WEIGHTS", payload);
+  },
   //TODO::check interval on desktop app
-  readFromData({ commit }, payload) {
+  simulateReadFromPedana({ commit }, payload) {
     return new Promise(resolve => {
       if (timeout) clearTimeout(timeout);
       timeout = setTimeout(() => {
