@@ -2,10 +2,11 @@
   <v-container fluid>
     <not-connected-dialog v-if="!isConnected && !isReady" />
     <connecting-dialog v-else-if="!isReady" />
-    <import-file-btn @inportedData="onImport" />
 
     <v-row>
       <v-col>
+        <import-file-btn @inportedData="onImport" />
+
         <!-- Read from File controls -->
         <v-sheet v-if="readingsData.length" class="mt-5">
           <v-btn icon @click="back" :disabled="readingsIdx <= 0"
@@ -14,7 +15,7 @@
 
           <v-btn @click="start" icon>
             <v-icon>{{
-              isProcessing && readingsIdx > 0 ? "mdi-pause" : "mdi-play"
+              isPlaying && readingsIdx > 0 ? "mdi-pause" : "mdi-play"
             }}</v-icon>
           </v-btn>
 
@@ -24,7 +25,8 @@
             :disabled="readingsIdx >= readingsData.length - 1"
             ><v-icon>mdi-step-forward</v-icon></v-btn
           >
-          {{ readingsIdx }}
+          <v-icon color="green" dark>mdi-timer-outline</v-icon>
+          {{ readingsIdx > 0 ? (readingsIdx / Hz).toFixed(2) : 0 }}
         </v-sheet>
         <!--  -->
         <!-- Stream controls -->
@@ -205,9 +207,8 @@ export default Vue.extend({
     height: 600,
     zoom: 1,
     error: false,
-    isProcessing: false,
+    isPlaying: false,
     readingsIdx: -1,
-    //TODO::read from file
     readingsData: [],
     isEndReading: false,
     isConnected: false,
@@ -259,13 +260,17 @@ export default Vue.extend({
   methods: {
     onImport(data) {
       this.readingsData = data;
-      console.log(data, data.length);
+      this.readingsIdx = 0;
+      console.log(data);
       while (this.readingsIdx < this.readingsData.length) {
-        const res = this.setWeights(this.readingsData[this.readingsIdx]);
+        console.log(this.readingsIdx);
 
+        const res = this.setWeights(this.readingsData[this.readingsIdx]);
         this.update();
         this.readingsIdx++;
       }
+      this.isPlaying = false;
+      this.isEndReading = true;
     },
     displayNumber,
     ...mapActions("pedana", [
@@ -292,7 +297,7 @@ export default Vue.extend({
       this.getWeights();
     },
     pause() {
-      this.isProcessing = false;
+      this.isPlaying = false;
       // this.play();
     },
     restart() {
@@ -318,7 +323,7 @@ export default Vue.extend({
     },
     start() {
       if (this.isEndReading) this.restart();
-      this.isProcessing = !this.isProcessing;
+      this.isPlaying = !this.isPlaying;
       this.play();
     },
     async rewind() {
@@ -347,7 +352,7 @@ export default Vue.extend({
     },
     async play() {
       try {
-        if (!this.isProcessing) return;
+        if (!this.isPlaying) return;
         if (this.readingsIdx < 0) this.readingsIdx = 0;
         if (this.readingsIdx < this.readingsData.length) {
           const res = await this.simulateReadFromPedana(
@@ -362,14 +367,14 @@ export default Vue.extend({
             });
           }
         } else {
-          this.isProcessing = false;
+          this.isPlaying = false;
           this.isEndReading = true;
         }
       } catch (e) {
         console.error(e);
       }
     },
-    connectBarycenters() {
+    drawConnectBarycenters() {
       c.drawLine(leftBarycenter, rightBarycenter, "red");
     },
     drawHistory() {
@@ -403,6 +408,27 @@ export default Vue.extend({
       }
       ctx.restore();
     },
+    moveBarycenters(): void {
+      console.log("moveBarycenters");
+      generalBarycenter.move(this.weights);
+      leftBarycenter.move(this.leftWeights);
+      rightBarycenter.move(this.rightWeights);
+      console.log("move", this.weights);
+
+      const general = {
+        x: generalBarycenter.x,
+        y: generalBarycenter.y
+      };
+      const left = {
+        x: leftBarycenter.x,
+        y: leftBarycenter.y
+      };
+      const right = {
+        x: rightBarycenter.x,
+        y: rightBarycenter.y
+      };
+      this.addBarycentersToHistory({ general, left, right });
+    },
     update(): void {
       try {
         c.clear();
@@ -410,30 +436,13 @@ export default Vue.extend({
 
         c.transdormCoordinates();
 
-        generalBarycenter.move(this.weights);
-        leftBarycenter.move(this.leftWeights);
-        rightBarycenter.move(this.rightWeights);
-        console.log("move", this.weights);
-
-        const general = {
-          x: generalBarycenter.x,
-          y: generalBarycenter.y
-        };
-        const left = {
-          x: leftBarycenter.x,
-          y: leftBarycenter.y
-        };
-        const right = {
-          x: rightBarycenter.x,
-          y: rightBarycenter.y
-        };
-        this.addBarycentersToHistory({ general, left, right });
+        this.moveBarycenters();
 
         leftBarycenter.drawOld(ctx);
         generalBarycenter.drawOld(ctx);
         rightBarycenter.drawOld(ctx);
 
-        this.connectBarycenters();
+        this.drawConnectBarycenters();
         leftBarycenter.draw(ctx);
         generalBarycenter.draw(ctx);
         rightBarycenter.draw(ctx);

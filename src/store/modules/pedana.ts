@@ -49,10 +49,13 @@ const actions = {
     return state.weightsHistory;
   },
   setWeights({ commit }, payload) {
+    console.log("setWeights action");
     commit("SET_WEIGHTS", payload);
   },
   //TODO::check interval on desktop app
   simulateReadFromPedana({ commit }, payload) {
+    console.log("simulateReadFromPedana");
+
     return new Promise(resolve => {
       if (timeout) clearTimeout(timeout);
       timeout = setTimeout(() => {
@@ -63,6 +66,7 @@ const actions = {
     });
   },
   setMeasurements({ commit }, payload) {
+    console.log("setMeasurements");
     commit("SET_WEIGHTS", payload);
   }
 };

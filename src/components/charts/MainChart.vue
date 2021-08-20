@@ -7,7 +7,6 @@
         maxHeight: '600px',
         maxWidth: '1200px'
       }"
-      v-if="generalBarycenterHistory.length"
       :chart-data="datacollection"
       :options="options"
     ></line-chart>
@@ -81,8 +80,11 @@ export default Vue.extend({
   },
   //TODO::write getter with set get
   watch: {
-    generalBarycenterHistory() {
-      this.fillData();
+    generalBarycenterHistory: {
+      handler() {
+        this.fillData();
+      },
+      immediate: true
     }
   },
   computed: {

@@ -1,7 +1,7 @@
 <template>
-  <v-btn color="secondary" small @click="importFile">
+  <v-btn color="primary" small @click="importFile">
     <v-icon left>mdi-import</v-icon>
-    Import from file
+    Import
   </v-btn>
 </template>
 <script>
@@ -30,7 +30,10 @@ export default {
             const res = data
               .toString()
               .split(/[\r\n]+/)
-              .map(item => item.split(", "));
+              .map(item => {
+                const arr = item.split(", ");
+                return arr.map(el => parseFloat(el));
+              });
             this.$emit("inportedData", res);
             console.log(res);
           });
