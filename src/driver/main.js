@@ -10,6 +10,7 @@ console.log("start");
 
 export default function Device() {
   this.isConnected = false;
+  this.isErrored = false;
   this._connecting = false;
   this._callbacks = {
     connect: [],
@@ -31,6 +32,14 @@ export default function Device() {
     right: null
   };
 
+  this.isPortConnected = portPath => {
+    const isLeft =
+      this.platforms.left && this.platforms.left.portPath == portPath;
+    const isRight =
+      this.platforms.right && this.platforms.right.portPath == portPath;
+    return isLeft || isRight;
+  };
+
   this.addPlatform = platform => {
     console.log("adding platform", platform.platformCode);
     this.platforms[platform.platformCode] = platform;
@@ -45,19 +54,24 @@ export default function Device() {
   this.deletePlatform = platformCode => {
     this.platforms[platformCode] = null;
     const _isConnected = this.isConnected;
-    this.isConnected = false;
+    this.isConnected = !!this.platforms.left && !!this.platforms.right;
     if (_isConnected != this.isConnected) {
       this.emit("disconnect", "device disconnected");
+      console.log("fired `disconnect` event");
     }
   };
 
   this.sendReadings = () => {
-    console.log("device.sendReadings");
-    const data = this.platforms.left.latestReadings.concat(
-      this.platforms.right.latestReadings
-    );
-    if (data.length == 6) {
-      this.emit("data", data);
+    if (this.isConnected) {
+      // console.log("device.sendReadings");
+      const data = this.platforms.left.latestReadings.concat(
+        this.platforms.right.latestReadings
+      );
+      if (data.length == 6) {
+        this.emit("data", data);
+        const tm = process.hrtime();
+        // console.log(`readings sent at: ${tm[0]}.${tm[1]}`);
+      }
     }
   };
 
@@ -70,108 +84,143 @@ export default function Device() {
     this.platforms.right.haltReading();
   };
 
-  const device = this;
+  this.initPlatform = async portPath => {
+    return new Promise((resolve, reject) => {
+      const platform = {};
+      platform.portPath = portPath;
+      platform.port = new SerialPort(portPath, { baudRate: 115200 });
+      platform.portOpened = false;
+      //   console.log(port);
+      platform.status = "init"; // pause (h), handshake (l/r), readings, error (e)
+      platform.platformCode = null;
+      platform.handshakeChar = "";
+      platform.latestReadings = [];
+      platform.port.on("error", err => {
+        console.log(`${platform.portPath}`, "Error: ", err.message);
+        platform.port.close();
+        reject(err);
+      });
 
-  const Platform = function(portPath) {
-    this.port = new SerialPort(portPath, { baudRate: 115200 });
-    //   console.log(port);
-    this.status = "handshake"; // pause (h), handshake (l/r), readings, error (e)
-    this.platformCode = null;
-    this.handshakeChar = "";
-    this.latestReadings = [];
-    this.port.on("error", err => {
-      console.log("Error: ", err.message);
-      //this.port.close();
-    });
+      platform.port.on("open", () => {
+        // open logic
+        platform.portOpened = true;
+      });
+      platform.port.on("disconnect", err => {
+        console.log("Platform disconnected. Error: ", err);
+        this.deletePlatform(platform.platformCode);
+      });
+      platform.port.on("close", err => {
+        console.log("Platform disconnected. Error: ", err);
+        this.deletePlatform(platform.platformCode);
+      });
 
-    this.port.on("open", function() {
-      // open logic
-    });
-
-    this.startReading = () => {
-      this.port.write("s");
-      this.status = "readings";
-    };
-    this.haltReading = () => {
-      this.port.write("h");
-      this.status = "pause";
-    };
-
-    this.setReadings = readings => {
-      const _tmp = readings.split("!").map(s => parseInt(s));
-      this.latestReadings = [_tmp[2], _tmp[0], _tmp[1]];
-      if (this.platformCode == "left") {
-        device.sendReadings();
-      }
-    };
-
-    this.parser = this.port.pipe(new Readline());
-    this.parser.on("data", ln => {
-      ln = ln.replace(/\r?\n|\r/, "");
-      const tm = process.hrtime();
-      console.log(
-        `${tm[0]}.${tm[1]}(${this.status},${this.platformCode}) incoming: ${ln}`
-      );
-      if (this.status == "handshake") {
-        console.log(`status handshake`);
-        if (ln == "l") {
-          this.handshakeChar = "l";
-          this.platformCode = "left";
-          this.status = "pause";
-          this.port.write(this.handshakeChar);
-          device.addPlatform(this);
-        } else if (ln == "r") {
-          this.handshakeChar = "r";
-          this.platformCode = "right";
-          this.status = "pause";
-          this.port.write(this.handshakeChar);
-          device.addPlatform(this);
-        } else if (ln == "h") {
-          console.log("unplug and plug the device");
-          throw "wrong state";
-        } else {
-          // if we're handshaking and there's no handshake char is coming then it's not our device
-          //this.port.close();
+      setTimeout(() => {
+        if (!platform.portOpened) {
+          reject("PORT_OPEN_TIMEOUT");
         }
-      }
-      if (ln == "e") {
-        this.status = "error";
-        if (this.platformCode) {
-          device.deletePlatform(this.platformCode);
-          this.port.write(this.handshakeChar);
-          this.port.write(this.handshakeChar);
-          this.port.write(this.handshakeChar);
-          this.status = "handshake";
-        } else {
-          this.port.close();
+      }, 1000);
+
+      platform.parser = platform.port.pipe(new Readline());
+
+      platform.parser.on("data", ln => {
+        ln = ln.replace(/\r?\n|\r/, "");
+        console.log(
+          `${platform.portPath}(${platform.status},${platform.platformCode}) incoming: ${ln}`
+        );
+
+        if (platform.status == "init") {
+          // check if we received readings (device was already connected)
+          if (/-?\d{5}!-?\d{5}!-?\d{5}/.test(ln)) {
+            // pause and re-initialize
+            //platform.port.write("h");
+            //console.log("re-init with `rrr`");
+            //console.log(`${platform.portPath}`, "pause with `h`");
+            //return;
+            platform.port.close();
+            return reject("INIT_ERROR");
+          }
+          if (ln == "e" || ln == "h") {
+            // error state
+            // platform.port.write("rrr");
+            // console.log(`${platform.portPath}`, "re-init with `rrr`");
+            platform.port.close();
+            return reject("INIT_ERROR");
+          }
+          if (ln == "l" || ln == "r") {
+            platform.handshakeChar = ln;
+            platform.platformCode = ln == "l" ? "left" : "right";
+            platform.status = "pause";
+            platform.port.write(platform.handshakeChar);
+            return resolve(platform);
+          }
+          platform.port.close();
+          return reject("UNKNOWN_DEVICE");
         }
-      } else if (ln == "h") {
-        //this.port.write(this.handshakeChar);
-        this.status = "pause";
-      } else if (this.status == "readings") {
-        // supposedly readings
-        this.setReadings(ln);
-      }
+
+        if (
+          /-?\d{5}!-?\d{5}!-?\d{5}/.test(ln) &&
+          platform.status == "readings"
+        ) {
+          platform.setReadings(ln);
+        }
+
+        if (ln == "e") {
+          platform.status = "error";
+          this.deletePlatform(platform.platformCode);
+          platform.port.close();
+        }
+      });
+
+      // methods of the platform
+      platform.startReading = () => {
+        platform.port.write("s");
+        platform.status = "readings";
+      };
+      platform.haltReading = () => {
+        platform.port.write("h");
+        platform.status = "pause";
+      };
+
+      platform.setReadings = readings => {
+        const _tmp = readings.split("!").map(s => parseInt(s));
+        platform.latestReadings = [_tmp[2], _tmp[0], _tmp[1]];
+        if (platform.platformCode == "left") {
+          this.sendReadings();
+        }
+      };
     });
   };
 
   this.initDevice = async () => {
-    if (!this.isConnected) {
+    if (!this.isConnected && !this._connecting) {
       console.log("init device");
       this._connecting = true;
       const ports = await SerialPort.list();
-      ports.forEach(portInfo => {
+      for (const p in ports) {
+        const portInfo = ports[p];
         if (
           portInfo.manufacturer &&
-          portInfo.manufacturer.toLowerCase().includes("arduino")
+          portInfo.manufacturer.toLowerCase().includes("arduino") &&
+          !this.isPortConnected(portInfo.path)
         ) {
           console.log(`init port: ${portInfo.path}`);
-          new Platform(portInfo.path);
+          try {
+            const p = await this.initPlatform(portInfo.path);
+            this.addPlatform(p);
+          } catch (e) {
+            console.log("init device error:", e);
+            this.isErrored = true;
+            this.emit("error", "device connection error: " + e);
+          }
         }
-      });
+      }
+      this._connecting = false;
+      if (!this.isConnected) {
+        setTimeout(this.initDevice, 1000);
+      }
     }
-    setTimeout(this.initDevice, 1000);
   };
+
   this.initDevice(); // init
 }
 //******---Example of using----****
