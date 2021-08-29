@@ -5,45 +5,59 @@
 
     <v-row>
       <v-col>
-        <ImportFileBtn @importedData="onImport" class="ml-2" />
-        <ExportToFileBtn v-if="readingsData.length" class="ml-2" />
+        <!--- Streaming from Pedana Play Control --->
+        <template v-if="isReady">
+          <v-btn @click="toggleStreaming" class="mx-2" small>
+            <v-icon left>
+              {{ isEndStreaming ? "mdi-play" : "mdi-pause" }}
+            </v-icon>
+            {{ isEndStreaming ? "New Session" : "STOP" }}
+          </v-btn>
+        </template>
+
+        <ImportFileBtn
+          v-if="isEndStreaming"
+          @importData="onImport"
+          class="ml-2"
+        />
+        <ExportToFileBtn
+          v-if="readingsData.length && isEndStreaming"
+          :data="readingsData"
+          class="ml-2"
+        />
 
         <!-- CONTROLS -->
         <v-sheet class="mt-3 pa-3 d-flex align-center">
-          <!-- Back -->
-          <v-btn icon @click="back" :disabled="readingsIdx <= 0"
-            ><v-icon>mdi-step-backward</v-icon></v-btn
-          >
-          <!-- Read from File Play Control -->
           <template v-if="readingsData.length">
+            <!-- Back -->
+            <v-btn icon @click="back" :disabled="readingsIdx <= 0"
+              ><v-icon>mdi-step-backward</v-icon></v-btn
+            >
+            <!-- Read from File Play Control -->
             <v-btn @click="start" icon>
               <v-icon>{{
                 isPlaying && readingsIdx > 0 ? "mdi-pause" : "mdi-play"
               }}</v-icon>
             </v-btn>
+            <!-- Forward -->
+            <v-btn
+              icon
+              @click="next"
+              :disabled="readingsIdx >= readingsData.length - 1"
+              ><v-icon>mdi-step-forward</v-icon></v-btn
+            >
           </template>
-          <!--- Streaming from Pedana Play Control --->
-          <template v-else-if="isReady">
-            <v-btn @click="toggleStreaming" class="mx-2" icon>
-              <v-icon>
-                {{ isStreamingPaused ? "mdi-play" : "mdi-pause" }}
-              </v-icon>
-            </v-btn>
-          </template>
-          <!-- Forward -->
-          <v-btn
-            icon
-            @click="next"
-            :disabled="readingsIdx >= readingsData.length - 1"
-            ><v-icon>mdi-step-forward</v-icon></v-btn
-          >
+
           <!--- Timer --->
-          <v-icon color="green" dark>mdi-timer-outline</v-icon>
-          {{ readingsIdx > 0 ? (readingsIdx / Hz).toFixed(2) : 0 }}
+          <template v-if="readingsIdx > 0">
+            <v-icon color="green" dark>mdi-timer-outline</v-icon>
+            {{ readingsIdx > 0 ? (readingsIdx / Hz).toFixed(2) : 0 }}
+          </template>
+
           <!-- Reset ---->
           <v-btn
-            v-if="weights.length > 0"
-            @click="restart"
+            v-if="readingsData.length > 0"
+            @click="reset"
             color="red"
             small
             rounded
@@ -54,6 +68,7 @@
             Reset
           </v-btn>
         </v-sheet>
+
         <!--- END CONTROLS --->
 
         <!--- CANVAS --->
@@ -178,7 +193,7 @@ import NotConnectedDialog from "@/components/dialogs/NotConnectedDialog.vue";
 import ConnectingDialog from "@/components/dialogs/ConnectingDialog.vue";
 import ImportFileBtn from "@/components/file/ImportFileBtn.vue";
 import ExportToFileBtn from "@/components/file/ExportToFileBtn.vue";
-import ImportFile from "@/components/dialogs/ConnectingDialog.vue";
+import _ from "lodash";
 /* eslint-disable */
 const electron = window.require("electron"),
   ipc = electron.ipcRenderer;
@@ -211,10 +226,10 @@ export default Vue.extend({
     error: false,
     isPlaying: false,
     readingsIdx: -1,
-    readingsData: [],
+    readingsData: [] as Array<Array<number>>,
     isEndReading: false,
     isConnected: false,
-    isStreamingPaused: true,
+    isEndStreaming: true,
     isReady: false,
     Hz: Hz
   }),
@@ -227,17 +242,20 @@ export default Vue.extend({
     c.preloadImages(this.play);
     ipc.on("is-connected", (event, args) => {
       this.isConnected = args;
+      if (!args) {
+        this.isReady = false;
+      }
       console.log("is-connected", args);
     });
     ipc.on("data", (event, args) => {
       this.isReady = true;
-      if (!this.isStreamingPaused) this.startReadingPedana(args);
+      if (!this.isEndStreaming) this.startReadingPedana(args);
       console.log("data", args);
     });
   },
   computed: {
     ...mapGetters("pedana", ["leftWeights", "rightWeights"]),
-    ...mapState("pedana", ["weights"]),
+    ...mapState("pedana", ["weights", "weightsHistory"]),
 
     totalWeight(): number {
       return total(this.weights);
@@ -263,9 +281,9 @@ export default Vue.extend({
     onImport(data) {
       this.readingsData = data;
       this.restart();
-      // console.log(data);
+      console.log(data);
       while (this.readingsIdx < this.readingsData.length) {
-        // console.log(this.readingsIdx);
+        console.log(this.readingsIdx);
 
         const res = this.setWeights(this.readingsData[this.readingsIdx]);
         this.update();
@@ -273,7 +291,6 @@ export default Vue.extend({
       }
       this.isPlaying = false;
       this.isEndReading = true;
-      this.isReady = true;
     },
     displayNumber,
     ...mapActions("pedana", [
@@ -304,6 +321,10 @@ export default Vue.extend({
       this.isPlaying = false;
       // this.play();
     },
+    reset() {
+      this.readingsData = [];
+      this.restart();
+    },
     restart() {
       this.readingsIdx = 0;
       this.isEndReading = false;
@@ -314,10 +335,17 @@ export default Vue.extend({
       c.clear();
     },
     toggleStreaming() {
-      this.isStreamingPaused = !this.isStreamingPaused;
+      this.isEndStreaming = !this.isEndStreaming;
+      if (this.isEndStreaming) {
+        this.readingsData = _.cloneDeep(this.weightsHistory);
+        this.isEndReading = true;
+      } else {
+        console.log("start streaming");
+        this.reset();
+      }
     },
-    startReadingPedana(data) {
-      this.isStreamingPaused = false;
+    startReadingPedana(data: number[]) {
+      this.isEndStreaming = false;
 
       this.setMeasurements(data);
       requestAnimationFrame(() => {

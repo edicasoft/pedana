@@ -50,7 +50,7 @@ export default {
                 const arr = item.split(",");
                 return arr.map(el => parseFloat(el));
               });
-            this.$emit("importedData", res);
+            this.$emit("importData", res);
             this.isProcessing = false;
 
             // console.log(res);

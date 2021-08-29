@@ -58,6 +58,7 @@ export default function Device() {
     if (_isConnected != this.isConnected) {
       this.emit("disconnect", "device disconnected");
       console.log("fired `disconnect` event");
+      this.initDevice();
     }
   };
 
@@ -68,7 +69,10 @@ export default function Device() {
         this.platforms.right.latestReadings
       );
       if (data.length == 6) {
-        this.emit("data", data);
+        this.emit(
+          "data",
+          data.map(val => val / 1000 - 0.1)
+        );
         const tm = process.hrtime();
         // console.log(`readings sent at: ${tm[0]}.${tm[1]}`);
       }

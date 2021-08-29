@@ -14,7 +14,6 @@
 <script>
 const app = window.require("electron").remote;
 const dialog = app.dialog;
-import { mapState } from "vuex";
 
 const fs = window.require("fs");
 export default {
@@ -23,15 +22,13 @@ export default {
       isProcessing: false
     };
   },
-  computed: {
-    ...mapState("pedana", ["weightsHistory"])
-  },
+  props: ["data"],
   methods: {
     exportToFile() {
       let content = ``;
-      this.weightsHistory.forEach((element, idx) => {
+      this.data.forEach((element, idx) => {
         content += element;
-        if (idx < this.weightsHistory.length - 1) content += `\n`;
+        if (idx < this.data.length - 1) content += `\n`;
       });
       const d = new Date();
 
