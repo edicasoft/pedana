@@ -1,5 +1,5 @@
 <template>
-  <v-dialog :value="value" @click:outside="close" :max-width="1200">
+  <v-dialog :value="value" @click:outside="close" :max-width="1200" fullscreen>
     <v-card class="pa-3">
       <div class="d-flex align-center justify-space-between pb-3">
         <v-card-title class="pt-0 pb-0">Tortion</v-card-title>

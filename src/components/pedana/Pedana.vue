@@ -5,54 +5,42 @@
 
     <v-row>
       <v-col>
-        <import-file-btn @inportedData="onImport" />
+        <ImportFileBtn @importedData="onImport" class="ml-2" />
+        <ExportToFileBtn v-if="readingsData.length" class="ml-2" />
 
-        <!-- Read from File controls -->
-        <v-sheet v-if="readingsData.length" class="mt-5">
+        <!-- CONTROLS -->
+        <v-sheet class="mt-3 pa-3 d-flex align-center">
+          <!-- Back -->
           <v-btn icon @click="back" :disabled="readingsIdx <= 0"
             ><v-icon>mdi-step-backward</v-icon></v-btn
           >
-
-          <v-btn @click="start" icon>
-            <v-icon>{{
-              isPlaying && readingsIdx > 0 ? "mdi-pause" : "mdi-play"
-            }}</v-icon>
-          </v-btn>
-
+          <!-- Read from File Play Control -->
+          <template v-if="readingsData.length">
+            <v-btn @click="start" icon>
+              <v-icon>{{
+                isPlaying && readingsIdx > 0 ? "mdi-pause" : "mdi-play"
+              }}</v-icon>
+            </v-btn>
+          </template>
+          <!--- Streaming from Pedana Play Control --->
+          <template v-else-if="isReady">
+            <v-btn @click="toggleStreaming" class="mx-2" icon>
+              <v-icon>
+                {{ isStreamingPaused ? "mdi-play" : "mdi-pause" }}
+              </v-icon>
+            </v-btn>
+          </template>
+          <!-- Forward -->
           <v-btn
             icon
             @click="next"
             :disabled="readingsIdx >= readingsData.length - 1"
             ><v-icon>mdi-step-forward</v-icon></v-btn
           >
+          <!--- Timer --->
           <v-icon color="green" dark>mdi-timer-outline</v-icon>
           {{ readingsIdx > 0 ? (readingsIdx / Hz).toFixed(2) : 0 }}
-        </v-sheet>
-        <!--  -->
-        <!-- Stream controls -->
-        <v-sheet
-          v-else-if="isReady"
-          max-width="600"
-          class="pa-3 d-flex align-center"
-          rounded
-          color="white"
-        >
-          <v-btn
-            @click="toggleStreaming"
-            class="mx-2"
-            fab
-            dark
-            small
-            color="green"
-          >
-            <v-icon dark>
-              {{ isStreamingPaused ? "mdi-play" : "mdi-pause" }}
-            </v-icon>
-          </v-btn>
-
-          <v-icon color="green" dark>mdi-timer-outline</v-icon>
-          {{ readingsIdx > 0 ? readingsIdx / Hz : 0 }}
-
+          <!-- Reset ---->
           <v-btn
             v-if="weights.length > 0"
             @click="restart"
@@ -66,11 +54,16 @@
             Reset
           </v-btn>
         </v-sheet>
+        <!--- END CONTROLS --->
+
+        <!--- CANVAS --->
         <v-sheet class="viewport" :width="width" :height="height">
           <canvas id="barycenters-layer"> </canvas>
           <BackgroundLayer :width="width" :height="height" />
         </v-sheet>
+        <!--- END CANVAS --->
 
+        <!--- WEIGHTS --->
         <v-sheet :width="width">
           <div class="d-flex justify-space-around align-center">
             <div class="text-left w-100">
@@ -107,9 +100,11 @@
           </div>
         </v-sheet>
       </v-col>
+      <!--- END WEIGHTS --->
 
-      <!-- CHARTS -->
+      <!-- CHARTS  -->
       <v-col v-if="weights.length > 0">
+        <!-- Buttons -->
         <div class="d-flex mb-3">
           <v-icon class="mr-3">mdi-chart-line</v-icon>
 
@@ -117,13 +112,14 @@
             @click="showTortionChart = true"
             small
             color="primary"
+            dark
             class="mr-3"
             >Torsion</v-btn
           >
           <v-btn
             @click="showGeneralChart = true"
             small
-            color="primary"
+            color="white"
             class="mr-3"
             >General</v-btn
           >
@@ -131,20 +127,23 @@
             >Right & Left</v-btn
           >
         </div>
-        <!-- ----- -->
 
         <MainChart />
       </v-col>
     </v-row>
+
     <TortionChart v-if="showTortionChart" :value.sync="showTortionChart" />
+
     <GeneralBarycenterChart
       v-if="showGeneralChart"
       :value.sync="showGeneralChart"
     />
+
     <LeftRightBarycenterChart
       v-if="showLeftRightChart"
       :value.sync="showLeftRightChart"
     />
+    <!-- END CHARTS  -->
   </v-container>
 </template>
 
@@ -178,6 +177,8 @@ import LeftRightBarycenterChart from "@/components/charts/LeftRightBarycenterCha
 import NotConnectedDialog from "@/components/dialogs/NotConnectedDialog.vue";
 import ConnectingDialog from "@/components/dialogs/ConnectingDialog.vue";
 import ImportFileBtn from "@/components/file/ImportFileBtn.vue";
+import ExportToFileBtn from "@/components/file/ExportToFileBtn.vue";
+import ImportFile from "@/components/dialogs/ConnectingDialog.vue";
 /* eslint-disable */
 const electron = window.require("electron"),
   ipc = electron.ipcRenderer;
@@ -195,6 +196,7 @@ export default Vue.extend({
     GeneralBarycenterChart,
     LeftRightBarycenterChart,
     ImportFileBtn,
+    ExportToFileBtn,
     // Dialogs
     NotConnectedDialog,
     ConnectingDialog
@@ -260,10 +262,10 @@ export default Vue.extend({
   methods: {
     onImport(data) {
       this.readingsData = data;
-      this.readingsIdx = 0;
-      console.log(data);
+      this.restart();
+      // console.log(data);
       while (this.readingsIdx < this.readingsData.length) {
-        console.log(this.readingsIdx);
+        // console.log(this.readingsIdx);
 
         const res = this.setWeights(this.readingsData[this.readingsIdx]);
         this.update();
@@ -271,6 +273,7 @@ export default Vue.extend({
       }
       this.isPlaying = false;
       this.isEndReading = true;
+      this.isReady = true;
     },
     displayNumber,
     ...mapActions("pedana", [
@@ -287,6 +290,7 @@ export default Vue.extend({
       this.pause();
       this.readingsIdx--;
       console.log("readingsIdx", this.readingsIdx);
+      this.isEndReading = false;
       this.rewind();
     },
     next() {

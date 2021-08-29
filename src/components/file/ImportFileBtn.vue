@@ -1,7 +1,14 @@
 <template>
-  <v-btn color="primary" small @click="importFile">
+  <v-btn
+    color="blue"
+    small
+    dark
+    @click="importFile"
+    :loading="isProcessing"
+    :disabled="isProcessing"
+  >
     <v-icon left>mdi-import</v-icon>
-    Import
+    IMPORT
   </v-btn>
 </template>
 <script>
@@ -11,7 +18,9 @@ const dialog = app.dialog;
 const fs = window.require("fs");
 export default {
   data() {
-    return {};
+    return {
+      isProcessing: false
+    };
   },
   methods: {
     importFile() {
@@ -20,8 +29,15 @@ export default {
           properties: ["openFile"]
         })
         .then(result => {
-          console.log(result.canceled);
-          console.log(result.filePaths);
+          // console.log(result.canceled);
+          // console.log(result.filePaths);
+          if (
+            result.canceled ||
+            (!result.filePaths.length && !result.filePaths[0])
+          ) {
+            return;
+          }
+          this.isProcessing = true;
           fs.readFile(result.filePaths[0], "utf-8", (err, data) => {
             if (err) {
               alert("An error ocurred reading the file :" + err.message);
@@ -31,11 +47,13 @@ export default {
               .toString()
               .split(/[\r\n]+/)
               .map(item => {
-                const arr = item.split(", ");
+                const arr = item.split(",");
                 return arr.map(el => parseFloat(el));
               });
-            this.$emit("inportedData", res);
-            console.log(res);
+            this.$emit("importedData", res);
+            this.isProcessing = false;
+
+            // console.log(res);
           });
         })
         .catch(err => {

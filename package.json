@@ -39,7 +39,7 @@
     "@vue/cli-service": "^4.5.13",
     "@vue/eslint-config-prettier": "^6.0.0",
     "@vue/eslint-config-typescript": "^5.0.2",
-    "electron": "~8.x",
+    "electron": "8.5.5",
     "electron-devtools-installer": "^3.2.0",
     "electron-rebuild": "^3.1.1",
     "eslint": "^6.7.2",

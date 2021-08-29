@@ -1,5 +1,5 @@
 <template>
-  <v-dialog :value="value" @click:outside="close" :max-width="1200">
+  <v-dialog :value="value" @click:outside="close" :max-width="1200" fullscreen>
     <v-card class="pa-3">
       <div class="d-flex align-center justify-space-between pb-3">
         <v-card-title class="pt-0 pb-0"
@@ -15,12 +15,12 @@
           <line-chart
             :style="{
               position: 'relative',
-              width: '570px'
+              width: '550px'
             }"
             :chart-data="datacollectionLeft"
             :options="optionsLeft"
           ></line-chart>
-          <div class="pa-3">
+          <v-sheet :max-width="500" class="px-7 py-3">
             <div>
               Ammq:
               <strong>{{ AmmqL }}</strong>
@@ -31,18 +31,18 @@
             <div>
               Vvar: <strong>{{ VvarL }}</strong>
             </div>
-          </div>
+          </v-sheet>
         </v-col>
         <v-col>
           <line-chart
             :style="{
               position: 'relative',
-              width: '570px'
+              width: '550px'
             }"
             :chart-data="datacollectionRight"
             :options="optionsRight"
           ></line-chart>
-          <div class="pa-3">
+          <v-sheet :max-width="500" class="px-7 py-3">
             <div>
               Ammq:
               <strong>{{ AmmqR }}</strong>
@@ -53,7 +53,7 @@
             <div>
               Vvar: <strong>{{ VvarR }}</strong>
             </div>
-          </div>
+          </v-sheet>
         </v-col>
       </v-row>
     </v-card>
