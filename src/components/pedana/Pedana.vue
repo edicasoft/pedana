@@ -1,33 +1,58 @@
 <template>
   <v-container fluid>
-    <not-connected-dialog v-if="!isConnected && !isReady" />
-    <connecting-dialog v-else-if="!isReady" />
+    <error-dialog
+      v-if="!isConnected && !isReady"
+      message="Pedana is not connected."
+    />
+    <connecting-dialog v-else-if="isConnected" />
+
+    <error-dialog v-if="pedanaError" :message="pedanaError" />
 
     <v-row>
       <v-col>
-        <!--- Streaming from Pedana Play Control --->
-        <template v-if="isReady">
-          <v-btn @click="toggleStreaming" class="mx-2" small>
-            <v-icon left>
-              {{ isEndStreaming ? "mdi-play" : "mdi-pause" }}
-            </v-icon>
-            {{ isEndStreaming ? "New Session" : "STOP" }}
+        <v-sheet>
+          <!--- Streaming from Pedana Play Control --->
+          <template v-if="isReady">
+            <v-btn @click="toggleStreaming" class="mx-2" small>
+              <v-icon left>
+                {{ isEndStreaming ? "mdi-play" : "mdi-pause" }}
+              </v-icon>
+              {{ isEndStreaming ? "New Session" : "STOP" }}
+            </v-btn>
+          </template>
+          <!-- Reset ---->
+          <v-btn
+            v-if="readingsData.length > 0"
+            @click="reset"
+            color="red"
+            small
+            rounded
+            dark
+          >
+            <v-icon dark left>mdi-autorenew</v-icon>
+            Reset
           </v-btn>
-        </template>
-
-        <ImportFileBtn
-          v-if="isEndStreaming"
-          @importData="onImport"
-          class="ml-2"
-        />
-        <ExportToFileBtn
-          v-if="readingsData.length && isEndStreaming"
-          :data="readingsData"
-          class="ml-2"
-        />
+          <span class="ml-auto">
+            <ImportFileBtn
+              v-if="isEndStreaming"
+              @importData="onImport"
+              class="ml-2"
+            />
+            <ExportToFileBtn
+              v-if="readingsData.length && isEndStreaming"
+              :data="readingsData"
+              class="ml-2"
+            />
+          </span>
+        </v-sheet>
+        <v-divider class="mt-3"></v-divider>
 
         <!-- CONTROLS -->
-        <v-sheet class="mt-3 pa-3 d-flex align-center">
+        <v-sheet class="pa-3 d-flex align-center">
+          <span
+            >Total:
+            {{ leftPlatformTotalWeight + rightPlatformTotalWeight }}</span
+          >
           <template v-if="readingsData.length">
             <!-- Back -->
             <v-btn icon @click="back" :disabled="readingsIdx <= 0"
@@ -53,22 +78,7 @@
             <v-icon color="green" dark>mdi-timer-outline</v-icon>
             {{ readingsIdx > 0 ? (readingsIdx / Hz).toFixed(2) : 0 }}
           </template>
-
-          <!-- Reset ---->
-          <v-btn
-            v-if="readingsData.length > 0"
-            @click="reset"
-            color="red"
-            small
-            rounded
-            dark
-            class="ml-auto"
-          >
-            <v-icon dark left>mdi-autorenew</v-icon>
-            Reset
-          </v-btn>
         </v-sheet>
-
         <!--- END CONTROLS --->
 
         <!--- CANVAS --->
@@ -121,27 +131,35 @@
       <v-col v-if="weights.length > 0">
         <!-- Buttons -->
         <div class="d-flex mb-3">
-          <v-icon class="mr-3">mdi-chart-line</v-icon>
-
           <v-btn
             @click="showTortionChart = true"
             small
-            color="primary"
+            rounded
+            color="blue-grey"
             dark
             class="mr-3"
-            >Torsion</v-btn
-          >
+            >Torsion
+            <v-icon left>mdi-chart-line</v-icon>
+          </v-btn>
           <v-btn
             @click="showGeneralChart = true"
             small
-            color="white"
+            dark
+            rounded
+            color="blue-grey"
             class="mr-3"
             >General</v-btn
           >
-          <v-btn @click="showLeftRightChart = true" small color="primary"
+          <v-btn
+            @click="showLeftRightChart = true"
+            small
+            dark
+            rounded
+            color="blue-grey"
             >Right & Left</v-btn
           >
         </div>
+        <v-divider class="mt-3"></v-divider>
 
         <MainChart />
       </v-col>
@@ -164,7 +182,6 @@
 
 <script lang="ts">
 //TODO::move player to separate component
-//ts for store files
 import { Cell } from "@/entities/Cell";
 import Canvas from "@/entities/Canvas";
 
@@ -189,7 +206,7 @@ import TortionChart from "@/components/charts/TortionChart.vue";
 import GeneralBarycenterChart from "@/components/charts/GeneralBarycenterChart.vue";
 import LeftRightBarycenterChart from "@/components/charts/LeftRightBarycenterChart.vue";
 
-import NotConnectedDialog from "@/components/dialogs/NotConnectedDialog.vue";
+import ErrorDialog from "@/components/dialogs/ErrorDialog.vue";
 import ConnectingDialog from "@/components/dialogs/ConnectingDialog.vue";
 import ImportFileBtn from "@/components/file/ImportFileBtn.vue";
 import ExportToFileBtn from "@/components/file/ExportToFileBtn.vue";
@@ -213,7 +230,7 @@ export default Vue.extend({
     ImportFileBtn,
     ExportToFileBtn,
     // Dialogs
-    NotConnectedDialog,
+    ErrorDialog,
     ConnectingDialog
   },
   data: () => ({
@@ -231,6 +248,7 @@ export default Vue.extend({
     isConnected: false,
     isEndStreaming: true,
     isReady: false,
+    pedanaError: "",
     Hz: Hz
   }),
   destroyed() {
@@ -241,6 +259,7 @@ export default Vue.extend({
     ctx = c.ctx;
     c.preloadImages(this.play);
     ipc.on("is-connected", (event, args) => {
+      this.pedanaError = "";
       this.isConnected = args;
       if (!args) {
         this.isReady = false;
@@ -249,8 +268,21 @@ export default Vue.extend({
     });
     ipc.on("data", (event, args) => {
       this.isReady = true;
-      if (!this.isEndStreaming) this.startReadingPedana(args);
-      console.log("data", args);
+      const total = args.reduce(
+        (accumulator, current) => accumulator + current,
+        0
+      );
+      if (total >= 1 && !this.isEndStreaming) this.startReadingPedana(args);
+      // console.log("data", args, total);
+    });
+    ipc.on("is-error", (event, args) => {
+      if (args && args.code) {
+        switch (args.code) {
+          case "INIT_ERROR":
+            this.pedanaError = "Please, reconnect your Pedana.";
+        }
+      }
+      //console.log("is-error", args);
     });
   },
   computed: {

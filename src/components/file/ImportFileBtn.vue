@@ -2,6 +2,7 @@
   <v-btn
     color="blue"
     small
+    rounded
     dark
     @click="importFile"
     :loading="isProcessing"

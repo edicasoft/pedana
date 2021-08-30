@@ -1,6 +1,7 @@
 <template>
   <v-btn
     color="green"
+    rounded
     small
     dark
     @click="exportToFile"
@@ -38,9 +39,9 @@ export default {
         (d.getMonth() + 1) +
         "-" +
         d.getFullYear() +
-        "-" +
+        "@" +
         d.getHours() +
-        ":" +
+        "_" +
         d.getMinutes();
       dialog
         .showSaveDialog({

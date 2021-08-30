@@ -101,8 +101,10 @@ export default function Device() {
       platform.latestReadings = [];
       platform.port.on("error", err => {
         console.log(`${platform.portPath}`, "Error: ", err.message);
-        platform.port.close();
-        reject(err);
+        // try {
+        //   platform.port.close();
+        // } catch (e) {}
+        reject(err.message);
       });
 
       platform.port.on("open", () => {
@@ -140,15 +142,17 @@ export default function Device() {
             //console.log("re-init with `rrr`");
             //console.log(`${platform.portPath}`, "pause with `h`");
             //return;
+            reject("reconnect platform to re-initialize");
             platform.port.close();
-            return reject("INIT_ERROR");
+            return;
           }
           if (ln == "e" || ln == "h") {
             // error state
             // platform.port.write("rrr");
             // console.log(`${platform.portPath}`, "re-init with `rrr`");
+            reject("reconnect platform to re-initialize");
             platform.port.close();
-            return reject("INIT_ERROR");
+            return;
           }
           if (ln == "l" || ln == "r") {
             platform.handshakeChar = ln;
@@ -157,8 +161,9 @@ export default function Device() {
             platform.port.write(platform.handshakeChar);
             return resolve(platform);
           }
+          reject("UNKNOWN_DEVICE");
           platform.port.close();
-          return reject("UNKNOWN_DEVICE");
+          return;
         }
 
         if (
@@ -214,7 +219,7 @@ export default function Device() {
           } catch (e) {
             console.log("init device error:", e);
             this.isErrored = true;
-            this.emit("error", "device connection error: " + e);
+            this.emit("error", { code: "INIT_ERROR", message: e });
           }
         }
       }
