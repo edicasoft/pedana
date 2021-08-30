@@ -4,7 +4,7 @@
       v-if="!isConnected && !isReady"
       message="Pedana is not connected."
     />
-    <connecting-dialog v-else-if="isConnected" />
+    <connecting-dialog v-else-if="isConnected && !isReady" />
 
     <error-dialog v-if="pedanaError" :message="pedanaError" />
 
@@ -49,10 +49,6 @@
 
         <!-- CONTROLS -->
         <v-sheet class="pa-3 d-flex align-center">
-          <span
-            >Total:
-            {{ leftPlatformTotalWeight + rightPlatformTotalWeight }}</span
-          >
           <template v-if="readingsData.length">
             <!-- Back -->
             <v-btn icon @click="back" :disabled="readingsIdx <= 0"
@@ -77,6 +73,12 @@
           <template v-if="readingsIdx > 0">
             <v-icon color="green" dark>mdi-timer-outline</v-icon>
             {{ readingsIdx > 0 ? (readingsIdx / Hz).toFixed(2) : 0 }}
+            <!-- <span
+              >Total:
+              {{
+                (leftPlatformTotalWeight + rightPlatformTotalWeight).toFixed(2)
+              }}</span
+            > -->
           </template>
         </v-sheet>
         <!--- END CONTROLS --->
@@ -138,8 +140,8 @@
             color="blue-grey"
             dark
             class="mr-3"
-            >Torsion
-            <v-icon left>mdi-chart-line</v-icon>
+          >
+            <v-icon left>mdi-chart-line</v-icon> Torsion
           </v-btn>
           <v-btn
             @click="showGeneralChart = true"
@@ -148,7 +150,7 @@
             rounded
             color="blue-grey"
             class="mr-3"
-            >General</v-btn
+            ><v-icon left>mdi-chart-line</v-icon> General</v-btn
           >
           <v-btn
             @click="showLeftRightChart = true"
@@ -156,7 +158,7 @@
             dark
             rounded
             color="blue-grey"
-            >Right & Left</v-btn
+            ><v-icon left>mdi-chart-line</v-icon> Right & Left</v-btn
           >
         </div>
         <v-divider class="mt-3"></v-divider>

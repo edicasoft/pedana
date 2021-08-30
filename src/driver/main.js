@@ -219,6 +219,7 @@ export default function Device() {
           } catch (e) {
             console.log("init device error:", e);
             this.isErrored = true;
+            this.isConnected = false;
             this.emit("error", { code: "INIT_ERROR", message: e });
           }
         }
