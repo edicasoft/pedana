@@ -58,11 +58,11 @@ export default class Barycenter {
       ctx.save();
       ctx.fillStyle = "#C0C0C0";
       ctx.beginPath();
-      ctx.shadowBlur = 0;
+      ctx.shadowBlur = 3;
       ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 0;
-      ctx.shadowColor = "#C0C0C0";
-      ctx.arc(this.xVals[i], this.yVals[i], radius / 1.2, 0, 2 * Math.PI);
+      ctx.shadowOffsetY = 1;
+      ctx.shadowColor = "#615e5e";
+      ctx.arc(this.xVals[i], this.yVals[i], radius, 0, 2 * Math.PI);
       ctx.fill();
       ctx.closePath();
       ctx.restore();

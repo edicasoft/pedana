@@ -448,8 +448,14 @@ export default Vue.extend({
     drawConnectBarycenters() {
       c.drawLine(leftBarycenter, rightBarycenter, "red");
     },
-    drawHistory() {
-      c.drawLine(leftBarycenter, rightBarycenter, "grey");
+    drawConnectBarycentersHistory() {
+      for (let i = 0; i < this.readingsData.length; i++) {
+        c.drawLine(
+          { x: leftBarycenter.xVals[i], y: leftBarycenter.yVals[i] },
+          { x: rightBarycenter.xVals[i], y: rightBarycenter.yVals[i] },
+          "green"
+        );
+      }
     },
     displayWeights() {
       if (this.weights.length === 0) return;
@@ -509,6 +515,7 @@ export default Vue.extend({
 
         this.moveBarycenters();
 
+        this.drawConnectBarycentersHistory();
         leftBarycenter.drawOld(ctx);
         generalBarycenter.drawOld(ctx);
         rightBarycenter.drawOld(ctx);

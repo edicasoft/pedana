@@ -72,7 +72,6 @@ export const rightBarycenter = new Barycenter(rightPlatformCells, "gold");
 import { displayNumber } from "@/common/helpers";
 
 import PedanaMixin from "@/mixins/PedanaCanvasMixin.vue";
-const cells = leftPlatformCells.concat(rightPlatformCells);
 let c;
 export default {
   mixins: [PedanaMixin],

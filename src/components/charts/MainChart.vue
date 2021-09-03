@@ -2,7 +2,7 @@
   <div class="small">
     <line-chart
       :style="{
-        height: '100vh',
+        height: '350px',
         position: 'relative',
         maxHeight: '600px',
         maxWidth: '1200px'
@@ -30,12 +30,15 @@ export default Vue.extend({
       options: {
         responsive: true,
         maintainAspectRatio: false,
-
         scales: {
           xAxes: [
             {
-              type: "linear",
-              position: "bottom"
+              type: "linear"
+            }
+          ],
+          yAxes: [
+            {
+              type: "linear"
             }
           ]
         }
