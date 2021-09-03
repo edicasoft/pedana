@@ -1,5 +1,6 @@
 <template>
   <v-container fluid>
+    <!-- <ComparePedanasDialog :data="readingsData" v-if="readingsData.length" /> -->
     <error-dialog
       v-if="!isConnected && !isReady"
       message="Pedana is not connected."
@@ -73,12 +74,6 @@
           <template v-if="readingsIdx > 0">
             <v-icon color="green" dark>mdi-timer-outline</v-icon>
             {{ readingsIdx > 0 ? (readingsIdx / Hz).toFixed(2) : 0 }}
-            <!-- <span
-              >Total:
-              {{
-                (leftPlatformTotalWeight + rightPlatformTotalWeight).toFixed(2)
-              }}</span
-            > -->
           </template>
         </v-sheet>
         <!--- END CONTROLS --->
@@ -124,6 +119,14 @@
             <div class="text-right w-100">
               Right: <b>{{ displayNumber(rightPlatformTotalWeight) }}</b>
             </div>
+          </div>
+          <div>
+            <span class="mt-5"
+              >Total:
+              {{
+                (leftPlatformTotalWeight + rightPlatformTotalWeight).toFixed(2)
+              }}</span
+            >
           </div>
         </v-sheet>
       </v-col>
@@ -210,6 +213,7 @@ import LeftRightBarycenterChart from "@/components/charts/LeftRightBarycenterCha
 
 import ErrorDialog from "@/components/dialogs/ErrorDialog.vue";
 import ConnectingDialog from "@/components/dialogs/ConnectingDialog.vue";
+// import ComparePedanasDialog from "@/components/dialogs/ComparePedanasDialog.vue";
 import ImportFileBtn from "@/components/file/ImportFileBtn.vue";
 import ExportToFileBtn from "@/components/file/ExportToFileBtn.vue";
 import _ from "lodash";
@@ -234,6 +238,7 @@ export default Vue.extend({
     // Dialogs
     ErrorDialog,
     ConnectingDialog
+    // ComparePedanasDialog
   },
   data: () => ({
     showTortionChart: false,
