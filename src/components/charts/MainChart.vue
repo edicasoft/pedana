@@ -28,12 +28,18 @@ export default Vue.extend({
     return {
       datacollection: {} as ChartData,
       options: {
+        legend: {
+          display: false
+        },
         responsive: true,
         maintainAspectRatio: false,
         scales: {
           xAxes: [
             {
               type: "linear"
+              // ticks: {
+              //   display: false
+              // },
             }
           ],
           yAxes: [
@@ -47,9 +53,47 @@ export default Vue.extend({
   },
   methods: {
     fillData() {
+      const maxYL = Math.max(
+        ...this.leftBarycenterHistory.map(item => Math.abs(item.y))
+      );
+      const maxXL = Math.max(
+        ...this.leftBarycenterHistory.map(item => Math.abs(item.x))
+      );
+
+      const maxYR = Math.max(
+        ...this.rightBarycenterHistory.map(item => Math.abs(item.y))
+      );
+      const maxXR = Math.max(
+        ...this.rightBarycenterHistory.map(item => Math.abs(item.x))
+      );
+
+      const maxY = Math.max(maxYL, maxYR);
+      const maxX = Math.max(maxXL, maxXR);
       this.datacollection = {
         labels: [""],
         datasets: [
+          {
+            label: "X",
+            borderColor: "black",
+            pointRadius: 0,
+            fill: false,
+            data: [
+              { x: -maxX, y: 0 },
+              { x: maxX, y: 0 }
+            ],
+            borderWidth: 1
+          },
+          {
+            label: "Y",
+            borderColor: "black",
+            pointRadius: 0,
+            fill: false,
+            data: [
+              { x: 0, y: -maxY },
+              { x: 0, y: maxY }
+            ],
+            borderWidth: 1
+          },
           {
             label: "Left Barycenter",
             borderColor: "blue",
