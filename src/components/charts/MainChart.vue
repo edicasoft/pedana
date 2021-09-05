@@ -1,11 +1,9 @@
 <template>
-  <div class="small">
+  <div class="small mt-3">
     <line-chart
       :style="{
-        height: '350px',
-        position: 'relative',
-        maxHeight: '600px',
-        maxWidth: '1200px'
+        width: '600px',
+        position: 'relative'
       }"
       :chart-data="datacollection"
       :options="options"
@@ -28,15 +26,24 @@ export default Vue.extend({
     return {
       datacollection: {} as ChartData,
       options: {
-        legend: {
-          display: false
+        plugins: {
+          legend: false
         },
-        responsive: true,
+        responsive: false,
         maintainAspectRatio: false,
         scales: {
           xAxes: [
             {
-              type: "linear"
+              type: "linear",
+              ticks: {
+                min: 100,
+                max: 100
+              },
+              gridLines: {
+                // tickMarkLength: 50
+                //   display: false
+              }
+
               // ticks: {
               //   display: false
               // },
@@ -44,7 +51,18 @@ export default Vue.extend({
           ],
           yAxes: [
             {
-              type: "linear"
+              type: "linear",
+              // gridLines: {
+              //   display: false
+              // },
+              ticks: {
+                min: 100,
+                max: 100
+              },
+              gridLines: {
+                // tickMarkLength: 50
+                //   display: false
+              }
             }
           ]
         }
@@ -52,6 +70,13 @@ export default Vue.extend({
     };
   },
   methods: {
+    setTicksRange(maxX, maxY) {
+      const max = Math.max(maxX, maxY);
+      this.options.scales.xAxes[0].ticks.min = Math.floor(-max);
+      this.options.scales.xAxes[0].ticks.max = Math.floor(max);
+      this.options.scales.yAxes[0].ticks.min = Math.floor(-max);
+      this.options.scales.yAxes[0].ticks.max = Math.floor(max);
+    },
     fillData() {
       const maxYL = Math.max(
         ...this.leftBarycenterHistory.map(item => Math.abs(item.y))
@@ -69,6 +94,10 @@ export default Vue.extend({
 
       const maxY = Math.max(maxYL, maxYR);
       const maxX = Math.max(maxXL, maxXR);
+      console.log(maxY, maxX);
+      this.setTicksRange(maxX, maxY);
+      const max = Math.max(maxX, maxY);
+
       this.datacollection = {
         labels: [""],
         datasets: [
@@ -78,8 +107,8 @@ export default Vue.extend({
             pointRadius: 0,
             fill: false,
             data: [
-              { x: -maxX, y: 0 },
-              { x: maxX, y: 0 }
+              { x: -max, y: 0 },
+              { x: max, y: 0 }
             ],
             borderWidth: 1
           },
@@ -89,8 +118,8 @@ export default Vue.extend({
             pointRadius: 0,
             fill: false,
             data: [
-              { x: 0, y: -maxY },
-              { x: 0, y: maxY }
+              { x: 0, y: max },
+              { x: 0, y: -max }
             ],
             borderWidth: 1
           },

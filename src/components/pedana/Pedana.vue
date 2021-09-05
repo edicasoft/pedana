@@ -22,7 +22,7 @@
             </v-btn>
           </template>
           <!-- Reset ---->
-          <v-btn
+          <!-- <v-btn
             v-if="readingsData.length > 0"
             @click="reset"
             color="red"
@@ -32,7 +32,7 @@
           >
             <v-icon dark left>mdi-autorenew</v-icon>
             Reset
-          </v-btn>
+          </v-btn> -->
           <span class="ml-auto">
             <ImportFileBtn
               v-if="isEndStreaming"
