@@ -29,8 +29,8 @@ export default Vue.extend({
         plugins: {
           legend: false
         },
-        responsive: false,
-        maintainAspectRatio: false,
+        responsive: true,
+        maintainAspectRatio: true,
         scales: {
           xAxes: [
             {
