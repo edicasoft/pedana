@@ -1,8 +1,21 @@
+<template>
+  <canvas id="print"> </canvas>
+</template>
 <script>
 import { total } from "@/common/helpers";
+import { leftPlatformCells, rightPlatformCells } from "@/common/constants.js";
+import { Cell } from "@/entities/Cell";
+import Canvas from "@/entities/Canvas";
 const cells = leftPlatformCells.concat(rightPlatformCells);
+import Vue from "vue";
+import { ipcRenderer } from "electron";
 
-export default {
+export default Vue.extend({
+  data() {
+    return {
+      bgCanvasObj: null
+    };
+  },
   computed: {
     leftWeights() {
       return this.weights.slice(0, 3);
@@ -21,6 +34,18 @@ export default {
     }
   },
   methods: {
+    onBgCanvasCreated(c) {
+      this.bgCanvasObj = c;
+    },
+    print() {
+      const printC = new Canvas("print", 600, 600);
+      const bg = document.getElementById(this.backgroundCanvasId);
+      printC.ctx.drawImage(bg, 0, 0);
+      printC.ctx.drawImage(this.c.canvas, 0, 0);
+      const dataUrl = printC.canvas.toDataURL();
+      ipcRenderer.send("canvas:data", dataUrl);
+      console.log("print", dataUrl);
+    },
     displayWeights() {
       if (this.weights.length === 0) return;
       this.ctx.fillStyle = "black";
@@ -29,7 +54,7 @@ export default {
       for (let i = 0; i < cells.length; i++) {
         this.$nextTick(() => {
           const cell = new Cell(cells[i], this.weights[i]);
-          cell.draw(c, this.totalWeight);
+          cell.draw(this.c, this.totalWeight);
         });
 
         let x = this.width / 2 + cells[i].x;
@@ -50,5 +75,5 @@ export default {
       this.ctx.restore();
     }
   }
-};
+});
 </script>

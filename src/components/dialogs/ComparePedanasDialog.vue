@@ -22,7 +22,7 @@
   </v-dialog>
 </template>
 <script>
-import PedanaCanvas from "@/components/pedana/PedanaCanvas.vue";
+import PedanaCanvas from "@/components/pedana/PedanaCanvasImage.vue";
 export default {
   props: ["data"],
   components: {

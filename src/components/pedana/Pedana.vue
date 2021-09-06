@@ -22,7 +22,7 @@
             </v-btn>
           </template>
           <!-- Reset ---->
-          <!-- <v-btn
+          <v-btn
             v-if="readingsData.length > 0"
             @click="reset"
             color="red"
@@ -32,11 +32,12 @@
           >
             <v-icon dark left>mdi-autorenew</v-icon>
             Reset
-          </v-btn> -->
+          </v-btn>
           <span class="ml-auto">
             <ImportFileBtn
               v-if="isEndStreaming"
               @importData="onImport"
+              @onLoading="onLoading"
               class="ml-2"
             />
             <ExportToFileBtn
@@ -81,12 +82,20 @@
         <!--- CANVAS --->
         <v-sheet class="viewport" :width="width" :height="height">
           <canvas id="barycenters-layer"> </canvas>
-          <BackgroundLayer :width="width" :height="height" />
+          <BackgroundLayer
+            :width="width"
+            :height="height"
+            @canvasCreated="onBgCanvasCreated"
+            :id="backgroundCanvasId"
+          />
         </v-sheet>
         <!--- END CANVAS --->
 
         <!--- WEIGHTS --->
         <v-sheet :width="width">
+          <v-btn icon @click="print">
+            <v-icon>mdi-printer</v-icon>
+          </v-btn>
           <div class="d-flex justify-space-around align-center">
             <div class="text-left w-100">
               Left: <b>{{ displayNumber(leftPlatformTotalWeight) }}</b>
@@ -120,14 +129,14 @@
               Right: <b>{{ displayNumber(rightPlatformTotalWeight) }}</b>
             </div>
           </div>
-          <div>
+          <!-- <div>
             <span class="mt-5"
               >Total:
               {{
                 (leftPlatformTotalWeight + rightPlatformTotalWeight).toFixed(2)
               }}</span
             >
-          </div>
+          </div> -->
         </v-sheet>
       </v-col>
       <!--- END WEIGHTS --->
@@ -182,23 +191,25 @@
       :value.sync="showLeftRightChart"
     />
     <!-- END CHARTS  -->
+    <v-overlay :value="isLoading">
+      <v-progress-circular indeterminate size="64"></v-progress-circular>
+    </v-overlay>
+    <canvas id="print" :style="{ display: 'none' }"> </canvas>
   </v-container>
 </template>
 
-<script lang="ts">
+<script>
 //TODO::move player to separate component
-import { Cell } from "@/entities/Cell";
 import Canvas from "@/entities/Canvas";
 
-import { total, displayNumber } from "@/common/helpers";
-import Vue from "vue";
+import { displayNumber } from "@/common/helpers";
 import {
   leftPlatformCells,
   rightPlatformCells,
   images,
   Hz
 } from "@/common/constants.js";
-import { mapState, mapGetters, mapActions } from "vuex";
+import { mapState, mapActions } from "vuex";
 import BackgroundLayer from "@/components/pedana/BackgroundLayer.vue";
 import MainChart from "@/components/charts/MainChart.vue";
 import {
@@ -217,15 +228,19 @@ import ConnectingDialog from "@/components/dialogs/ConnectingDialog.vue";
 import ImportFileBtn from "@/components/file/ImportFileBtn.vue";
 import ExportToFileBtn from "@/components/file/ExportToFileBtn.vue";
 import _ from "lodash";
+import pedanaCanvasMixin from "@/mixins/PedanaCanvasMixin.vue";
+import Vue from "vue";
+
 /* eslint-disable */
 const electron = window.require("electron"),
   ipc = electron.ipcRenderer;
 
 const cells = leftPlatformCells.concat(rightPlatformCells);
-let c: Canvas;
-let ctx: CanvasRenderingContext2D;
+// let c: Canvas;
+// let ctx: CanvasRenderingContext2D;
 
 export default Vue.extend({
+  mixins: [pedanaCanvasMixin],
   name: "Pedana",
   components: {
     BackgroundLayer,
@@ -250,21 +265,25 @@ export default Vue.extend({
     error: false,
     isPlaying: false,
     readingsIdx: -1,
-    readingsData: [] as Array<Array<number>>,
+    readingsData: [],
     isEndReading: false,
     isConnected: false,
     isEndStreaming: true,
     isReady: false,
     pedanaError: "",
-    Hz: Hz
+    Hz: Hz,
+    isLoading: false,
+    ctx: null,
+    c: null,
+    backgroundCanvasId: "background-layer"
   }),
   destroyed() {
-    c.clear();
+    this.c.clear();
   },
   mounted() {
-    c = new Canvas("barycenters-layer", 600, 600, images);
-    ctx = c.ctx;
-    c.preloadImages(this.play);
+    this.c = new Canvas("barycenters-layer", 600, 600, images);
+    this.ctx = this.c.ctx;
+    this.c.preloadImages(this.play);
     ipc.on("is-connected", (event, args) => {
       this.pedanaError = "";
       this.isConnected = args;
@@ -293,18 +312,7 @@ export default Vue.extend({
     });
   },
   computed: {
-    ...mapGetters("pedana", ["leftWeights", "rightWeights"]),
-    ...mapState("pedana", ["weights", "weightsHistory"]),
-
-    totalWeight(): number {
-      return total(this.weights);
-    },
-    leftPlatformTotalWeight(): number {
-      return total(this.leftWeights);
-    },
-    rightPlatformTotalWeight(): number {
-      return total(this.rightWeights);
-    }
+    ...mapState("pedana", ["weights", "weightsHistory"])
   },
   // watch: {
   //   weights(val) {
@@ -317,6 +325,9 @@ export default Vue.extend({
   // },
 
   methods: {
+    onLoading(e) {
+      this.isLoading = e;
+    },
     onImport(data) {
       this.readingsData = data;
       this.restart();
@@ -371,7 +382,7 @@ export default Vue.extend({
       generalBarycenter.reset();
       leftBarycenter.reset();
       rightBarycenter.reset();
-      c.clear();
+      this.c.clear();
     },
     toggleStreaming() {
       this.isEndStreaming = !this.isEndStreaming;
@@ -383,7 +394,7 @@ export default Vue.extend({
         this.reset();
       }
     },
-    startReadingPedana(data: number[]) {
+    startReadingPedana(data) {
       this.isEndStreaming = false;
 
       this.setMeasurements(data);
@@ -446,46 +457,19 @@ export default Vue.extend({
       }
     },
     drawConnectBarycenters() {
-      c.drawLine(leftBarycenter, rightBarycenter, "red");
+      this.c.drawLine(leftBarycenter, rightBarycenter, "red");
     },
+    //TODO::make it common along with the PedanaCanvasMixin method
     drawConnectBarycentersHistory() {
       for (let i = 0; i < this.readingsData.length; i++) {
-        c.drawLine(
+        this.c.drawLine(
           { x: leftBarycenter.xVals[i], y: leftBarycenter.yVals[i] },
           { x: rightBarycenter.xVals[i], y: rightBarycenter.yVals[i] },
           "green"
         );
       }
     },
-    displayWeights() {
-      if (this.weights.length === 0) return;
-      ctx.fillStyle = "black";
-      ctx.font = "16px Arial";
-      ctx.save();
-      for (let i = 0; i < cells.length; i++) {
-        this.$nextTick(() => {
-          const cell = new Cell(cells[i], this.weights[i]);
-          cell.draw(c, this.totalWeight);
-        });
-
-        let x = this.width / 2 + cells[i].x;
-        let y = this.height / 2 - cells[i].y;
-
-        if (cells[i].y < 0) {
-          y += 20;
-          if (cells[i].x > 0) x += 20;
-        } else {
-          y -= 20;
-        }
-        if (cells[i].x < 0) {
-          x -= 30;
-          if (cells[i].y < 0) x -= 20;
-        }
-        ctx.fillText(this.displayNumber(this.weights[i]).toString(), x, y);
-      }
-      ctx.restore();
-    },
-    moveBarycenters(): void {
+    moveBarycenters() {
       console.log("moveBarycenters");
       generalBarycenter.move(this.weights);
       leftBarycenter.move(this.leftWeights);
@@ -506,24 +490,24 @@ export default Vue.extend({
       };
       this.addBarycentersToHistory({ general, left, right });
     },
-    update(): void {
+    update() {
       try {
-        c.clear();
+        this.c.clear();
         this.displayWeights();
 
-        c.transdormCoordinates();
+        this.c.transdormCoordinates();
 
         this.moveBarycenters();
 
         this.drawConnectBarycentersHistory();
-        leftBarycenter.drawOld(ctx);
-        generalBarycenter.drawOld(ctx);
-        rightBarycenter.drawOld(ctx);
+        leftBarycenter.drawOld(this.ctx);
+        generalBarycenter.drawOld(this.ctx);
+        rightBarycenter.drawOld(this.ctx);
 
         this.drawConnectBarycenters();
-        leftBarycenter.draw(ctx);
-        generalBarycenter.draw(ctx);
-        rightBarycenter.draw(ctx);
+        leftBarycenter.draw(this.ctx);
+        generalBarycenter.draw(this.ctx);
+        rightBarycenter.draw(this.ctx);
       } catch (e) {
         this.error = true;
         console.error(e);

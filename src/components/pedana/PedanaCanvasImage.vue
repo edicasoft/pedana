@@ -54,7 +54,6 @@
   </div>
 </template>
 <script>
-import { Cell } from "@/entities/Cell";
 import Canvas from "@/entities/Canvas";
 import {
   leftPlatformCells,
@@ -71,10 +70,9 @@ export const leftBarycenter = new Barycenter(leftPlatformCells, "gold");
 export const rightBarycenter = new Barycenter(rightPlatformCells, "gold");
 import { displayNumber } from "@/common/helpers";
 
-import PedanaMixin from "@/mixins/PedanaCanvasMixin.vue";
-let c;
+import pedanaCanvasMixin from "@/mixins/PedanaCanvasMixin.vue";
 export default {
-  mixins: [PedanaMixin],
+  mixins: [pedanaCanvasMixin],
   components: {
     BackgroundLayer
   },
@@ -85,23 +83,33 @@ export default {
     zoom: 1,
     readingsIdx: 0,
     weights: [],
-    ctx: null
+    ctx: null,
+    c: null
   }),
   destroyed() {
-    c.clear();
+    this.c.clear();
   },
   mounted() {
-    c = new Canvas(`barycenters-layer${this.idx}`, 600, 600, images);
-    this.ctx = c.ctx;
-    c.preloadImages(this.start);
+    this.c = new Canvas(`barycenters-layer${this.idx}`, 600, 600, images);
+    this.ctx = this.c.ctx;
+    this.c.preloadImages(this.start);
   },
   methods: {
     displayNumber,
+    drawConnectBarycentersHistory() {
+      for (let i = 0; i < this.readingsData.length; i++) {
+        this.c.drawLine(
+          { x: leftBarycenter.xVals[i], y: leftBarycenter.yVals[i] },
+          { x: rightBarycenter.xVals[i], y: rightBarycenter.yVals[i] },
+          "green"
+        );
+      }
+    },
     drawConnectBarycenters() {
-      c.drawLine(leftBarycenter, rightBarycenter, "red");
+      this.c.drawLine(leftBarycenter, rightBarycenter, "red");
     },
     drawHistory() {
-      c.drawLine(leftBarycenter, rightBarycenter, "grey");
+      this.c.drawLine(leftBarycenter, rightBarycenter, "grey");
     },
     moveBarycenters() {
       console.log("moveBarycenters");
@@ -109,19 +117,6 @@ export default {
       leftBarycenter.move(this.leftWeights);
       rightBarycenter.move(this.rightWeights);
       console.log("move", this.weights);
-
-      const general = {
-        x: generalBarycenter.x,
-        y: generalBarycenter.y
-      };
-      const left = {
-        x: leftBarycenter.x,
-        y: leftBarycenter.y
-      };
-      const right = {
-        x: rightBarycenter.x,
-        y: rightBarycenter.y
-      };
     },
     start() {
       while (this.readingsIdx < this.readingsData.length) {
@@ -134,12 +129,13 @@ export default {
     },
     draw() {
       try {
-        c.clear();
+        this.c.clear();
         this.displayWeights();
 
-        c.transdormCoordinates();
+        this.c.transdormCoordinates();
 
         this.moveBarycenters();
+        this.drawConnectBarycentersHistory();
 
         leftBarycenter.drawOld(this.ctx);
         generalBarycenter.drawOld(this.ctx);

@@ -1,5 +1,5 @@
 <template>
-  <canvas id="background-layer"> </canvas>
+  <canvas :id="id"> </canvas>
 </template>
 <script lang="ts">
 import Canvas from "@/entities/Canvas";
@@ -18,9 +18,10 @@ let ctx: CanvasRenderingContext2D;
 
 export default Vue.extend({
   name: "BackgrounfLayer",
-  props: ["width", "height"],
+  props: ["width", "height", "id"],
   mounted() {
-    c = new Canvas("background-layer", 600, 600);
+    c = new Canvas(this.id, 600, 600);
+    this.$emit("canvasCreated", c);
     ctx = c.ctx;
     this.draw();
   },

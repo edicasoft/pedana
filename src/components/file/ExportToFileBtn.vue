@@ -3,7 +3,6 @@
     color="green"
     rounded
     small
-    dark
     @click="exportToFile"
     :loading="isProcessing"
     :disabled="isProcessing"

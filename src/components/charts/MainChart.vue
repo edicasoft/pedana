@@ -38,30 +38,20 @@ export default Vue.extend({
               ticks: {
                 min: 100,
                 max: 100
-              },
-              gridLines: {
-                // tickMarkLength: 50
-                //   display: false
+                //display: false
               }
-
-              // ticks: {
-              //   display: false
-              // },
             }
           ],
           yAxes: [
             {
               type: "linear",
-              // gridLines: {
-              //   display: false
-              // },
+              gridLines: {
+                display: false
+              },
               ticks: {
                 min: 100,
                 max: 100
-              },
-              gridLines: {
-                // tickMarkLength: 50
-                //   display: false
+                // display: false
               }
             }
           ]
@@ -70,8 +60,7 @@ export default Vue.extend({
     };
   },
   methods: {
-    setTicksRange(maxX, maxY) {
-      const max = Math.max(maxX, maxY);
+    setTicksRange(max) {
       this.options.scales.xAxes[0].ticks.min = Math.floor(-max);
       this.options.scales.xAxes[0].ticks.max = Math.floor(max);
       this.options.scales.yAxes[0].ticks.min = Math.floor(-max);
@@ -94,9 +83,9 @@ export default Vue.extend({
 
       const maxY = Math.max(maxYL, maxYR);
       const maxX = Math.max(maxXL, maxXR);
-      console.log(maxY, maxX);
-      this.setTicksRange(maxX, maxY);
       const max = Math.max(maxX, maxY);
+      this.setTicksRange(max);
+      console.log("setTicksRange", max);
 
       this.datacollection = {
         labels: [""],

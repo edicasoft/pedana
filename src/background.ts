@@ -8,6 +8,7 @@ import Device from "@/driver/main.js";
 import pedana from "./store/modules/pedana";
 /*eslint-disable*/
 const ipc = require("electron").ipcMain;
+const fs = require("fs");
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 
@@ -97,7 +98,63 @@ app.on("ready", async () => {
   }
   createWindow();
 });
+ipc.on("canvas:data", (event, dataUrl) => {
+  console.log("on canvas:data", dataUrl);
+  var options = {
+    silent: false,
+    printBackground: false,
+    color: false,
+    margin: {
+      marginType: "printableArea"
+    },
+    landscape: false,
+    pagesPerSheet: 1,
+    collate: false,
+    copies: 1,
+    header: "Header of the Page",
+    footer: "Footer of the Page"
+  };
 
+  let win = new BrowserWindow({
+    show: true,
+    webPreferences: {
+      nodeIntegration: true
+    }
+  });
+  let windowContent = "<!DOCTYPE html>";
+  windowContent += "<html>";
+  windowContent += "<head><title>Print canvas</title></head>";
+  windowContent += "<body>";
+  windowContent += '<img src="' + dataUrl + '">';
+  windowContent += "</body>";
+  windowContent += "</html>";
+  win.loadURL("data:text/html;charset=utf-8," + encodeURI(windowContent));
+//TODO::change filepath, set proper name for the file
+  win.webContents.on("did-finish-load", () => {
+    // win.webContents.openDevTools();
+    win.webContents.print(options, (success, failureReason) => {
+      if (!success) {
+        var filepath1 = "print1.pdf";
+        win.webContents
+          .printToPDF(options)
+          .then(data => {
+            fs.writeFile(filepath1, data, function(err) {
+              if (err) {
+                console.log(err);
+              } else {
+                console.log("PDF Generated Successfully");
+              }
+            });
+          })
+          .catch(error => {
+            console.log(error);
+          });
+        console.log(failureReason);
+      }
+      console.log("Print Initiated");
+    });
+  });
+});
 // Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {
   if (process.platform === "win32") {

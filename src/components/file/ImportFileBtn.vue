@@ -3,7 +3,6 @@
     color="blue"
     small
     rounded
-    dark
     @click="importFile"
     :loading="isProcessing"
     :disabled="isProcessing"
@@ -39,6 +38,8 @@ export default {
             return;
           }
           this.isProcessing = true;
+          this.$emit("onLoading", true);
+
           fs.readFile(result.filePaths[0], "utf-8", (err, data) => {
             if (err) {
               alert("An error ocurred reading the file :" + err.message);
@@ -53,6 +54,7 @@ export default {
               });
             this.$emit("importData", res);
             this.isProcessing = false;
+            this.$emit("onLoading", false);
 
             // console.log(res);
           });
