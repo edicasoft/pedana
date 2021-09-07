@@ -9,7 +9,9 @@ import {
   rightPlatformCells,
   canvasSmoothCoef,
   idealBarycenterLeftX,
-  idealBarycenterRightX
+  idealBarycenterRightX,
+  pedanaWidth,
+  pedanaHeight
 } from "@/common/constants.js";
 const arrowLength = 5;
 const cells = leftPlatformCells.concat(rightPlatformCells);
@@ -20,7 +22,7 @@ export default Vue.extend({
   name: "BackgrounfLayer",
   props: ["width", "height", "id"],
   mounted() {
-    c = new Canvas(this.id, 600, 600);
+    c = new Canvas(this.id, pedanaWidth, pedanaHeight);
     this.$emit("canvasCreated", c);
     ctx = c.ctx;
     this.draw();

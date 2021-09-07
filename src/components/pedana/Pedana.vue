@@ -207,7 +207,9 @@ import {
   leftPlatformCells,
   rightPlatformCells,
   images,
-  Hz
+  Hz,
+  pedanaHeight,
+  pedanaWidth
 } from "@/common/constants.js";
 import { mapState, mapActions } from "vuex";
 import BackgroundLayer from "@/components/pedana/BackgroundLayer.vue";
@@ -259,8 +261,8 @@ export default Vue.extend({
     showTortionChart: false,
     showGeneralChart: false,
     showLeftRightChart: false,
-    width: 600,
-    height: 600,
+    width: pedanaWidth,
+    height: pedanaHeight,
     zoom: 1,
     error: false,
     isPlaying: false,
@@ -281,7 +283,7 @@ export default Vue.extend({
     this.c.clear();
   },
   mounted() {
-    this.c = new Canvas("barycenters-layer", 600, 600, images);
+    this.c = new Canvas("barycenters-layer", pedanaWidth, pedanaHeight, images);
     this.ctx = this.c.ctx;
     this.c.preloadImages(this.play);
     ipc.on("is-connected", (event, args) => {

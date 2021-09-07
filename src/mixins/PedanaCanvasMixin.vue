@@ -3,7 +3,12 @@
 </template>
 <script>
 import { total } from "@/common/helpers";
-import { leftPlatformCells, rightPlatformCells } from "@/common/constants.js";
+import {
+  leftPlatformCells,
+  rightPlatformCells,
+  pedanaWidth,
+  pedanaHeight
+} from "@/common/constants.js";
 import { Cell } from "@/entities/Cell";
 import Canvas from "@/entities/Canvas";
 const cells = leftPlatformCells.concat(rightPlatformCells);
@@ -41,11 +46,16 @@ export default Vue.extend({
       console.log("save");
     },
     print() {
-      const printC = new Canvas("print", 600, 600);
+      //for three items
+      const koef = 0.92;
+      const width = pedanaWidth * koef;
+      const height = pedanaHeight * koef;
+      const printC = new Canvas("print", width, height);
       const bg = document.getElementById(this.backgroundCanvasId);
-      printC.ctx.drawImage(bg, 0, 0);
-      printC.ctx.drawImage(this.c.canvas, 0, 0);
+      printC.ctx.drawImage(bg, 0, 0, width, height);
+      printC.ctx.drawImage(this.c.canvas, 0, 0, width, height);
       const dataUrl = printC.canvas.toDataURL();
+      //TODO::there is no need to send
       ipcRenderer.send("canvas:data", dataUrl);
       console.log("print", dataUrl);
     },
@@ -68,6 +78,7 @@ export default Vue.extend({
           if (cells[i].x > 0) x += 20;
         } else {
           y -= 20;
+          if (cells[i].x > 0) x -= 5;
         }
         if (cells[i].x < 0) {
           x -= 30;

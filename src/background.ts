@@ -97,7 +97,7 @@ app.on("ready", async () => {
   }
   createWindow();
 });
-function saveAsPdf(win, fileName = "test.pdf") {
+function saveAsPdf(win, options, fileName = "test.pdf") {
   //TODO::move to separate function btn
   dialog
     .showSaveDialog({
@@ -108,7 +108,7 @@ function saveAsPdf(win, fileName = "test.pdf") {
         return;
       }
       win.webContents
-        .printToPDF({})
+        .printToPDF(options)
         .then(data => {
           fs.writeFile(res.filePath, data, function(err) {
             if (err) {
@@ -135,17 +135,16 @@ ipc.on("canvas:data", (event, dataUrl) => {
     silent: false,
     printBackground: false,
     color: false,
-    margin: {
-      marginType: "printableArea"
-    },
-    landscape: false,
+    landscape: true,
     pagesPerSheet: 1,
     collate: false,
-    copies: 1
+    copies: 1,
+    pageSize: 'A4',
+    scaleFactor: 73
   };
 
   let win = new BrowserWindow({
-    show: true,//TODO::set to false
+    show: true, //TODO::set to false
     webPreferences: {
       nodeIntegration: true
     }
@@ -154,12 +153,16 @@ ipc.on("canvas:data", (event, dataUrl) => {
   windowContent += "<html>";
   windowContent += "<head><title>Print canvas</title></head>";
   windowContent += "<body>";
-  windowContent += `<div style="display: 'inline-block'">`;
+  windowContent += `<div style="display: inline-block; margin-right: 15px">`;
   windowContent += "<div>Test case 1 </div>";
   windowContent += '<div><img src="' + dataUrl + '"></div>';
   windowContent += "</div>";
-  windowContent += `<div style="display: 'inline-block'">`;
-  windowContent += "<div>Test case 1 </div>";
+  windowContent += `<div style="display: inline-block; margin-right: 15px">`;
+  windowContent += "<div>Test case 2 </div>";
+  windowContent += '<div><img src="' + dataUrl + '"></div>';
+  windowContent += "</div>";
+  windowContent += `<div style="display: inline-block">`;
+  windowContent += "<div>Test case 3 </div>";
   windowContent += '<div><img src="' + dataUrl + '"></div>';
   windowContent += "</div>";
   windowContent += "</body>";
@@ -170,7 +173,7 @@ ipc.on("canvas:data", (event, dataUrl) => {
     win.webContents.openDevTools();
     win.webContents.print(options, (success, failureReason) => {
       if (!success) {
-        saveAsPdf(win);
+        saveAsPdf(win, options);
       }
       console.log("Print Initiated");
     });

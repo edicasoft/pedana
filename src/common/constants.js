@@ -35,6 +35,8 @@ const images = [
   "img/triangle-yellow.png"
 ];
 const Hz = 10;
+const pedanaWidth = 500;
+const pedanaHeight = 560;
 const data = [
   [8.0859375, 11.54296875, 11.81640625, 11.42578125, 13.0859375, 14.3359375],
   [8.0078125, 11.23046875, 12.67578125, 10.99609375, 12.34375, 14.98046875],
@@ -124,5 +126,7 @@ export {
   idealBarycenterRightX,
   images,
   data,
-  Hz
+  Hz,
+  pedanaWidth,
+  pedanaHeight
 };

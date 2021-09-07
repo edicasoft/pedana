@@ -58,7 +58,9 @@ import Canvas from "@/entities/Canvas";
 import {
   leftPlatformCells,
   rightPlatformCells,
-  images
+  images,
+  pedanaHeight,
+  pedanaWidth
 } from "@/common/constants.js";
 import BackgroundLayer from "@/components/pedana/BackgroundLayer.vue";
 import Barycenter from "@/entities/Barycenter";
@@ -78,8 +80,8 @@ export default {
   },
   props: ["readingsData", "idx"],
   data: () => ({
-    width: 600,
-    height: 600,
+    width: pedanaWidth,
+    height: pedanaHeight,
     zoom: 1,
     readingsIdx: 0,
     weights: [],
@@ -90,7 +92,12 @@ export default {
     this.c.clear();
   },
   mounted() {
-    this.c = new Canvas(`barycenters-layer${this.idx}`, 600, 600, images);
+    this.c = new Canvas(
+      `barycenters-layer${this.idx}`,
+      pedanaWidth,
+      pedanaHeight,
+      images
+    );
     this.ctx = this.c.ctx;
     this.c.preloadImages(this.start);
   },
