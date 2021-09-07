@@ -1,11 +1,10 @@
 // @ts-nocheck
 "use strict";
 
-import { app, protocol, BrowserWindow } from "electron";
+import { app, protocol, BrowserWindow, dialog } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import Device from "@/driver/main.js";
-import pedana from "./store/modules/pedana";
 /*eslint-disable*/
 const ipc = require("electron").ipcMain;
 const fs = require("fs");
@@ -98,6 +97,38 @@ app.on("ready", async () => {
   }
   createWindow();
 });
+function saveAsPdf(win, fileName = "test.pdf") {
+  //TODO::move to separate function btn
+  dialog
+    .showSaveDialog({
+      defaultPath: fileName
+    })
+    .then(res => {
+      if (res.canceled || !res.filePath) {
+        return;
+      }
+      win.webContents
+        .printToPDF({})
+        .then(data => {
+          fs.writeFile(res.filePath, data, function(err) {
+            if (err) {
+              //TODO::show message box
+              alert(err);
+              console.log(err);
+            } else {
+              console.log("PDF Generated Successfully");
+            }
+          });
+        })
+        .catch(error => {
+          alert(error);
+          console.log(error);
+        });
+    })
+    .catch(err => {
+      console.log(err);
+    });
+}
 ipc.on("canvas:data", (event, dataUrl) => {
   console.log("on canvas:data", dataUrl);
   var options = {
@@ -110,13 +141,11 @@ ipc.on("canvas:data", (event, dataUrl) => {
     landscape: false,
     pagesPerSheet: 1,
     collate: false,
-    copies: 1,
-    header: "Header of the Page",
-    footer: "Footer of the Page"
+    copies: 1
   };
 
   let win = new BrowserWindow({
-    show: true,
+    show: true,//TODO::set to false
     webPreferences: {
       nodeIntegration: true
     }
@@ -125,31 +154,23 @@ ipc.on("canvas:data", (event, dataUrl) => {
   windowContent += "<html>";
   windowContent += "<head><title>Print canvas</title></head>";
   windowContent += "<body>";
-  windowContent += '<img src="' + dataUrl + '">';
+  windowContent += `<div style="display: 'inline-block'">`;
+  windowContent += "<div>Test case 1 </div>";
+  windowContent += '<div><img src="' + dataUrl + '"></div>';
+  windowContent += "</div>";
+  windowContent += `<div style="display: 'inline-block'">`;
+  windowContent += "<div>Test case 1 </div>";
+  windowContent += '<div><img src="' + dataUrl + '"></div>';
+  windowContent += "</div>";
   windowContent += "</body>";
   windowContent += "</html>";
   win.loadURL("data:text/html;charset=utf-8," + encodeURI(windowContent));
-//TODO::change filepath, set proper name for the file
+  //TODO::change filepath, set proper name for the file
   win.webContents.on("did-finish-load", () => {
-    // win.webContents.openDevTools();
+    win.webContents.openDevTools();
     win.webContents.print(options, (success, failureReason) => {
       if (!success) {
-        var filepath1 = "print1.pdf";
-        win.webContents
-          .printToPDF(options)
-          .then(data => {
-            fs.writeFile(filepath1, data, function(err) {
-              if (err) {
-                console.log(err);
-              } else {
-                console.log("PDF Generated Successfully");
-              }
-            });
-          })
-          .catch(error => {
-            console.log(error);
-          });
-        console.log(failureReason);
+        saveAsPdf(win);
       }
       console.log("Print Initiated");
     });

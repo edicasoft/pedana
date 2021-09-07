@@ -37,6 +37,9 @@ export default Vue.extend({
     onBgCanvasCreated(c) {
       this.bgCanvasObj = c;
     },
+    saveAs() {
+      console.log("save");
+    },
     print() {
       const printC = new Canvas("print", 600, 600);
       const bg = document.getElementById(this.backgroundCanvasId);

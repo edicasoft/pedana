@@ -24,13 +24,13 @@
       </v-row>
 
       <div class="pa-5">
-        <div>
+        <!-- <div>
           Angle opposite of X-axis:
           <strong>{{ oppositeXAngle.toFixed(2) }}</strong>
-        </div>
-        <!-- <div>
-          Angle next to X-axis: <strong>{{ nextToXAngle.toFixed(2) }}</strong>
         </div> -->
+        <div>
+          Angle next to X-axis: <strong>{{ nextToXAngle.toFixed(2) }}</strong>
+        </div>
       </div>
     </v-card>
   </v-dialog>
@@ -93,10 +93,10 @@ export default Vue.extend({
       const sqrt = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
       const angle = sqrt ? (Math.acos(deltaX / sqrt) * 180) / Math.PI : 0;
       return this.y2 > this.y1 ? -1 * angle : angle;
+    },
+    nextToXAngle(): number {
+      return 90 - Math.abs(this.oppositeXAngle);
     }
-    // nextToXAngle(): number {
-    //   return 90 - Math.abs(this.oppositeXAngle);
-    // }
   },
   created() {
     this.fillData();
