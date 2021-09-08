@@ -97,7 +97,7 @@ app.on("ready", async () => {
   }
   createWindow();
 });
-function saveAsPdf(win, options, fileName = "test.pdf") {
+function saveAsPdf(win, options, fileName = "Di_Rocca_Solange.pdf") {
   //TODO::move to separate function btn
   dialog
     .showSaveDialog({
@@ -139,7 +139,7 @@ ipc.on("canvas:data", (event, dataUrl) => {
     pagesPerSheet: 1,
     collate: false,
     copies: 1,
-    pageSize: 'A4',
+    pageSize: "A4",
     scaleFactor: 73
   };
 
@@ -154,15 +154,15 @@ ipc.on("canvas:data", (event, dataUrl) => {
   windowContent += "<head><title>Print canvas</title></head>";
   windowContent += "<body>";
   windowContent += `<div style="display: inline-block; margin-right: 15px">`;
-  windowContent += "<div>Test case 1 </div>";
+  windowContent += "<div>NO - 25/08/20_18-01</div>";
   windowContent += '<div><img src="' + dataUrl + '"></div>';
   windowContent += "</div>";
   windowContent += `<div style="display: inline-block; margin-right: 15px">`;
-  windowContent += "<div>Test case 2 </div>";
+  windowContent += "<div>O - 25/08/20_18-02</div>";
   windowContent += '<div><img src="' + dataUrl + '"></div>';
   windowContent += "</div>";
   windowContent += `<div style="display: inline-block">`;
-  windowContent += "<div>Test case 3 </div>";
+  windowContent += "<div>EC - 25/08/20_18-03</div>";
   windowContent += '<div><img src="' + dataUrl + '"></div>';
   windowContent += "</div>";
   windowContent += "</body>";

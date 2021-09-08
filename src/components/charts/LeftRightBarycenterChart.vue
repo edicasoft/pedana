@@ -113,8 +113,8 @@ export default Vue.extend({
     return {
       datacollectionLeft: {} as ChartData,
       datacollectionRight: {} as ChartData,
-      xL: 0,
-      yL: 0,
+      bxL: 0,
+      byL: 0,
       AmmqL: "",
       VvarL: "",
       RforL: "",
@@ -202,8 +202,8 @@ export default Vue.extend({
       this.AmmqL = leftBarycenter.calculateAMmq().toFixed(2);
       this.VvarL = leftBarycenter.calculateVelocityVariation().toFixed(2);
       this.RforL = leftBarycenter.calculateRForma().toFixed(2);
-      this.xL = leftBarycenter.calculateBx();
-      this.yL = leftBarycenter.calculateBy();
+      this.bxL = leftBarycenter.calculateBx();
+      this.byL = leftBarycenter.calculateBy();
 
       this.AmmqR = rightBarycenter.calculateAMmq().toFixed(2);
       this.VvarR = rightBarycenter.calculateVelocityVariation().toFixed(2);
@@ -320,11 +320,11 @@ export default Vue.extend({
             data: [
               {
                 x: maxX,
-                y: this.yL
+                y: this.byL
               },
               {
                 x: -maxX,
-                y: this.yL
+                y: this.byL
               }
             ]
           },
@@ -332,11 +332,11 @@ export default Vue.extend({
             ...intersectLineStyle,
             data: [
               {
-                x: this.xL,
+                x: this.bxL,
                 y: maxY
               },
               {
-                x: this.xL,
+                x: this.bxL,
                 y: -maxY
               }
             ]

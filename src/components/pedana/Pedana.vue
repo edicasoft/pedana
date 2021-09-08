@@ -333,14 +333,28 @@ export default Vue.extend({
     onImport(data) {
       this.readingsData = data;
       this.restart();
-      console.log(data);
       while (this.readingsIdx < this.readingsData.length) {
         console.log(this.readingsIdx);
 
         const res = this.setWeights(this.readingsData[this.readingsIdx]);
-        this.update();
+        this.moveBarycenters();
         this.readingsIdx++;
       }
+      //TODO::improve in PedanaImage as well
+      this.c.clear();
+      this.displayWeights();
+
+      this.c.transdormCoordinates();
+
+      this.drawConnectBarycentersHistory();
+      leftBarycenter.drawOld(this.ctx);
+      generalBarycenter.drawOld(this.ctx);
+      rightBarycenter.drawOld(this.ctx);
+
+      this.drawConnectBarycenters();
+      leftBarycenter.draw(this.ctx);
+      generalBarycenter.draw(this.ctx);
+      rightBarycenter.draw(this.ctx);
       this.isPlaying = false;
       this.isEndReading = true;
     },

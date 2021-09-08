@@ -41,7 +41,7 @@ export default class Barycenter {
       this.xVals.push(this.x);
       this.yVals.push(this.y);
       this.weights.push(weights);
-      console.log("move", this.xVals, this.weights);
+      //console.log("move", this.xVals, this.weights);
     }
   }
 

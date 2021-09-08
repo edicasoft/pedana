@@ -2,8 +2,12 @@
   <div class="small mt-3">
     <line-chart
       :style="{
-        width: '600px',
-        position: 'relative'
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        overflow: 'hidden',
+        height: '350px',
+        width: '600px'
       }"
       :chart-data="datacollection"
       :options="options"
@@ -12,11 +16,21 @@
 </template>
 
 <script lang="ts">
+//TODO::setTicksRange is not reactive
 import Vue from "vue";
 import { mapState } from "vuex";
 import LineChart from "@/common/LineChart.js";
 import { ChartData } from "chart.js";
-
+import {
+  leftBarycenter,
+  rightBarycenter,
+  generalBarycenter
+} from "@/common/barycenters.service.js";
+import {
+  idealBarycenterLeftX,
+  idealBarycenterRightX
+} from "@/common/constants.js";
+const defalutRange = 150;
 export default Vue.extend({
   name: "MainChart",
   components: {
@@ -25,6 +39,7 @@ export default Vue.extend({
   data() {
     return {
       datacollection: {} as ChartData,
+      margin: 10,
       options: {
         plugins: {
           legend: false
@@ -36,9 +51,12 @@ export default Vue.extend({
             {
               type: "linear",
               ticks: {
-                min: 100,
-                max: 100
-                //display: false
+                min: -defalutRange,
+                max: defalutRange,
+                display: false
+              },
+              gridLines: {
+                display: false
               }
             }
           ],
@@ -49,9 +67,9 @@ export default Vue.extend({
                 display: false
               },
               ticks: {
-                min: 100,
-                max: 100
-                // display: false
+                min: -defalutRange,
+                max: defalutRange,
+                display: false
               }
             }
           ]
@@ -60,13 +78,22 @@ export default Vue.extend({
     };
   },
   methods: {
-    setTicksRange(max) {
-      this.options.scales.xAxes[0].ticks.min = Math.floor(-max);
-      this.options.scales.xAxes[0].ticks.max = Math.floor(max);
-      this.options.scales.yAxes[0].ticks.min = Math.floor(-max);
-      this.options.scales.yAxes[0].ticks.max = Math.floor(max);
-    },
+    // setTicksRange(max) {
+    //   console.log("setTicksRange", max);
+    //   this.options.scales.xAxes[0].ticks.min = Math.floor(-max);
+    //   this.options.scales.xAxes[0].ticks.max = Math.floor(max);
+    //   this.options.scales.yAxes[0].ticks.min = Math.floor(-max);
+    //   this.options.scales.yAxes[0].ticks.max = Math.floor(max);
+    // },
+
     fillData() {
+      const bxL = leftBarycenter.calculateBx();
+      const byL = leftBarycenter.calculateBy();
+      const bxR = rightBarycenter.calculateBx();
+      const byR = rightBarycenter.calculateBy();
+      const bxG = generalBarycenter.calculateBx();
+      const byG = generalBarycenter.calculateBy();
+
       const maxYL = Math.max(
         ...this.leftBarycenterHistory.map(item => Math.abs(item.y))
       );
@@ -83,10 +110,59 @@ export default Vue.extend({
 
       const maxY = Math.max(maxYL, maxYR);
       const maxX = Math.max(maxXL, maxXR);
-      const max = Math.max(maxX, maxY);
-      this.setTicksRange(max);
-      console.log("setTicksRange", max);
+      let max = Math.max(maxX, maxY);
+      if (max < defalutRange) max = defalutRange;
+      //this.setTicksRange(max + this.margin);
+      const idealLeft = [
+        {
+          label: "Ideal Left",
+          borderColor: "blue",
+          pointBackgroundColor: "blue",
+          fill: false,
+          borderWidth: 1,
+          pointRadius: 0,
+          data: [
+            {
+              x: idealBarycenterLeftX,
+              y: max
+            },
+            {
+              x: idealBarycenterLeftX,
+              y: -max
+            }
+          ]
+        }
+      ];
 
+      const idealRight = [
+        {
+          label: "Ideal Right",
+          borderColor: "blue",
+          pointBackgroundColor: "blue",
+          fill: false,
+          borderWidth: 1,
+          pointRadius: 0,
+          data: [
+            {
+              x: idealBarycenterRightX,
+              y: max
+            },
+            {
+              x: idealBarycenterRightX,
+              y: -max
+            }
+          ]
+        }
+      ];
+      const intersectLineStyle = {
+        label: "",
+        borderColor: "#18dbfb",
+        pointBackgroundColor: "#18dbfb",
+        pointRadius: 0,
+        fill: false,
+        borderWidth: 1
+      };
+      const fullWidth = 2 * (max + this.margin);
       this.datacollection = {
         labels: [""],
         datasets: [
@@ -96,8 +172,8 @@ export default Vue.extend({
             pointRadius: 0,
             fill: false,
             data: [
-              { x: -max, y: 0 },
-              { x: max, y: 0 }
+              { x: -max - this.margin, y: 0 },
+              { x: max + this.margin, y: 0 }
             ],
             borderWidth: 1
           },
@@ -107,8 +183,8 @@ export default Vue.extend({
             pointRadius: 0,
             fill: false,
             data: [
-              { x: 0, y: max },
-              { x: 0, y: -max }
+              { x: 0, y: max + this.margin },
+              { x: 0, y: -max - this.margin }
             ],
             borderWidth: 1
           },
@@ -138,6 +214,96 @@ export default Vue.extend({
             fill: false,
             data: this.rightBarycenterHistory,
             borderWidth: 1
+          },
+          ...idealRight,
+          ...idealLeft,
+          {
+            ...intersectLineStyle,
+            data: [
+              {
+                x: -fullWidth / 2 + fullWidth / 3,
+                y: byL
+              },
+              {
+                x: -fullWidth / 2,
+                y: byL
+              }
+            ]
+          },
+          {
+            ...intersectLineStyle,
+            data: [
+              {
+                x: bxL,
+                y: max
+              },
+              {
+                x: bxL,
+                y: -max
+              }
+            ]
+          },
+          {
+            ...intersectLineStyle,
+            data: [
+              {
+                x: fullWidth / 2,
+                y: byR
+              },
+              {
+                x: fullWidth / 2 - fullWidth / 3,
+                y: byR
+              }
+            ]
+          },
+          {
+            ...intersectLineStyle,
+            data: [
+              {
+                x: bxR,
+                y: max
+              },
+              {
+                x: bxR,
+                y: -max
+              }
+            ]
+          },
+          {
+            label: "",
+            borderColor: "pink",
+            pointBackgroundColor: "pink",
+            pointRadius: 0,
+            fill: false,
+            borderWidth: 1,
+            data: [
+              {
+                x: fullWidth / 2 - fullWidth / 3,
+                y: byG
+              },
+              {
+                x: -fullWidth / 2 + fullWidth / 3,
+                y: byG
+              }
+            ]
+          },
+          {
+            label: "",
+            borderColor: "pink",
+            pointBackgroundColor: "pink",
+            pointRadius: 0,
+            fill: false,
+            borderWidth: 1,
+            data: [
+              {
+                x: bxG,
+                y: max
+              },
+              {
+                x: bxG,
+                y: -max
+              }
+            ]
           }
         ]
       };
@@ -146,8 +312,9 @@ export default Vue.extend({
   //TODO::write getter with set get
   watch: {
     generalBarycenterHistory: {
-      handler() {
+      handler(val) {
         this.fillData();
+        console.log(val);
       },
       immediate: true
     }
