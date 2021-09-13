@@ -1,56 +1,21 @@
 <template>
   <div>
+    <img v-if="resize" :src="result" />
     <!--- CANVAS --->
-    <v-sheet :width="width" :height="height">
-      <canvas :id="`barycenters-layer${idx}`"> </canvas>
-      <BackgroundLayer :width="width" :height="height" />
+    <v-sheet
+      class="viewport"
+      :class="{ 'd-none': resize }"
+      :width="width"
+      :height="height"
+    >
+      <BackgroundLayer
+        :width="width"
+        :height="height"
+        :id="backgroundCanvasId"
+      />
+      <canvas :id="`pedana-${idx}`"> </canvas>
     </v-sheet>
     <!--- END CANVAS --->
-
-    <!--- WEIGHTS --->
-    <v-sheet :width="width">
-      <div class="d-flex justify-space-around align-center">
-        <div class="text-left w-100">
-          Left: <b>{{ displayNumber(leftPlatformTotalWeight) }}</b>
-        </div>
-        <div class="d-flex align-items-center align-center">
-          <v-icon
-            color="red"
-            v-if="leftPlatformTotalWeight > rightPlatformTotalWeight"
-          >
-            mdi-menu-left
-          </v-icon>
-
-          <div class="text-center w-100">
-            Diff:
-            <b>{{
-              displayNumber(
-                Math.abs(rightPlatformTotalWeight - leftPlatformTotalWeight)
-              )
-            }}</b>
-          </div>
-          <v-icon
-            large
-            color="red"
-            v-if="rightPlatformTotalWeight > leftPlatformTotalWeight"
-          >
-            mdi-menu-right</v-icon
-          >
-        </div>
-
-        <div class="text-right w-100">
-          Right: <b>{{ displayNumber(rightPlatformTotalWeight) }}</b>
-        </div>
-      </div>
-      <div>
-        <span class="mt-5"
-          >Total:
-          {{
-            (leftPlatformTotalWeight + rightPlatformTotalWeight).toFixed(2)
-          }}</span
-        >
-      </div>
-    </v-sheet>
   </div>
 </template>
 <script>
@@ -78,7 +43,7 @@ export default {
   components: {
     BackgroundLayer
   },
-  props: ["readingsData", "idx"],
+  props: ["readingsData", "idx", "resize"],
   data: () => ({
     width: pedanaWidth,
     height: pedanaHeight,
@@ -86,14 +51,23 @@ export default {
     readingsIdx: 0,
     weights: [],
     ctx: null,
-    c: null
+    c: null,
+    generalBarycenter,
+    leftBarycenter,
+    rightBarycenter,
+    result: null
   }),
+  computed: {
+    backgroundCanvasId() {
+      return `pedana-bg-${this.idx}`;
+    }
+  },
   destroyed() {
     this.c.clear();
   },
   mounted() {
     this.c = new Canvas(
-      `barycenters-layer${this.idx}`,
+      `pedana-${this.idx}`,
       pedanaWidth,
       pedanaHeight,
       images
@@ -103,36 +77,13 @@ export default {
   },
   methods: {
     displayNumber,
-    drawConnectBarycentersHistory() {
-      for (let i = 0; i < this.readingsData.length; i++) {
-        this.c.drawLine(
-          { x: leftBarycenter.xVals[i], y: leftBarycenter.yVals[i] },
-          { x: rightBarycenter.xVals[i], y: rightBarycenter.yVals[i] },
-          "green"
-        );
-      }
-    },
-    drawConnectBarycenters() {
-      this.c.drawLine(leftBarycenter, rightBarycenter, "red");
-    },
-    drawHistory() {
-      this.c.drawLine(leftBarycenter, rightBarycenter, "grey");
-    },
-    moveBarycenters() {
-      console.log("moveBarycenters");
-      generalBarycenter.move(this.weights);
-      leftBarycenter.move(this.leftWeights);
-      rightBarycenter.move(this.rightWeights);
-      console.log("move", this.weights);
-    },
     start() {
       while (this.readingsIdx < this.readingsData.length) {
-        console.log(this.readingsIdx);
-
         this.weights = this.readingsData[this.readingsIdx];
-        this.draw();
+        this.moveBarycenters();
         this.readingsIdx++;
       }
+      this.draw();
     },
     draw() {
       try {
@@ -141,17 +92,22 @@ export default {
 
         this.c.transdormCoordinates();
 
-        this.moveBarycenters();
         this.drawConnectBarycentersHistory();
 
-        leftBarycenter.drawOld(this.ctx);
-        generalBarycenter.drawOld(this.ctx);
-        rightBarycenter.drawOld(this.ctx);
+        this.leftBarycenter.drawOld(this.ctx);
+        this.generalBarycenter.drawOld(this.ctx);
+        this.rightBarycenter.drawOld(this.ctx);
 
         this.drawConnectBarycenters();
-        leftBarycenter.draw(this.ctx);
-        generalBarycenter.draw(this.ctx);
-        rightBarycenter.draw(this.ctx);
+        this.leftBarycenter.draw(this.ctx);
+        this.generalBarycenter.draw(this.ctx);
+        this.rightBarycenter.draw(this.ctx);
+        if (this.resize) {
+          setTimeout(() => {
+            this.result = this.combineCanvasesToImage(0.94);
+            //console.log(this.result);
+          }, 500);
+        }
       } catch (e) {
         this.error = true;
         console.error(e);

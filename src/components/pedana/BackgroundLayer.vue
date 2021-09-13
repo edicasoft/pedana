@@ -23,7 +23,7 @@ export default Vue.extend({
   props: ["width", "height", "id"],
   mounted() {
     c = new Canvas(this.id, pedanaWidth, pedanaHeight);
-    this.$emit("canvasCreated", c);
+    //this.$emit("canvasCreated", c);
     ctx = c.ctx;
     this.draw();
   },

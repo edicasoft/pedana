@@ -1,6 +1,11 @@
 <template>
   <v-container fluid>
-    <!-- <ComparePedanasDialog :data="readingsData" v-if="readingsData.length" /> -->
+    <v-btn @click="showCompareDlg = true">Compare</v-btn>
+    <ComparePedanasDialog
+      v-if="showCompareDlg"
+      :data="readingsData"
+      :value.sync="showCompareDlg"
+    />
     <error-dialog
       v-if="!isConnected && !isReady"
       message="Pedana is not connected."
@@ -81,13 +86,12 @@
 
         <!--- CANVAS --->
         <v-sheet class="viewport" :width="width" :height="height">
-          <canvas id="barycenters-layer"> </canvas>
           <BackgroundLayer
             :width="width"
             :height="height"
-            @canvasCreated="onBgCanvasCreated"
             :id="backgroundCanvasId"
           />
+          <canvas id="pedana-main"> </canvas>
         </v-sheet>
         <!--- END CANVAS --->
 
@@ -95,6 +99,9 @@
         <v-sheet :width="width">
           <v-btn icon @click="print">
             <v-icon>mdi-printer</v-icon>
+          </v-btn>
+          <v-btn icon @click="saveAsPdf">
+            <v-icon>mdi-content-save</v-icon>
           </v-btn>
           <div class="d-flex justify-space-around align-center">
             <div class="text-left w-100">
@@ -226,7 +233,7 @@ import LeftRightBarycenterChart from "@/components/charts/LeftRightBarycenterCha
 
 import ErrorDialog from "@/components/dialogs/ErrorDialog.vue";
 import ConnectingDialog from "@/components/dialogs/ConnectingDialog.vue";
-// import ComparePedanasDialog from "@/components/dialogs/ComparePedanasDialog.vue";
+import ComparePedanasDialog from "@/components/dialogs/ComparePedanasDialog.vue";
 import ImportFileBtn from "@/components/file/ImportFileBtn.vue";
 import ExportToFileBtn from "@/components/file/ExportToFileBtn.vue";
 import _ from "lodash";
@@ -254,8 +261,8 @@ export default Vue.extend({
     ExportToFileBtn,
     // Dialogs
     ErrorDialog,
-    ConnectingDialog
-    // ComparePedanasDialog
+    ConnectingDialog,
+    ComparePedanasDialog
   },
   data: () => ({
     showTortionChart: false,
@@ -277,13 +284,17 @@ export default Vue.extend({
     isLoading: false,
     ctx: null,
     c: null,
-    backgroundCanvasId: "background-layer"
+    backgroundCanvasId: "background-layer",
+    generalBarycenter,
+    leftBarycenter,
+    rightBarycenter,
+    showCompareDlg: false
   }),
   destroyed() {
     this.c.clear();
   },
   mounted() {
-    this.c = new Canvas("barycenters-layer", pedanaWidth, pedanaHeight, images);
+    this.c = new Canvas("pedana-main", pedanaWidth, pedanaHeight, images);
     this.ctx = this.c.ctx;
     this.c.preloadImages(this.play);
     ipc.on("is-connected", (event, args) => {
@@ -337,24 +348,14 @@ export default Vue.extend({
         console.log(this.readingsIdx);
 
         const res = this.setWeights(this.readingsData[this.readingsIdx]);
-        this.moveBarycenters();
+        if (this.readingsIdx !== this.readingsData.length - 1) {
+          this.moveBarycenters();
+          this.saveBarycentersHistory();
+        }
         this.readingsIdx++;
       }
       //TODO::improve in PedanaImage as well
-      this.c.clear();
-      this.displayWeights();
-
-      this.c.transdormCoordinates();
-
-      this.drawConnectBarycentersHistory();
-      leftBarycenter.drawOld(this.ctx);
-      generalBarycenter.drawOld(this.ctx);
-      rightBarycenter.drawOld(this.ctx);
-
-      this.drawConnectBarycenters();
-      leftBarycenter.draw(this.ctx);
-      generalBarycenter.draw(this.ctx);
-      rightBarycenter.draw(this.ctx);
+      this.update();
       this.isPlaying = false;
       this.isEndReading = true;
     },
@@ -396,8 +397,8 @@ export default Vue.extend({
       this.isEndReading = false;
       this.$store.commit("pedana/CLEAR_HISTORY");
       generalBarycenter.reset();
-      leftBarycenter.reset();
-      rightBarycenter.reset();
+      this.leftBarycenter.reset();
+      this.rightBarycenter.reset();
       this.c.clear();
     },
     toggleStreaming() {
@@ -427,9 +428,9 @@ export default Vue.extend({
     async rewind() {
       const res = await this.rewindData(this.readingsIdx);
 
-      generalBarycenter.resetDataToIndex(this.readingsIdx);
-      leftBarycenter.resetDataToIndex(this.readingsIdx);
-      rightBarycenter.resetDataToIndex(this.readingsIdx);
+      this.generalBarycenter.resetDataToIndex(this.readingsIdx);
+      this.leftBarycenter.resetDataToIndex(this.readingsIdx);
+      this.rightBarycenter.resetDataToIndex(this.readingsIdx);
       if (!this.error) {
         requestAnimationFrame(() => {
           this.update();
@@ -472,37 +473,18 @@ export default Vue.extend({
         console.error(e);
       }
     },
-    drawConnectBarycenters() {
-      this.c.drawLine(leftBarycenter, rightBarycenter, "red");
-    },
-    //TODO::make it common along with the PedanaCanvasMixin method
-    drawConnectBarycentersHistory() {
-      for (let i = 0; i < this.readingsData.length; i++) {
-        this.c.drawLine(
-          { x: leftBarycenter.xVals[i], y: leftBarycenter.yVals[i] },
-          { x: rightBarycenter.xVals[i], y: rightBarycenter.yVals[i] },
-          "green"
-        );
-      }
-    },
-    moveBarycenters() {
-      console.log("moveBarycenters");
-      generalBarycenter.move(this.weights);
-      leftBarycenter.move(this.leftWeights);
-      rightBarycenter.move(this.rightWeights);
-      console.log("move", this.weights);
-
+    saveBarycentersHistory() {
       const general = {
-        x: generalBarycenter.x,
-        y: generalBarycenter.y
+        x: this.generalBarycenter.x,
+        y: this.generalBarycenter.y
       };
       const left = {
-        x: leftBarycenter.x,
-        y: leftBarycenter.y
+        x: this.leftBarycenter.x,
+        y: this.leftBarycenter.y
       };
       const right = {
-        x: rightBarycenter.x,
-        y: rightBarycenter.y
+        x: this.rightBarycenter.x,
+        y: this.rightBarycenter.y
       };
       this.addBarycentersToHistory({ general, left, right });
     },
@@ -514,16 +496,17 @@ export default Vue.extend({
         this.c.transdormCoordinates();
 
         this.moveBarycenters();
+        this.saveBarycentersHistory();
 
         this.drawConnectBarycentersHistory();
-        leftBarycenter.drawOld(this.ctx);
-        generalBarycenter.drawOld(this.ctx);
-        rightBarycenter.drawOld(this.ctx);
+        this.leftBarycenter.drawOld(this.ctx);
+        this.generalBarycenter.drawOld(this.ctx);
+        this.rightBarycenter.drawOld(this.ctx);
 
         this.drawConnectBarycenters();
-        leftBarycenter.draw(this.ctx);
-        generalBarycenter.draw(this.ctx);
-        rightBarycenter.draw(this.ctx);
+        this.leftBarycenter.draw(this.ctx);
+        this.generalBarycenter.draw(this.ctx);
+        this.rightBarycenter.draw(this.ctx);
       } catch (e) {
         this.error = true;
         console.error(e);

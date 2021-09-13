@@ -16,11 +16,6 @@ import Vue from "vue";
 import { ipcRenderer } from "electron";
 
 export default Vue.extend({
-  data() {
-    return {
-      bgCanvasObj: null
-    };
-  },
   computed: {
     leftWeights() {
       return this.weights.slice(0, 3);
@@ -39,25 +34,51 @@ export default Vue.extend({
     }
   },
   methods: {
-    onBgCanvasCreated(c) {
-      this.bgCanvasObj = c;
-    },
-    saveAs() {
-      console.log("save");
-    },
-    print() {
-      //for three items
-      const koef = 0.92;
-      const width = pedanaWidth * koef;
-      const height = pedanaHeight * koef;
+    combineCanvasesToImage(k = 1) {
+      //TODO::destroy canvas
+      const width = k * pedanaWidth;
+      const height = k * pedanaHeight;
       const printC = new Canvas("print", width, height);
+      printC.clear();
       const bg = document.getElementById(this.backgroundCanvasId);
       printC.ctx.drawImage(bg, 0, 0, width, height);
       printC.ctx.drawImage(this.c.canvas, 0, 0, width, height);
-      const dataUrl = printC.canvas.toDataURL();
-      //TODO::there is no need to send
-      ipcRenderer.send("canvas:data", dataUrl);
-      console.log("print", dataUrl);
+      return printC.canvas.toDataURL();
+    },
+    saveAsPdf() {
+      console.log("save");
+      ipcRenderer.send("canvas:pdf", [
+        { image: this.combineCanvasesToImage() }
+      ]);
+      console.log("saveAsPdf");
+    },
+    print() {
+      ipcRenderer.send("canvas:print", [
+        { image: this.combineCanvasesToImage() }
+      ]);
+      console.log("print");
+    },
+    drawConnectBarycentersHistory() {
+      for (let i = 0; i < this.readingsData.length; i++) {
+        this.c.drawLine(
+          { x: this.leftBarycenter.xVals[i], y: this.leftBarycenter.yVals[i] },
+          {
+            x: this.rightBarycenter.xVals[i],
+            y: this.rightBarycenter.yVals[i]
+          },
+          "green"
+        );
+      }
+    },
+    drawConnectBarycenters() {
+      this.c.drawLine(this.leftBarycenter, this.rightBarycenter, "red");
+    },
+    moveBarycenters() {
+      //console.log("moveBarycenters");
+      this.generalBarycenter.move(this.weights);
+      this.leftBarycenter.move(this.leftWeights);
+      this.rightBarycenter.move(this.rightWeights);
+      //console.log("move", this.weights);
     },
     displayWeights() {
       if (this.weights.length === 0) return;

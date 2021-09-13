@@ -50,6 +50,7 @@ async function createWindow() {
   pedana.on("connect", data => {
     console.log("connect:", data);
     win.webContents.send("is-connected", true);
+    //TODO::remove timeout
     setTimeout(pedana.startReading, 2000);
     // setTimeout(pedana.haltReading, 12000);
   });
@@ -98,7 +99,6 @@ app.on("ready", async () => {
   createWindow();
 });
 function saveAsPdf(win, options, fileName = "Di_Rocca_Solange.pdf") {
-  //TODO::move to separate function btn
   dialog
     .showSaveDialog({
       defaultPath: fileName
@@ -129,20 +129,7 @@ function saveAsPdf(win, options, fileName = "Di_Rocca_Solange.pdf") {
       console.log(err);
     });
 }
-ipc.on("canvas:data", (event, dataUrl) => {
-  console.log("on canvas:data", dataUrl);
-  var options = {
-    silent: false,
-    printBackground: false,
-    color: false,
-    landscape: true,
-    pagesPerSheet: 1,
-    collate: false,
-    copies: 1,
-    pageSize: "A4",
-    scaleFactor: 73
-  };
-
+function createPrintCanvasWindow(data) {
   let win = new BrowserWindow({
     show: true, //TODO::set to false
     webPreferences: {
@@ -151,31 +138,68 @@ ipc.on("canvas:data", (event, dataUrl) => {
   });
   let windowContent = "<!DOCTYPE html>";
   windowContent += "<html>";
-  windowContent += "<head><title>Print canvas</title></head>";
+  windowContent += "<head><title>Patient Name</title></head>";
   windowContent += "<body>";
-  windowContent += `<div style="display: inline-block; margin-right: 15px">`;
-  windowContent += "<div>NO - 25/08/20_18-01</div>";
-  windowContent += '<div><img src="' + dataUrl + '"></div>';
-  windowContent += "</div>";
-  windowContent += `<div style="display: inline-block; margin-right: 15px">`;
-  windowContent += "<div>O - 25/08/20_18-02</div>";
-  windowContent += '<div><img src="' + dataUrl + '"></div>';
-  windowContent += "</div>";
-  windowContent += `<div style="display: inline-block">`;
-  windowContent += "<div>EC - 25/08/20_18-03</div>";
-  windowContent += '<div><img src="' + dataUrl + '"></div>';
+  for (let i = 0; i < data.length; i++) {
+    let style = `display: inline-block;`;
+    if (i > data.length - 1) {
+      style += `margin-right: 15px;`;
+    }
+    windowContent += `<div style="${style}">`;
+    windowContent += `<div>${data[i].type} - ${data[i].datetime}</div>`;
+    windowContent += '<div><img src="' + data[i].image + '"></div>';
+    windowContent += "</div>";
+  }
   windowContent += "</div>";
   windowContent += "</body>";
   windowContent += "</html>";
   win.loadURL("data:text/html;charset=utf-8," + encodeURI(windowContent));
-  //TODO::change filepath, set proper name for the file
+  return win;
+}
+ipc.on("canvas:pdf", (event, data) => {
+  console.log("on canvas:pdf", data);
+  let options = {
+    silent: false,
+    printBackground: false,
+    color: false,
+    landscape: true,
+    pagesPerSheet: 1,
+    collate: false,
+    copies: 1,
+    pageSize: "A4"
+  };
+  if (data.length === 3) options.scaleFactor = 67;
+
+  const win = createPrintCanvasWindow(data);
+  //TODO::set proper name for the file
+  win.webContents.on("did-finish-load", () => {
+    win.webContents.openDevTools();
+    saveAsPdf(win, options, "Patient_Name.pdf");
+    //TODO::show message box on success
+  });
+});
+ipc.on("canvas:print", (event, data) => {
+  console.log("on canvas:data", data);
+  let options = {
+    silent: false,
+    printBackground: false,
+    color: false,
+    landscape: true,
+    pagesPerSheet: 1,
+    collate: false,
+    copies: 1,
+    pageSize: "A4"
+  };
+  if (data.length === 3) options.scaleFactor = 67;
+  const win = createPrintCanvasWindow(data);
+  //TODO::set proper name for the file
   win.webContents.on("did-finish-load", () => {
     win.webContents.openDevTools();
     win.webContents.print(options, (success, failureReason) => {
       if (!success) {
-        saveAsPdf(win, options);
+        saveAsPdf(win, options, "Patient_Name.pdf");
+        console.log(failureReason);
       }
-      console.log("Print Initiated");
     });
   });
 });
