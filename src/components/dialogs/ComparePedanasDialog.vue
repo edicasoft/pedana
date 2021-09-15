@@ -9,17 +9,17 @@
       </div>
       <div v-if="value">
         <div class="d-inline-block mr-3">
-          <PedanaCanvas :readingsData="data" :idx="1" :resize="true" />
+          <PedanaCanvas :readingsData="data" :idx="1" />
         </div>
         <div class="d-inline-block mr-3">
           <PedanaCanvas
             :readingsData="data.slice(1, 4)"
             :idx="2"
-            :resize="true"
+            :resize="false"
           />
         </div>
         <div class="d-inline-block">
-          <PedanaCanvas :readingsData="data" :idx="3" :resize="true" />
+          <PedanaCanvas :readingsData="data" :idx="3" />
         </div>
       </div>
     </v-card>

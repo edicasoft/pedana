@@ -47,7 +47,7 @@ export default Vue.extend({
     },
     saveAsPdf() {
       console.log("save");
-      ipcRenderer.send("canvas:pdf", [
+      ipcRenderer.send("canvas:print", [
         { image: this.combineCanvasesToImage() }
       ]);
       console.log("saveAsPdf");
@@ -93,17 +93,21 @@ export default Vue.extend({
 
         let x = this.width / 2 + cells[i].x;
         let y = this.height / 2 - cells[i].y;
-
         if (cells[i].y < 0) {
           y += 20;
+          //y < 0, x > 0
           if (cells[i].x > 0) x += 20;
         } else {
+          //y > 0, x > 0
           y -= 20;
-          if (cells[i].x > 0) x -= 5;
+          if (cells[i].x > 0) x -= 20;
         }
         if (cells[i].x < 0) {
           x -= 30;
+          //y < 0, x < 0,
           if (cells[i].y < 0) x -= 20;
+          //y > 0, x < 0
+          else x += 15;
         }
         this.ctx.fillText(this.displayNumber(this.weights[i]).toString(), x, y);
       }

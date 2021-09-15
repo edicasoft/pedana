@@ -1,13 +1,8 @@
 <template>
   <div>
-    <img v-if="resize" :src="result" />
+    <!-- <img v-if="resize" :src="result" /> -->
     <!--- CANVAS --->
-    <v-sheet
-      class="viewport"
-      :class="{ 'd-none': resize }"
-      :width="width"
-      :height="height"
-    >
+    <v-sheet class="viewport" :width="width" :height="height">
       <BackgroundLayer
         :width="width"
         :height="height"
@@ -43,7 +38,7 @@ export default {
   components: {
     BackgroundLayer
   },
-  props: ["readingsData", "idx", "resize"],
+  props: ["readingsData", "idx"],
   data: () => ({
     width: pedanaWidth,
     height: pedanaHeight,
@@ -102,12 +97,12 @@ export default {
         this.leftBarycenter.draw(this.ctx);
         this.generalBarycenter.draw(this.ctx);
         this.rightBarycenter.draw(this.ctx);
-        if (this.resize) {
-          setTimeout(() => {
-            this.result = this.combineCanvasesToImage(0.94);
-            //console.log(this.result);
-          }, 500);
-        }
+        // if (this.resize) {
+        //   setTimeout(() => {
+        //     this.result = this.combineCanvasesToImage(0.94);
+        //     //console.log(this.result);
+        //   }, 500);
+        // }
       } catch (e) {
         this.error = true;
         console.error(e);

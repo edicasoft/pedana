@@ -216,7 +216,8 @@ import {
   images,
   Hz,
   pedanaHeight,
-  pedanaWidth
+  pedanaWidth,
+  data
 } from "@/common/constants.js";
 import { mapState, mapActions } from "vuex";
 import BackgroundLayer from "@/components/pedana/BackgroundLayer.vue";
@@ -234,6 +235,7 @@ import LeftRightBarycenterChart from "@/components/charts/LeftRightBarycenterCha
 import ErrorDialog from "@/components/dialogs/ErrorDialog.vue";
 import ConnectingDialog from "@/components/dialogs/ConnectingDialog.vue";
 import ComparePedanasDialog from "@/components/dialogs/ComparePedanasDialog.vue";
+
 import ImportFileBtn from "@/components/file/ImportFileBtn.vue";
 import ExportToFileBtn from "@/components/file/ExportToFileBtn.vue";
 import _ from "lodash";

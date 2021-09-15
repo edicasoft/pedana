@@ -35,7 +35,7 @@ const images = [
   "img/triangle-yellow.png"
 ];
 const Hz = 10;
-const pedanaWidth = 500;
+const pedanaWidth = 470;
 const pedanaHeight = 560;
 const data = [
   [8.0859375, 11.54296875, 11.81640625, 11.42578125, 13.0859375, 14.3359375],
