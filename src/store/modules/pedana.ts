@@ -7,11 +7,7 @@ const state = {
   leftBarycenterHistory: [],
   rightBarycenterHistory: []
 };
-//TODO::check if it's redundant
-const getters = {
-  leftWeights: state => state.weights.slice(0, 3),
-  rightWeights: state => state.weights.slice(3, 6)
-};
+const getters = {};
 const mutations = {
   REWIND(state, idx: number) {
     //set new weights and weightsHistory

@@ -1,25 +1,21 @@
 <template>
-  <v-dialog :value="value" fullscreen :style="{ zIndex: 1000 }">
+  <v-dialog :value="value" fullscreen :style="{ zIndex: 1000 }" persistent>
     <v-card class="pa-3">
-      <div class="d-flex align-center justify-space-between pb-3">
-        <v-card-title class="pt-0 pb-0"></v-card-title>
+      <div class="d-flex align-center justify-end pb-3">
         <v-btn @click="close" icon>
           <v-icon color="error">mdi-close-circle</v-icon></v-btn
         >
       </div>
-      <div v-if="value">
-        <div class="d-inline-block mr-3">
-          <PedanaCanvas :readingsData="data" :idx="1" />
-        </div>
-        <div class="d-inline-block mr-3">
-          <PedanaCanvas
-            :readingsData="data.slice(1, 4)"
-            :idx="2"
-            :resize="false"
-          />
-        </div>
-        <div class="d-inline-block">
-          <PedanaCanvas :readingsData="data" :idx="3" />
+      <div>
+        <v-btn>Print</v-btn>
+        <v-btn>Save</v-btn>
+      </div>
+      <div
+        v-if="value"
+        class="d-flex align-items-center justify-space-around pl-1"
+      >
+        <div v-for="(exam, idx) in selectedExams" :key="idx" class="pr-2">
+          <PedanaCanvas :readingsData="exam" :idx="idx" />
         </div>
       </div>
     </v-card>
@@ -27,13 +23,14 @@
 </template>
 <script>
 import PedanaCanvas from "@/components/pedana/PedanaCanvasImage.vue";
+import { mapState } from "vuex";
 export default {
   props: ["data", "value"],
   components: {
     PedanaCanvas
   },
-  data() {
-    return {};
+  computed: {
+    ...mapState("exams", ["selectedExams"])
   },
   methods: {
     close() {

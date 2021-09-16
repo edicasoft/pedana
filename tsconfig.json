@@ -33,7 +33,7 @@
     "src/**/*.vue",
     "tests/**/*.ts",
     "tests/**/*.tsx"
-, "src/store/modules/pedana.ts"  ],
+, "src/store/modules/pedana.ts", "src/store/index.js"  ],
   "exclude": [
     "node_modules"
   ]

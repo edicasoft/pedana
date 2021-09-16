@@ -149,7 +149,7 @@
       <!--- END WEIGHTS --->
 
       <!-- CHARTS  -->
-      <v-col v-if="weights.length > 0">
+      <v-col>
         <!-- Buttons -->
         <div class="d-flex mb-3">
           <v-btn
@@ -216,8 +216,7 @@ import {
   images,
   Hz,
   pedanaHeight,
-  pedanaWidth,
-  data
+  pedanaWidth
 } from "@/common/constants.js";
 import { mapState, mapActions } from "vuex";
 import BackgroundLayer from "@/components/pedana/BackgroundLayer.vue";
