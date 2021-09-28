@@ -98,7 +98,7 @@ app.on("ready", async () => {
   }
   createWindow();
 });
-function saveAsPdf(win, options, fileName = "Di_Rocca_Solange.pdf") {
+function saveAsPdf(win, options, fileName = "Patient_Name.pdf") {
   dialog
     .showSaveDialog({
       defaultPath: fileName
@@ -197,7 +197,7 @@ ipc.on("canvas:print", (event, data) => {
     win.webContents.openDevTools();
     win.webContents.print(options, (success, failureReason) => {
       if (!success) {
-        saveAsPdf(win, options, "Patient_Name.pdf");
+        dialog.showErrorBox("Print File Error", failureReason);
         console.log(failureReason);
       }
     });

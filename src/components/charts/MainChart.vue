@@ -1,18 +1,32 @@
 <template>
-  <div class="small mt-3">
-    <line-chart
-      :style="{
-        position: 'relative',
-        display: 'flex',
-        alignItems: 'center',
-        overflow: 'hidden',
-        height: '350px',
-        width: '600px'
-      }"
-      :chart-data="datacollection"
-      :options="options"
-    ></line-chart>
-  </div>
+  <v-dialog
+    :value="value"
+    @click:outside="close"
+    :max-width="1200"
+    fullscreen
+    persistent
+  >
+    <v-card class="pa-3">
+      <div class="d-flex align-center justify-space-between pb-3">
+        <v-card-title class="pt-0 pb-0">Main</v-card-title>
+        <v-btn @click="close" icon>
+          <v-icon color="error">mdi-close-circle</v-icon></v-btn
+        >
+      </div>
+      <line-chart
+        :style="{
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          overflow: 'hidden',
+          height: '600px',
+          width: '800px'
+        }"
+        :chart-data="datacollection"
+        :options="options"
+      ></line-chart>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script lang="ts">
@@ -36,6 +50,7 @@ export default Vue.extend({
   components: {
     LineChart
   },
+  props: ["value"],
   data() {
     return {
       datacollection: {} as ChartData,
@@ -85,7 +100,9 @@ export default Vue.extend({
     //   this.options.scales.yAxes[0].ticks.min = Math.floor(-max);
     //   this.options.scales.yAxes[0].ticks.max = Math.floor(max);
     // },
-
+    close() {
+      this.$emit("update:value", false);
+    },
     fillData() {
       const bxL = leftBarycenter.calculateBx();
       const byL = leftBarycenter.calculateBy();

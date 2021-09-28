@@ -1,15 +1,18 @@
 <template>
   <v-dialog :value="value" fullscreen :style="{ zIndex: 1000 }" persistent>
     <v-card class="pa-3">
-      <div class="d-flex align-center justify-end pb-3">
+      <v-toolbar dense flat>
+        <v-btn icon>
+          <v-icon>mdi-printer</v-icon>
+        </v-btn>
+        <v-btn icon>
+          <v-icon>mdi-content-save</v-icon>
+        </v-btn>
+        <v-spacer />
         <v-btn @click="close" icon>
           <v-icon color="error">mdi-close-circle</v-icon></v-btn
         >
-      </div>
-      <div>
-        <v-btn>Print</v-btn>
-        <v-btn>Save</v-btn>
-      </div>
+      </v-toolbar>
       <div
         v-if="value"
         class="d-flex align-items-center justify-space-around pl-1"

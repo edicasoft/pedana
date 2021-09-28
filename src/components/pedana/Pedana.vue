@@ -1,6 +1,40 @@
 <template>
-  <v-container fluid>
-    <v-btn @click="showCompareDlg = true">Compare</v-btn>
+  <v-main>
+    <v-app-bar dark>
+      <!--- Streaming from Pedana Play Control --->
+      <template v-if="isReady">
+        <v-btn @click="toggleStreaming" class="mx-2" small>
+          <v-icon left>
+            {{ isEndStreaming ? "mdi-play" : "mdi-pause" }}
+          </v-icon>
+          {{ isEndStreaming ? "New Session" : "STOP" }}
+        </v-btn>
+      </template>
+      <ImportFileBtn
+        v-if="isEndStreaming"
+        @importData="onImport"
+        @onLoading="onLoading"
+        class="ml-2"
+      />
+      <ExportToFileBtn
+        v-if="readingsData.length && isEndStreaming"
+        :data="readingsData"
+        class="ml-2"
+      />
+
+      <!-- <v-btn @click="showCompareDlg = true">Compare</v-btn> -->
+      <v-spacer></v-spacer>
+
+      <v-toolbar-title>
+        <v-icon>mdi-account</v-icon> Solange Di Rocca</v-toolbar-title
+      >
+
+      <v-spacer></v-spacer>
+      <v-btn class="ml-2"
+        ><v-icon left>mdi-account-group</v-icon>Patients</v-btn
+      >
+      <!-- Charts Buttons -->
+    </v-app-bar>
     <ComparePedanasDialog
       v-if="showCompareDlg"
       :data="readingsData"
@@ -13,21 +47,11 @@
     <connecting-dialog v-else-if="isConnected && !isReady" />
 
     <error-dialog v-if="pedanaError" :message="pedanaError" />
-
-    <v-row>
-      <v-col>
-        <v-sheet>
-          <!--- Streaming from Pedana Play Control --->
-          <template v-if="isReady">
-            <v-btn @click="toggleStreaming" class="mx-2" small>
-              <v-icon left>
-                {{ isEndStreaming ? "mdi-play" : "mdi-pause" }}
-              </v-icon>
-              {{ isEndStreaming ? "New Session" : "STOP" }}
-            </v-btn>
-          </template>
+    <v-container fluid>
+      <v-row>
+        <v-col>
           <!-- Reset ---->
-          <v-btn
+          <!-- <v-btn
             v-if="readingsData.length > 0"
             @click="reset"
             color="red"
@@ -37,106 +61,94 @@
           >
             <v-icon dark left>mdi-autorenew</v-icon>
             Reset
-          </v-btn>
-          <span class="ml-auto">
-            <ImportFileBtn
-              v-if="isEndStreaming"
-              @importData="onImport"
-              @onLoading="onLoading"
-              class="ml-2"
-            />
-            <ExportToFileBtn
-              v-if="readingsData.length && isEndStreaming"
-              :data="readingsData"
-              class="ml-2"
-            />
-          </span>
-        </v-sheet>
-        <v-divider class="mt-3"></v-divider>
-
-        <!-- CONTROLS -->
-        <v-sheet class="pa-3 d-flex align-center">
-          <template v-if="readingsData.length">
-            <!-- Back -->
-            <v-btn icon @click="back" :disabled="readingsIdx <= 0"
-              ><v-icon>mdi-step-backward</v-icon></v-btn
-            >
-            <!-- Read from File Play Control -->
-            <v-btn @click="start" icon>
-              <v-icon>{{
-                isPlaying && readingsIdx > 0 ? "mdi-pause" : "mdi-play"
-              }}</v-icon>
-            </v-btn>
-            <!-- Forward -->
-            <v-btn
-              icon
-              @click="next"
-              :disabled="readingsIdx >= readingsData.length - 1"
-              ><v-icon>mdi-step-forward</v-icon></v-btn
-            >
-          </template>
-
-          <!--- Timer --->
-          <template v-if="readingsIdx > 0">
-            <v-icon color="green" dark>mdi-timer-outline</v-icon>
-            {{ readingsIdx > 0 ? (readingsIdx / Hz).toFixed(2) : 0 }}
-          </template>
-        </v-sheet>
-        <!--- END CONTROLS --->
-
-        <!--- CANVAS --->
-        <v-sheet class="viewport" :width="width" :height="height">
-          <BackgroundLayer
-            :width="width"
-            :height="height"
-            :id="backgroundCanvasId"
-          />
-          <canvas id="pedana-main"> </canvas>
-        </v-sheet>
-        <!--- END CANVAS --->
-
-        <!--- WEIGHTS --->
-        <v-sheet :width="width">
-          <v-btn icon @click="print">
-            <v-icon>mdi-printer</v-icon>
-          </v-btn>
-          <v-btn icon @click="saveAsPdf">
-            <v-icon>mdi-content-save</v-icon>
-          </v-btn>
-          <div class="d-flex justify-space-around align-center">
-            <div class="text-left w-100">
-              Left: <b>{{ displayNumber(leftPlatformTotalWeight) }}</b>
-            </div>
-            <div class="d-flex align-items-center align-center">
-              <v-icon
-                color="red"
-                v-if="leftPlatformTotalWeight > rightPlatformTotalWeight"
+          </v-btn> -->
+          <!-- CONTROLS -->
+          <v-toolbar flat>
+            <template v-if="readingsData.length">
+              <!-- Back -->
+              <v-btn icon @click="back" :disabled="readingsIdx <= 0"
+                ><v-icon>mdi-step-backward</v-icon></v-btn
               >
-                mdi-menu-left
-              </v-icon>
+              <!-- Read from File Play Control -->
+              <v-btn @click="start" icon>
+                <v-icon>{{
+                  isPlaying && readingsIdx > 0 ? "mdi-pause" : "mdi-play"
+                }}</v-icon>
+              </v-btn>
+              <!-- Forward -->
+              <v-btn
+                icon
+                @click="next"
+                :disabled="readingsIdx >= readingsData.length - 1"
+                ><v-icon>mdi-step-forward</v-icon></v-btn
+              >
+            </template>
 
-              <div class="text-center w-100">
-                Diff:
-                <b>{{
-                  displayNumber(
-                    Math.abs(rightPlatformTotalWeight - leftPlatformTotalWeight)
-                  )
-                }}</b>
+            <!--- Timer --->
+            <template v-if="readingsIdx > 0">
+              <v-icon color="green" dark>mdi-timer-outline</v-icon>
+              {{ readingsIdx > 0 ? (readingsIdx / Hz).toFixed(2) : 0 }}
+            </template>
+          </v-toolbar>
+          <!--- END CONTROLS --->
+
+          <!--- CANVAS --->
+          <v-sheet class="viewport" :width="width" :height="height">
+            <BackgroundLayer
+              :width="width"
+              :height="height"
+              :id="backgroundCanvasId"
+            />
+            <canvas id="pedana-main"> </canvas>
+          </v-sheet>
+          <!--- END CANVAS --->
+
+          <!--- WEIGHTS --->
+          <v-sheet :width="width">
+            <div class="d-flex justify-space-around align-center">
+              <div class="text-left w-100">
+                Left: <b>{{ displayNumber(leftPlatformTotalWeight) }}</b>
               </div>
-              <v-icon
-                large
-                color="red"
-                v-if="rightPlatformTotalWeight > leftPlatformTotalWeight"
-              >
-                mdi-menu-right</v-icon
-              >
-            </div>
+              <div class="d-flex align-items-center align-center">
+                <v-icon
+                  color="red"
+                  v-if="leftPlatformTotalWeight > rightPlatformTotalWeight"
+                >
+                  mdi-menu-left
+                </v-icon>
 
-            <div class="text-right w-100">
-              Right: <b>{{ displayNumber(rightPlatformTotalWeight) }}</b>
+                <div class="text-center w-100">
+                  Diff:
+                  <b>{{
+                    displayNumber(
+                      Math.abs(
+                        rightPlatformTotalWeight - leftPlatformTotalWeight
+                      )
+                    )
+                  }}</b>
+                </div>
+                <v-icon
+                  large
+                  color="red"
+                  v-if="rightPlatformTotalWeight > leftPlatformTotalWeight"
+                >
+                  mdi-menu-right</v-icon
+                >
+              </div>
+
+              <div class="text-right w-100">
+                Right: <b>{{ displayNumber(rightPlatformTotalWeight) }}</b>
+              </div>
             </div>
-          </div>
-          <!-- <div>
+            <v-toolbar dense flat>
+              <v-btn icon @click="print">
+                <v-icon>mdi-printer</v-icon>
+              </v-btn>
+              <v-btn icon @click="saveAsPdf">
+                <v-icon>mdi-content-save</v-icon>
+              </v-btn>
+            </v-toolbar>
+            <!-- <div>
             <span class="mt-5"
               >Total:
               {{
@@ -144,55 +156,33 @@
               }}</span
             >
           </div> -->
-        </v-sheet>
-      </v-col>
-      <!--- END WEIGHTS --->
+          </v-sheet>
+        </v-col>
+        <!--- END WEIGHTS --->
 
-      <!-- CHARTS  -->
-      <v-col>
-        <!-- Buttons -->
-        <div class="d-flex mb-3">
-          <v-btn
-            @click="showTortionChart = true"
-            small
-            rounded
-            color="blue-grey"
-            dark
-            class="mr-3"
-          >
-            <v-icon left>mdi-chart-line</v-icon> Torsion
-          </v-btn>
-          <v-btn
-            @click="showGeneralChart = true"
-            small
-            dark
-            rounded
-            color="blue-grey"
-            class="mr-3"
-            ><v-icon left>mdi-chart-line</v-icon> General</v-btn
-          >
-          <v-btn
-            @click="showLeftRightChart = true"
-            small
-            dark
-            rounded
-            color="blue-grey"
-            ><v-icon left>mdi-chart-line</v-icon> Right & Left</v-btn
-          >
-        </div>
-        <v-divider class="mt-3"></v-divider>
-
-        <MainChart />
-      </v-col>
-    </v-row>
-
+        <!-- CHARTS  -->
+        <v-col>
+          <v-toolbar v-if="readingsData.length" flat>
+            <v-btn @click="showMainChart = true" class="mr-3" small>
+              Main
+            </v-btn>
+            <v-btn @click="showTortionChart = true" class="mr-3" small>
+              Torsion
+            </v-btn>
+            <v-btn @click="showGeneralChart = true" class="mr-3" small
+              >General</v-btn
+            >
+            <v-btn @click="showLeftRightChart = true" small>Right & Left</v-btn>
+          </v-toolbar>
+        </v-col>
+      </v-row>
+    </v-container>
     <TortionChart v-if="showTortionChart" :value.sync="showTortionChart" />
-
+    <MainChart v-if="showMainChart" :value.sync="showMainChart" />
     <GeneralBarycenterChart
       v-if="showGeneralChart"
       :value.sync="showGeneralChart"
     />
-
     <LeftRightBarycenterChart
       v-if="showLeftRightChart"
       :value.sync="showLeftRightChart"
@@ -202,7 +192,7 @@
       <v-progress-circular indeterminate size="64"></v-progress-circular>
     </v-overlay>
     <canvas id="print" :style="{ display: 'none' }"> </canvas>
-  </v-container>
+  </v-main>
 </template>
 
 <script>
@@ -266,6 +256,7 @@ export default Vue.extend({
     ComparePedanasDialog
   },
   data: () => ({
+    showMainChart: false,
     showTortionChart: false,
     showGeneralChart: false,
     showLeftRightChart: false,

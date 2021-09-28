@@ -1,12 +1,5 @@
 <template>
-  <v-btn
-    color="blue"
-    small
-    rounded
-    @click="importFile"
-    :loading="isProcessing"
-    :disabled="isProcessing"
-  >
+  <v-btn @click="importFile" :loading="isProcessing" :disabled="isProcessing">
     <v-icon left>mdi-import</v-icon>
     IMPORT
   </v-btn>
