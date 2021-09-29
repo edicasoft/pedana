@@ -18,7 +18,7 @@
         class="d-flex align-items-center justify-space-around pl-1"
       >
         <div v-for="(exam, idx) in selectedExams" :key="idx" class="pr-2">
-          <PedanaCanvas :readingsData="exam" :idx="idx" />
+          <PedanaCanvas :readingsData="exam.weightsData" :idx="idx" />
         </div>
       </div>
     </v-card>

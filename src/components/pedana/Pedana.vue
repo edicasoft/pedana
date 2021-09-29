@@ -15,7 +15,7 @@
       <ExamDialog
         v-if="showExamDialog"
         :value.sync="showExamDialog"
-        @close="setExamDuration"
+        @created="onNewExam"
       />
 
       <ImportFileBtn
@@ -29,9 +29,9 @@
         :data="readingsData"
         class="ml-2"
       />
-      <v-btn @click="showExamDialog = true">New Exam</v-btn>
+      <!-- <v-btn @click="showExamDialog = true">New Exam</v-btn> -->
 
-      <v-btn @click="showCompareDlg = true">Compare</v-btn>
+      <!-- <v-btn @click="showCompareDlg = true">Compare</v-btn> -->
       <v-spacer></v-spacer>
 
       <v-toolbar-title>
@@ -59,8 +59,11 @@
     <v-container fluid>
       <v-row>
         <v-col>
-          <!-- Reset ---->
-          <!-- <v-btn
+          <v-card>
+            <v-list subheader two-line flat>
+              <v-subheader>Current Exam</v-subheader>
+              <!-- Reset ---->
+              <!-- <v-btn
             v-if="readingsData.length > 0"
             @click="reset"
             color="red"
@@ -71,93 +74,101 @@
             <v-icon dark left>mdi-autorenew</v-icon>
             Reset
           </v-btn> -->
-          <!-- CONTROLS -->
-          <v-toolbar flat>
-            <template v-if="readingsData.length">
-              <!-- Back -->
-              <v-btn icon @click="back" :disabled="readingsIdx <= 0"
-                ><v-icon>mdi-step-backward</v-icon></v-btn
-              >
-              <!-- Read from File Play Control -->
-              <v-btn @click="start" icon>
-                <v-icon>{{
-                  isPlaying && readingsIdx > 0 ? "mdi-pause" : "mdi-play"
-                }}</v-icon>
-              </v-btn>
-              <!-- Forward -->
-              <v-btn
-                icon
-                @click="next"
-                :disabled="readingsIdx >= readingsData.length - 1"
-                ><v-icon>mdi-step-forward</v-icon></v-btn
-              >
-            </template>
-
-            <!--- Timer --->
-            <template v-if="readingsIdx > 0">
-              <v-icon color="green" dark>mdi-timer-outline</v-icon>
-              {{ currentTiming }}
-            </template>
-          </v-toolbar>
-          <!--- END CONTROLS --->
-
-          <!--- CANVAS --->
-          <v-sheet class="viewport" :width="width" :height="height">
-            <BackgroundLayer
-              :width="width"
-              :height="height"
-              :id="backgroundCanvasId"
-            />
-            <canvas id="pedana-main"> </canvas>
-          </v-sheet>
-          <!--- END CANVAS --->
-
-          <!--- WEIGHTS --->
-          <v-sheet :width="width">
-            <div class="d-flex justify-space-around align-center">
-              <div class="text-left w-100">
-                Left: <b>{{ displayNumber(leftPlatformTotalWeight) }}</b>
-              </div>
-              <div class="d-flex align-items-center align-center">
-                <v-icon
-                  color="red"
-                  v-if="leftPlatformTotalWeight > rightPlatformTotalWeight"
+              <!-- CHARTS BUTTONS -->
+              <v-toolbar v-if="readingsData.length" flat>
+                <v-btn @click="showMainChart = true" class="mr-3" small>
+                  Main
+                </v-btn>
+                <v-btn @click="showTortionChart = true" class="mr-3" small>
+                  Torsion
+                </v-btn>
+                <v-btn @click="showGeneralChart = true" class="mr-3" small
+                  >General</v-btn
                 >
-                  mdi-menu-left
-                </v-icon>
+                <v-btn @click="showLeftRightChart = true" small
+                  >Right & Left</v-btn
+                >
+              </v-toolbar>
+              <!-- CONTROLS -->
+              <v-toolbar flat>
+                <template v-if="readingsData.length">
+                  <!-- Back -->
+                  <v-btn icon @click="back" :disabled="readingsIdx <= 0"
+                    ><v-icon>mdi-step-backward</v-icon></v-btn
+                  >
+                  <!-- Read from File Play Control -->
+                  <v-btn @click="start" icon>
+                    <v-icon>{{
+                      isPlaying && readingsIdx > 0 ? "mdi-pause" : "mdi-play"
+                    }}</v-icon>
+                  </v-btn>
+                  <!-- Forward -->
+                  <v-btn
+                    icon
+                    @click="next"
+                    :disabled="readingsIdx >= readingsData.length - 1"
+                    ><v-icon>mdi-step-forward</v-icon></v-btn
+                  >
+                </template>
 
-                <div class="text-center w-100">
-                  Diff:
-                  <b>{{
-                    displayNumber(
-                      Math.abs(
-                        rightPlatformTotalWeight - leftPlatformTotalWeight
-                      )
-                    )
-                  }}</b>
+                <!--- Timer --->
+                <template v-if="readingsIdx > 0">
+                  <v-icon color="green" dark>mdi-timer-outline</v-icon>
+                  {{ currentTiming }}
+                </template>
+              </v-toolbar>
+              <!--- END CONTROLS --->
+
+              <!--- CANVAS --->
+              <v-sheet class="viewport mx-auto" :width="width" :height="height">
+                <BackgroundLayer
+                  :width="width"
+                  :height="height"
+                  :id="backgroundCanvasId"
+                />
+                <canvas id="pedana-main"> </canvas>
+              </v-sheet>
+              <!--- END CANVAS --->
+
+              <!--- WEIGHTS --->
+              <v-sheet :width="width" class="viewport mx-auto">
+                <div class="d-flex justify-space-around align-center">
+                  <div class="text-left w-100">
+                    Left: <b>{{ displayNumber(leftPlatformTotalWeight) }}</b>
+                  </div>
+                  <div class="d-flex align-items-center align-center">
+                    <v-icon
+                      color="red"
+                      v-if="leftPlatformTotalWeight > rightPlatformTotalWeight"
+                    >
+                      mdi-menu-left
+                    </v-icon>
+
+                    <div class="text-center w-100">
+                      Diff:
+                      <b>{{
+                        displayNumber(
+                          Math.abs(
+                            rightPlatformTotalWeight - leftPlatformTotalWeight
+                          )
+                        )
+                      }}</b>
+                    </div>
+                    <v-icon
+                      large
+                      color="red"
+                      v-if="rightPlatformTotalWeight > leftPlatformTotalWeight"
+                    >
+                      mdi-menu-right</v-icon
+                    >
+                  </div>
+
+                  <div class="text-right w-100">
+                    Right: <b>{{ displayNumber(rightPlatformTotalWeight) }}</b>
+                  </div>
                 </div>
-                <v-icon
-                  large
-                  color="red"
-                  v-if="rightPlatformTotalWeight > leftPlatformTotalWeight"
-                >
-                  mdi-menu-right</v-icon
-                >
-              </div>
 
-              <div class="text-right w-100">
-                Right: <b>{{ displayNumber(rightPlatformTotalWeight) }}</b>
-              </div>
-            </div>
-            <v-toolbar dense flat>
-              <v-btn icon @click="print">
-                <v-icon>mdi-printer</v-icon>
-              </v-btn>
-              <v-btn icon @click="saveAsPdf">
-                <v-icon>mdi-content-save</v-icon>
-              </v-btn>
-            </v-toolbar>
-            <!-- <div>
+                <!-- <div>
             <span class="mt-5"
               >Total:
               {{
@@ -165,24 +176,22 @@
               }}</span
             >
           </div> -->
-          </v-sheet>
+              </v-sheet>
+              <v-toolbar dense flat>
+                <v-btn icon @click="print">
+                  <v-icon>mdi-printer</v-icon>
+                </v-btn>
+                <v-btn icon @click="saveAsPdf">
+                  <v-icon>mdi-content-save</v-icon>
+                </v-btn>
+              </v-toolbar>
+            </v-list>
+          </v-card>
         </v-col>
         <!--- END WEIGHTS --->
 
-        <!-- CHARTS  -->
         <v-col>
-          <v-toolbar v-if="readingsData.length" flat>
-            <v-btn @click="showMainChart = true" class="mr-3" small>
-              Main
-            </v-btn>
-            <v-btn @click="showTortionChart = true" class="mr-3" small>
-              Torsion
-            </v-btn>
-            <v-btn @click="showGeneralChart = true" class="mr-3" small
-              >General</v-btn
-            >
-            <v-btn @click="showLeftRightChart = true" small>Right & Left</v-btn>
-          </v-toolbar>
+          <ExamsList />
         </v-col>
       </v-row>
     </v-container>
@@ -235,6 +244,7 @@ import ErrorDialog from "@/components/dialogs/ErrorDialog.vue";
 import ConnectingDialog from "@/components/dialogs/ConnectingDialog.vue";
 import ComparePedanasDialog from "@/components/dialogs/ComparePedanasDialog.vue";
 import ExamDialog from "@/components/exams/ExamDialog.vue";
+import ExamsList from "@/components/exams/ExamsList.vue";
 
 import ImportFileBtn from "@/components/file/ImportFileBtn.vue";
 import ExportToFileBtn from "@/components/file/ExportToFileBtn.vue";
@@ -265,7 +275,8 @@ export default Vue.extend({
     ErrorDialog,
     ConnectingDialog,
     ComparePedanasDialog,
-    ExamDialog
+    ExamDialog,
+    ExamsList
   },
   data: () => ({
     showExamDialog: false,
@@ -294,7 +305,7 @@ export default Vue.extend({
     leftBarycenter,
     rightBarycenter,
     showCompareDlg: false,
-    examDuration: 15
+    examDuration: null
   }),
   destroyed() {
     this.c.clear();
@@ -347,17 +358,22 @@ export default Vue.extend({
   // },
   watch: {
     currentTiming(val) {
-      if (val >= parseFloat(this.examDuration)) this.toggleStreaming();
+      if (this.examDuration !== null && val >= parseFloat(this.examDuration))
+        this.stopStreaming();
     }
   },
   methods: {
-    setExamDuration(val) {
-      if (val && val > 0) this.examDuration = parseFloat(val);
+    onNewExam(val) {
+      if (val && val > 0) {
+        this.examDuration = parseFloat(val);
+        this.reset();
+      }
     },
     onLoading(e) {
       this.isLoading = e;
     },
     onImport(data) {
+      this.examDuration = null;
       this.readingsData = data;
       this.restart();
       while (this.readingsIdx < this.readingsData.length) {
@@ -416,17 +432,20 @@ export default Vue.extend({
       this.rightBarycenter.reset();
       this.c.clear();
     },
+    stopStreaming() {
+      this.isEndStreaming = true;
+      this.readingsData = _.cloneDeep(this.weightsHistory);
+      this.isEndReading = true;
+      //TODO::save to db
+    },
+    startStreaming() {
+      console.log("start streaming");
+      this.isEndStreaming = false;
+      this.reset();
+      this.showExamDialog = true;
+    },
     toggleStreaming() {
-      this.isEndStreaming = !this.isEndStreaming;
-      if (this.isEndStreaming) {
-        this.readingsData = _.cloneDeep(this.weightsHistory);
-        this.isEndReading = true;
-        //TODO::save to db
-      } else {
-        console.log("start streaming");
-        this.reset();
-        this.showExamDialog = true;
-      }
+      this.isEndStreaming ? this.startStreaming() : this.stopStreaming();
     },
     startReadingPedana(data) {
       this.isEndStreaming = false;

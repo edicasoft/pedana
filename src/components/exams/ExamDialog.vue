@@ -1,8 +1,8 @@
 <template>
-  <v-dialog :value="value" :max-width="1200" fullscreen persistent>
+  <v-dialog :value="value" :max-width="800" persistent>
     <v-card class="pa-3">
       <div class="d-flex align-center justify-space-between pb-3">
-        <v-card-title class="pt-0 pb-0"></v-card-title>
+        <v-card-title class="pt-0 pb-0 text-center">New Exam</v-card-title>
         <v-btn @click="close" icon>
           <v-icon color="error">mdi-close-circle</v-icon></v-btn
         >
@@ -42,7 +42,7 @@
             dense
           ></v-textarea>
           <v-textarea v-model="notes" label="Notes" outlined dense></v-textarea>
-          <div class="d-flex justify-space-between">
+          <div class="d-flex justify-space-between mb-5">
             <v-btn
               class="mr-4"
               type="submit"
@@ -84,12 +84,15 @@ export default {
       this.validate();
       this.$nextTick(() => {
         console.log("isValid", this.valid);
+        if (this.valid) {
+          this.$emit("created", this.duration); //or updated
+          this.close();
+        }
       });
       // this.close();
     },
     close() {
       this.$emit("update:value", false);
-      this.$emit("close", this.duration);
       this.reset();
     },
     validate() {
