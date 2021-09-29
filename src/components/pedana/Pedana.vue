@@ -7,9 +7,17 @@
           <v-icon left>
             {{ isEndStreaming ? "mdi-play" : "mdi-pause" }}
           </v-icon>
-          {{ isEndStreaming ? "New Session" : "STOP" }}
+          {{ isEndStreaming ? "New Exam" : "STOP" }}
         </v-btn>
       </template>
+
+      <!-- EXAM DIALOG-->
+      <ExamDialog
+        v-if="showExamDialog"
+        :value.sync="showExamDialog"
+        @close="setExamDuration"
+      />
+
       <ImportFileBtn
         v-if="isEndStreaming"
         @importData="onImport"
@@ -21,8 +29,9 @@
         :data="readingsData"
         class="ml-2"
       />
+      <v-btn @click="showExamDialog = true">New Exam</v-btn>
 
-      <!-- <v-btn @click="showCompareDlg = true">Compare</v-btn> -->
+      <v-btn @click="showCompareDlg = true">Compare</v-btn>
       <v-spacer></v-spacer>
 
       <v-toolbar-title>
@@ -87,7 +96,7 @@
             <!--- Timer --->
             <template v-if="readingsIdx > 0">
               <v-icon color="green" dark>mdi-timer-outline</v-icon>
-              {{ readingsIdx > 0 ? (readingsIdx / Hz).toFixed(2) : 0 }}
+              {{ currentTiming }}
             </template>
           </v-toolbar>
           <!--- END CONTROLS --->
@@ -188,6 +197,7 @@
       :value.sync="showLeftRightChart"
     />
     <!-- END CHARTS  -->
+
     <v-overlay :value="isLoading">
       <v-progress-circular indeterminate size="64"></v-progress-circular>
     </v-overlay>
@@ -224,6 +234,7 @@ import LeftRightBarycenterChart from "@/components/charts/LeftRightBarycenterCha
 import ErrorDialog from "@/components/dialogs/ErrorDialog.vue";
 import ConnectingDialog from "@/components/dialogs/ConnectingDialog.vue";
 import ComparePedanasDialog from "@/components/dialogs/ComparePedanasDialog.vue";
+import ExamDialog from "@/components/exams/ExamDialog.vue";
 
 import ImportFileBtn from "@/components/file/ImportFileBtn.vue";
 import ExportToFileBtn from "@/components/file/ExportToFileBtn.vue";
@@ -253,9 +264,11 @@ export default Vue.extend({
     // Dialogs
     ErrorDialog,
     ConnectingDialog,
-    ComparePedanasDialog
+    ComparePedanasDialog,
+    ExamDialog
   },
   data: () => ({
+    showExamDialog: false,
     showMainChart: false,
     showTortionChart: false,
     showGeneralChart: false,
@@ -280,7 +293,8 @@ export default Vue.extend({
     generalBarycenter,
     leftBarycenter,
     rightBarycenter,
-    showCompareDlg: false
+    showCompareDlg: false,
+    examDuration: 15
   }),
   destroyed() {
     this.c.clear();
@@ -317,7 +331,10 @@ export default Vue.extend({
     });
   },
   computed: {
-    ...mapState("pedana", ["weights", "weightsHistory"])
+    ...mapState("pedana", ["weights", "weightsHistory"]),
+    currentTiming() {
+      return this.readingsIdx > 0 ? (this.readingsIdx / Hz).toFixed(2) : 0;
+    }
   },
   // watch: {
   //   weights(val) {
@@ -328,8 +345,15 @@ export default Vue.extend({
   //     }
   //   }
   // },
-
+  watch: {
+    currentTiming(val) {
+      if (val >= parseFloat(this.examDuration)) this.toggleStreaming();
+    }
+  },
   methods: {
+    setExamDuration(val) {
+      if (val && val > 0) this.examDuration = parseFloat(val);
+    },
     onLoading(e) {
       this.isLoading = e;
     },
@@ -346,7 +370,6 @@ export default Vue.extend({
         }
         this.readingsIdx++;
       }
-      //TODO::improve in PedanaImage as well
       this.update();
       this.isPlaying = false;
       this.isEndReading = true;
@@ -398,9 +421,11 @@ export default Vue.extend({
       if (this.isEndStreaming) {
         this.readingsData = _.cloneDeep(this.weightsHistory);
         this.isEndReading = true;
+        //TODO::save to db
       } else {
         console.log("start streaming");
         this.reset();
+        this.showExamDialog = true;
       }
     },
     startReadingPedana(data) {

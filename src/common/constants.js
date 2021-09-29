@@ -118,6 +118,12 @@ const data = [
 //   [11.6, 12.1, 7.9, 13.2, 14.1, 7.7],
 //   [11.5625, 12.0703125, 8.1640625, 13.26171875, 14.0234375, 7.75390625]
 // ];
+const examTypes = [
+  { type: "NO", text: "No Occlusion" },
+  { type: "O", text: "Occlusion" },
+  { type: "EC", text: "Eyes Closed" },
+  { type: "CR", text: "Custom Reading" }
+];
 export {
   leftPlatformCells,
   rightPlatformCells,
@@ -128,5 +134,6 @@ export {
   data,
   Hz,
   pedanaWidth,
-  pedanaHeight
+  pedanaHeight,
+  examTypes
 };
