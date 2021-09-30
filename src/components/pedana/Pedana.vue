@@ -31,7 +31,6 @@
       />
       <!-- <v-btn @click="showExamDialog = true">New Exam</v-btn> -->
 
-      <!-- <v-btn @click="showCompareDlg = true">Compare</v-btn> -->
       <v-spacer></v-spacer>
 
       <v-toolbar-title>
@@ -44,11 +43,7 @@
       >
       <!-- Charts Buttons -->
     </v-app-bar>
-    <ComparePedanasDialog
-      v-if="showCompareDlg"
-      :data="readingsData"
-      :value.sync="showCompareDlg"
-    />
+
     <error-dialog
       v-if="!isConnected && !isReady"
       message="Pedana is not connected."
@@ -191,7 +186,7 @@
         <!--- END WEIGHTS --->
 
         <v-col>
-          <ExamsList />
+          <ExamsList @play="onPlaySelected" />
         </v-col>
       </v-row>
     </v-container>
@@ -242,7 +237,6 @@ import LeftRightBarycenterChart from "@/components/charts/LeftRightBarycenterCha
 
 import ErrorDialog from "@/components/dialogs/ErrorDialog.vue";
 import ConnectingDialog from "@/components/dialogs/ConnectingDialog.vue";
-import ComparePedanasDialog from "@/components/dialogs/ComparePedanasDialog.vue";
 import ExamDialog from "@/components/exams/ExamDialog.vue";
 import ExamsList from "@/components/exams/ExamsList.vue";
 
@@ -274,7 +268,6 @@ export default Vue.extend({
     // Dialogs
     ErrorDialog,
     ConnectingDialog,
-    ComparePedanasDialog,
     ExamDialog,
     ExamsList
   },
@@ -304,7 +297,6 @@ export default Vue.extend({
     generalBarycenter,
     leftBarycenter,
     rightBarycenter,
-    showCompareDlg: false,
     examDuration: null
   }),
   destroyed() {
@@ -363,6 +355,9 @@ export default Vue.extend({
     }
   },
   methods: {
+    onPlaySelected(arr) {
+      this.onImport(arr, this.start);
+    },
     onNewExam(val) {
       if (val && val > 0) {
         this.examDuration = parseFloat(val);
@@ -372,13 +367,11 @@ export default Vue.extend({
     onLoading(e) {
       this.isLoading = e;
     },
-    onImport(data) {
+    onImport(data, callback) {
       this.examDuration = null;
       this.readingsData = data;
       this.restart();
       while (this.readingsIdx < this.readingsData.length) {
-        console.log(this.readingsIdx);
-
         const res = this.setWeights(this.readingsData[this.readingsIdx]);
         if (this.readingsIdx !== this.readingsData.length - 1) {
           this.moveBarycenters();
@@ -389,6 +382,7 @@ export default Vue.extend({
       this.update();
       this.isPlaying = false;
       this.isEndReading = true;
+      if (callback) callback();
     },
     displayNumber,
     ...mapActions("pedana", [

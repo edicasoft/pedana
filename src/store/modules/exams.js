@@ -225,8 +225,16 @@ const state = {
   ]
 };
 const getters = {};
-const mutations = {};
-const actions = {};
+const mutations = {
+  SET_SELECTED_EXAMS(store, val) {
+    store.selectedExams = val;
+  }
+};
+const actions = {
+  setSelectedExams({ commit }, payload) {
+    commit("SET_SELECTED_EXAMS", payload);
+  }
+};
 export default {
   state,
   getters,

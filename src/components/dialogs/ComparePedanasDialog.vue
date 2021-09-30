@@ -28,7 +28,7 @@
 import PedanaCanvas from "@/components/pedana/PedanaCanvasImage.vue";
 import { mapState } from "vuex";
 export default {
-  props: ["data", "value"],
+  props: ["value"],
   components: {
     PedanaCanvas
   },
