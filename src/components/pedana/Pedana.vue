@@ -211,6 +211,7 @@
 
 <script>
 //TODO::move player to separate component
+//TODO::display the name of a current exam
 import Canvas from "@/entities/Canvas";
 
 import { displayNumber } from "@/common/helpers";
@@ -224,16 +225,16 @@ import {
 } from "@/common/constants.js";
 import { mapState, mapActions } from "vuex";
 import BackgroundLayer from "@/components/pedana/BackgroundLayer.vue";
-import MainChart from "@/components/charts/MainChart.vue";
 import {
   generalBarycenter,
   leftBarycenter,
   rightBarycenter
 } from "@/common/barycenters.service.js";
 
-import TortionChart from "@/components/charts/TortionChart.vue";
-import GeneralBarycenterChart from "@/components/charts/GeneralBarycenterChart.vue";
-import LeftRightBarycenterChart from "@/components/charts/LeftRightBarycenterChart.vue";
+import MainChart from "@/components/exams/current/MainChart.vue";
+import TortionChart from "@/components/exams/current/TortionChart.vue";
+import GeneralBarycenterChart from "@/components/exams/current/GeneralBarycenterChart.vue";
+import LeftRightBarycenterChart from "@/components/exams/current/LeftRightBarycenterChart.vue";
 
 import ErrorDialog from "@/components/dialogs/ErrorDialog.vue";
 import ConnectingDialog from "@/components/dialogs/ConnectingDialog.vue";

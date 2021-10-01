@@ -31,6 +31,7 @@ export default class Barycenter {
     this.minX = 0;
   }
   move(weights: number[]) {
+    console.log("weights", weights);
     const totalWeight = weights.reduce((total: number, val) => total + val, 0);
     if (totalWeight > 0) {
       const sumX = this.calculateWeightenedSum("x", weights);
@@ -44,7 +45,6 @@ export default class Barycenter {
       //console.log("move", this.xVals, this.weights);
     }
   }
-
   resetDataToIndex(idx: number) {
     const i = idx < 0 ? 0 : idx;
     this.xVals.length = i;
@@ -155,5 +155,8 @@ export default class Barycenter {
     this.xVals = [];
     this.yVals = [];
     this.weights = [];
+  }
+  getHistory() {
+    return this.xVals.map((x, i) => ({ x, y: this.yVals[i] }));
   }
 }

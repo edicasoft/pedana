@@ -47,7 +47,7 @@ export default Vue.extend({
     },
     saveAsPdf() {
       console.log("save");
-      ipcRenderer.send("canvas:print", [
+      ipcRenderer.send("canvas:pdf", [
         { image: this.combineCanvasesToImage() }
       ]);
       console.log("saveAsPdf");

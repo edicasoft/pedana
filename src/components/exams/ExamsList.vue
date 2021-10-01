@@ -15,11 +15,11 @@
               >Pedanas</v-list-item-title
             >
           </v-list-item>
-          <v-list-item>
-            <v-list-item-title>Torsion</v-list-item-title>
+          <v-list-item @click="showGeneralBcentersDlg = true">
+            <v-list-item-title>General</v-list-item-title>
           </v-list-item>
           <v-list-item>
-            <v-list-item-title>General</v-list-item-title>
+            <v-list-item-title>Torsion</v-list-item-title>
           </v-list-item>
           <v-list-item>
             <v-list-item-title>Right & Left</v-list-item-title>
@@ -59,22 +59,29 @@
       v-if="showComparePedanasDlg"
       :value.sync="showComparePedanasDlg"
     />
+    <GeneralBarycentersDialog
+      v-if="showGeneralBcentersDlg"
+      :value.sync="showGeneralBcentersDlg"
+    />
   </v-card>
 </template>
 <script>
 import { mapState, mapActions } from "vuex";
 import { examTypes } from "@/common/constants.js";
-import ComparePedanasDialog from "@/components/dialogs/ComparePedanasDialog.vue";
+import ComparePedanasDialog from "@/components/exams/compare/ComparePedanasDlg.vue";
+import GeneralBarycentersDialog from "@/components/exams/compare/GeneralBarycentersDlg.vue";
 
 export default {
   components: {
-    ComparePedanasDialog
+    ComparePedanasDialog,
+    GeneralBarycentersDialog
   },
   data() {
     return {
       selectedExams: [],
       examTypes,
-      showComparePedanasDlg: false
+      showComparePedanasDlg: false,
+      showGeneralBcentersDlg: false
     };
   },
   watch: {
