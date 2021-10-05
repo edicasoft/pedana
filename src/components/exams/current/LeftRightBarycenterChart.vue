@@ -60,7 +60,7 @@
   </v-dialog>
 </template>
 
-<script lang="ts">
+<script>
 import Vue from "vue";
 import LineChart from "@/common/LineChart.js";
 import { ChartData } from "chart.js";
@@ -73,6 +73,9 @@ import {
   idealBarycenterLeftX,
   idealBarycenterRightX
 } from "@/common/constants.js";
+import ChartMixin from "@/mixins/ChartMixin";
+import _ from "lodash";
+
 const initialOptions = {
   maintainAspectRatio: true,
   responsive: true,
@@ -86,8 +89,8 @@ const initialOptions = {
         type: "linear",
         position: "center",
         ticks: {
-          max: 50,
-          min: 50
+          min: 100,
+          max: 100
         }
       }
     ],
@@ -95,8 +98,8 @@ const initialOptions = {
       {
         title: "Y",
         ticks: {
-          max: 50,
-          min: 50
+          min: 100,
+          max: 100
         }
       }
     ]
@@ -109,10 +112,12 @@ export default Vue.extend({
   components: {
     LineChart
   },
+  mixins: [ChartMixin],
+
   data() {
     return {
-      datacollectionLeft: {} as ChartData,
-      datacollectionRight: {} as ChartData,
+      datacollectionLeft: {},
+      datacollectionRight: {},
       bxL: 0,
       byL: 0,
       AmmqL: "",
@@ -123,36 +128,8 @@ export default Vue.extend({
       AmmqR: "",
       VvarR: "",
       RforR: "",
-      optionsLeft: {
-        maintainAspectRatio: true,
-        responsive: true,
-        plugins: {
-          legend: false
-        },
-        scales: {
-          xAxes: [
-            {
-              title: "X",
-              type: "linear",
-              position: "center",
-              ticks: {
-                max: 50,
-                min: 50
-              }
-            }
-          ],
-          yAxes: [
-            {
-              title: "Y",
-              ticks: {
-                max: 50,
-                min: 50
-              }
-            }
-          ]
-        }
-      },
-      optionsRight: Object.assign({}, initialOptions)
+      optionsLeft: _.cloneDeep(initialOptions),
+      optionsRight: _.cloneDeep(initialOptions)
     };
   },
   watch: {
@@ -225,31 +202,11 @@ export default Vue.extend({
         ...rightBarycenter.xVals.map(item => Math.abs(item))
       );
 
-      const maxY = Math.max(maxYL, maxYR);
-      const maxX = Math.max(maxXL, maxXR);
+      this.maxY = Math.max(maxYL, maxYR);
+      this.maxX = Math.max(maxXL, maxXR);
 
       this.setTicksRange();
 
-      const axesX = [
-        {
-          label: "X",
-          borderColor: "black",
-          pointBackgroundColor: "black",
-          pointRadius: 0,
-          fill: false,
-          borderWidth: 1,
-          data: [
-            {
-              x: -maxX,
-              y: 0
-            },
-            {
-              x: maxX,
-              y: 0
-            }
-          ]
-        }
-      ];
       const axesYLeft = [
         {
           label: "Y",
@@ -261,11 +218,11 @@ export default Vue.extend({
           data: [
             {
               x: idealBarycenterLeftX,
-              y: maxY
+              y: this.maxY
             },
             {
               x: idealBarycenterLeftX,
-              y: -maxY
+              y: -this.maxY
             }
           ]
         }
@@ -281,25 +238,15 @@ export default Vue.extend({
           data: [
             {
               x: idealBarycenterRightX,
-              y: maxY
+              y: this.maxY
             },
             {
               x: idealBarycenterRightX,
-              y: -maxY
+              y: -this.maxY
             }
           ]
         }
       ];
-
-      const intersectLineStyle = {
-        label: "",
-        borderColor: "blue",
-        pointBackgroundColor: "blue",
-        pointRadius: 0,
-        fill: false,
-        borderWidth: 1,
-        borderDash: [5, 5, 2, 5]
-      };
 
       this.datacollectionLeft = {
         labels: [""],
@@ -313,31 +260,31 @@ export default Vue.extend({
             data: this.leftBarycenterHistory,
             borderWidth: 1
           },
-          ...axesX,
+          this.axesX,
           ...axesYLeft,
           {
-            ...intersectLineStyle,
+            ...this.intersectLineStyle,
             data: [
               {
-                x: maxX,
+                x: this.maxX,
                 y: this.byL
               },
               {
-                x: -maxX,
+                x: -this.maxX,
                 y: this.byL
               }
             ]
           },
           {
-            ...intersectLineStyle,
+            ...this.intersectLineStyle,
             data: [
               {
                 x: this.bxL,
-                y: maxY
+                y: this.maxY
               },
               {
                 x: this.bxL,
-                y: -maxY
+                y: -this.maxY
               }
             ]
           }
@@ -355,31 +302,31 @@ export default Vue.extend({
             data: this.rightBarycenterHistory,
             borderWidth: 1
           },
-          ...axesX,
+          this.axesX,
           ...axesYRight,
           {
-            ...intersectLineStyle,
+            ...this.intersectLineStyle,
             data: [
               {
-                x: maxX,
+                x: this.maxX,
                 y: this.yR
               },
               {
-                x: -maxX,
+                x: -this.maxX,
                 y: this.yR
               }
             ]
           },
           {
-            ...intersectLineStyle,
+            ...this.intersectLineStyle,
             data: [
               {
                 x: this.xR,
-                y: maxY
+                y: this.maxY
               },
               {
                 x: this.xR,
-                y: -maxY
+                y: -this.maxY
               }
             ]
           }

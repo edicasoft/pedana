@@ -5,15 +5,13 @@
       <v-menu bottom :offset-y="true" v-if="selectedExams.length > 1">
         <template v-slot:activator="{ on, attrs }">
           <v-btn small color="primary" v-bind="attrs" v-on="on" class="ml-auto">
-            Compare
+            Compare Selected
           </v-btn>
         </template>
 
         <v-list>
-          <v-list-item>
-            <v-list-item-title @click="showComparePedanasDlg = true"
-              >Pedanas</v-list-item-title
-            >
+          <v-list-item @click="showComparePedanasDlg = true">
+            <v-list-item-title>Pedanas</v-list-item-title>
           </v-list-item>
           <v-list-item @click="showGeneralBcentersDlg = true">
             <v-list-item-title>General</v-list-item-title>
@@ -21,7 +19,7 @@
           <v-list-item>
             <v-list-item-title>Torsion</v-list-item-title>
           </v-list-item>
-          <v-list-item>
+          <v-list-item @click="showRightLeftBcentersDlg = true">
             <v-list-item-title>Right & Left</v-list-item-title>
           </v-list-item>
         </v-list>
@@ -37,6 +35,7 @@
         <v-list-item-action>
           <v-checkbox
             v-model="selectedExams"
+            @change="selectExam($event, exam)"
             color="primary"
             :value="exam"
           ></v-checkbox>
@@ -63,6 +62,10 @@
       v-if="showGeneralBcentersDlg"
       :value.sync="showGeneralBcentersDlg"
     />
+    <LeftRightBarycentersDialog
+      v-if="showRightLeftBcentersDlg"
+      :value.sync="showRightLeftBcentersDlg"
+    />
   </v-card>
 </template>
 <script>
@@ -70,18 +73,21 @@ import { mapState, mapActions } from "vuex";
 import { examTypes } from "@/common/constants.js";
 import ComparePedanasDialog from "@/components/exams/compare/ComparePedanasDlg.vue";
 import GeneralBarycentersDialog from "@/components/exams/compare/GeneralBarycentersDlg.vue";
+import LeftRightBarycentersDialog from "@/components/exams/compare/LeftRightBarycentersDlg.vue";
 
 export default {
   components: {
     ComparePedanasDialog,
-    GeneralBarycentersDialog
+    GeneralBarycentersDialog,
+    LeftRightBarycentersDialog
   },
   data() {
     return {
       selectedExams: [],
       examTypes,
       showComparePedanasDlg: false,
-      showGeneralBcentersDlg: false
+      showGeneralBcentersDlg: false,
+      showRightLeftBcentersDlg: false
     };
   },
   watch: {
@@ -96,8 +102,14 @@ export default {
   },
   methods: {
     ...mapActions("exams", ["setSelectedExams"]),
+    selectExam(evt, exam) {
+      console.log(evt, exam);
+      //if (evt.some(item => item.id === exam.id)) {
+      this.$emit("select", evt[0]);
+      //}
+    },
     play(exam) {
-      this.$emit("play", exam.weightsData);
+      this.$emit("play", exam);
     }
   }
 };

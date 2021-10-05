@@ -56,7 +56,13 @@
         <v-col>
           <v-card>
             <v-list subheader two-line flat>
-              <v-subheader>Current Exam</v-subheader>
+              <v-subheader
+                >Current Exam
+                <template v-if="currentExam"
+                  >{{ currentExam.created_at }}
+                  {{ currentExam.examType }}</template
+                ></v-subheader
+              >
               <!-- Reset ---->
               <!-- <v-btn
             v-if="readingsData.length > 0"
@@ -186,7 +192,7 @@
         <!--- END WEIGHTS --->
 
         <v-col>
-          <ExamsList @play="onPlaySelected" />
+          <ExamsList @play="onPlayExam" @select="onSelectExam" />
         </v-col>
       </v-row>
     </v-container>
@@ -246,6 +252,7 @@ import ExportToFileBtn from "@/components/file/ExportToFileBtn.vue";
 import _ from "lodash";
 import pedanaCanvasMixin from "@/mixins/PedanaCanvasMixin.vue";
 import Vue from "vue";
+import { examTypes } from "@/common/constants.js";
 
 /* eslint-disable */
 const electron = window.require("electron"),
@@ -298,7 +305,8 @@ export default Vue.extend({
     generalBarycenter,
     leftBarycenter,
     rightBarycenter,
-    examDuration: null
+    examDuration: null,
+    currentExam: null
   }),
   destroyed() {
     this.c.clear();
@@ -356,8 +364,17 @@ export default Vue.extend({
     }
   },
   methods: {
-    onPlaySelected(arr) {
-      this.onImport(arr, this.start);
+    onPlayExam(exam) {
+      this.onImport(exam.weightsData, this.start);
+      this.currentExam = exam;
+    },
+    onSelectExam(exam) {
+      if (exam) {
+        this.onImport(exam.weightsData);
+        this.currentExam = exam;
+      } else {
+        this.reset();
+      }
     },
     onNewExam(val) {
       if (val && val > 0) {
@@ -417,6 +434,7 @@ export default Vue.extend({
     reset() {
       this.readingsData = [];
       this.restart();
+      this.currentExam = null;
     },
     restart() {
       this.readingsIdx = 0;

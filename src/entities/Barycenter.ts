@@ -31,7 +31,7 @@ export default class Barycenter {
     this.minX = 0;
   }
   move(weights: number[]) {
-    console.log("weights", weights);
+    //console.log("weights", weights);
     const totalWeight = weights.reduce((total: number, val) => total + val, 0);
     if (totalWeight > 0) {
       const sumX = this.calculateWeightenedSum("x", weights);
@@ -50,7 +50,7 @@ export default class Barycenter {
     this.xVals.length = i;
     this.yVals.length = i;
     this.weights.length = i;
-    console.log("resetDataToIndex", this.weights);
+    //console.log("resetDataToIndex", this.weights);
   }
 
   drawOld(ctx: CanvasRenderingContext2D) {
@@ -101,7 +101,6 @@ export default class Barycenter {
     this.minX = minX;
     const deltaY = Math.abs(maxY - minY);
     const deltaX = Math.abs(maxX - minX);
-    console.log(deltaX, deltaY);
     return deltaX / deltaY || 0;
   }
   calculateAMmq() {
@@ -157,6 +156,7 @@ export default class Barycenter {
     this.weights = [];
   }
   getHistory() {
+    console.log(this.xVals);
     return this.xVals.map((x, i) => ({ x, y: this.yVals[i] }));
   }
 }

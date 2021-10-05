@@ -46,7 +46,7 @@ import Vue from "vue";
 import LineChart from "@/common/LineChart.js";
 import { leftPlatformCells, rightPlatformCells } from "@/common/constants.js";
 import Barycenter from "@/entities/Barycenter";
-import GeneralBarycenterChartMixin from "@/mixins/ChartMixin";
+import ChartMixin from "@/mixins/ChartMixin";
 import { mapState } from "vuex";
 const colors = ["red", "green", "blue"];
 export default Vue.extend({
@@ -55,7 +55,7 @@ export default Vue.extend({
   components: {
     LineChart
   },
-  mixins: [GeneralBarycenterChartMixin],
+  mixins: [ChartMixin],
   data() {
     return {
       colors,
@@ -90,12 +90,6 @@ export default Vue.extend({
     this.fillData();
   },
   methods: {
-    calcBarycenterCoordinates(bar, weights) {
-      for (let i = 0; i < weights.length; i++) {
-        console.log("calcBarycenterCoordinates", i, weights);
-        bar.move(weights[i]);
-      }
-    },
     calculateFormulas() {
       for (let i = 0; i < this.selectedExams.length; i++) {
         const color = this.colors[i];
@@ -117,10 +111,8 @@ export default Vue.extend({
         exam.x1 = barycenter.calculateBx();
         exam.y1 = barycenter.calculateBy();
 
-        exam.maxY =
-          Math.max(...barycenter.yVals.map(item => Math.abs(item))) + 5;
-        exam.maxX =
-          Math.max(...barycenter.xVals.map(item => Math.abs(item))) + 5;
+        exam.maxY = Math.max(...barycenter.yVals.map(item => Math.abs(item)));
+        exam.maxX = Math.max(...barycenter.xVals.map(item => Math.abs(item)));
         exam.history = barycenter.getHistory();
         exam.type = this.selectedExams[i].examType;
 
@@ -128,10 +120,12 @@ export default Vue.extend({
       }
     },
     fillData() {
-      const maxY =
-        Math.max(...this.calculations.map(item => Math.abs(item.maxY))) + 5;
-      const maxX =
-        Math.max(...this.calculations.map(item => Math.abs(item.maxX))) + 5;
+      const maxY = Math.max(
+        ...this.calculations.map(item => Math.abs(item.maxY))
+      );
+      const maxX = Math.max(
+        ...this.calculations.map(item => Math.abs(item.maxX))
+      );
       this.maxY = this.maxX = Math.max(maxX, maxY);
 
       for (let i = 0; i < this.calculations.length; i++) {
