@@ -17,8 +17,8 @@
         v-if="value"
         class="d-flex align-items-center justify-space-around pl-1"
       >
-        <div v-for="(exam, idx) in selectedExams" :key="idx" class="pr-2">
-          <PedanaCanvas :readingsData="exam.weightsData" :idx="idx" />
+        <div v-for="(exam, idx) in exams" :key="idx" class="pr-2">
+          <PedanaCanvas :exam="exam" :idx="idx" />
         </div>
       </div>
     </v-card>
@@ -33,7 +33,10 @@ export default {
     PedanaCanvas
   },
   computed: {
-    ...mapState("exams", ["selectedExams"])
+    ...mapState("exams", ["selectedExams"]),
+    exams() {
+      return this.selectedExams.slice(0, 3);
+    }
   },
   methods: {
     close() {

@@ -47,8 +47,6 @@ import LineChart from "@/common/LineChart.js";
 import { leftPlatformCells, rightPlatformCells } from "@/common/constants.js";
 import Barycenter from "@/entities/Barycenter";
 import ChartMixin from "@/mixins/ChartMixin";
-import { mapState } from "vuex";
-const colors = ["red", "green", "blue"];
 export default Vue.extend({
   props: ["value"],
 
@@ -58,7 +56,6 @@ export default Vue.extend({
   mixins: [ChartMixin],
   data() {
     return {
-      colors,
       calculations: [],
       datacollection: {
         labels: [""],
@@ -82,26 +79,20 @@ export default Vue.extend({
       }
     };
   },
-  computed: {
-    ...mapState("exams", ["selectedExams"])
-  },
   created() {
     this.calculateFormulas();
     this.fillData();
   },
   methods: {
     calculateFormulas() {
-      for (let i = 0; i < this.selectedExams.length; i++) {
+      for (let i = 0; i < this.exams.length; i++) {
         const color = this.colors[i];
 
         const barycenter = new Barycenter(
           leftPlatformCells.concat(rightPlatformCells),
           color
         );
-        this.calcBarycenterCoordinates(
-          barycenter,
-          this.selectedExams[i].weightsData
-        );
+        this.calcBarycenterCoordinates(barycenter, this.exams[i].weightsData);
 
         const exam = { color };
         exam.Ammq = barycenter.calculateAMmq().toFixed(2);
@@ -114,7 +105,7 @@ export default Vue.extend({
         exam.maxY = Math.max(...barycenter.yVals.map(item => Math.abs(item)));
         exam.maxX = Math.max(...barycenter.xVals.map(item => Math.abs(item)));
         exam.history = barycenter.getHistory();
-        exam.type = this.selectedExams[i].examType;
+        exam.type = this.exams[i].exam_type;
 
         this.calculations.push(exam);
       }

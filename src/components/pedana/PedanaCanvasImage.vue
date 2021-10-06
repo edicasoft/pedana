@@ -38,7 +38,7 @@ export default {
   components: {
     BackgroundLayer
   },
-  props: ["readingsData", "idx"],
+  props: ["exam", "idx"],
   data: () => ({
     width: pedanaWidth,
     height: pedanaHeight,
@@ -55,6 +55,9 @@ export default {
   computed: {
     backgroundCanvasId() {
       return `pedana-bg-${this.idx}`;
+    },
+    readingsData() {
+      return this.exam.weightsData;
     }
   },
   destroyed() {

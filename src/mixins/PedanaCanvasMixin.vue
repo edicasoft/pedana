@@ -48,13 +48,15 @@ export default Vue.extend({
     saveAsPdf() {
       console.log("save");
       ipcRenderer.send("canvas:pdf", [
-        { image: this.combineCanvasesToImage() }
+        { ...this.exam, image: this.combineCanvasesToImage() }
       ]);
-      console.log("saveAsPdf");
+      console.log("saveAsPdf", [
+        { ...this.exam, image: this.combineCanvasesToImage() }
+      ]);
     },
     print() {
       ipcRenderer.send("canvas:print", [
-        { image: this.combineCanvasesToImage() }
+        { ...this.exam, image: this.combineCanvasesToImage() }
       ]);
       console.log("print");
     },

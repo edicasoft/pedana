@@ -1,5 +1,7 @@
 import Vue from "vue";
-const colors = ["blue", "red", "green"];
+import { mapState } from "vuex";
+
+const colors = ["blue", "green", "red"];
 
 export default Vue.extend({
   data() {
@@ -19,6 +21,10 @@ export default Vue.extend({
     };
   },
   computed: {
+    ...mapState("exams", ["selectedExams"]),
+    exams() {
+      return this.selectedExams.slice(0, 3);
+    },
     axesX() {
       return {
         label: "X",

@@ -15,7 +15,7 @@
       >
         <v-sheet width="600px" class="mx-auto">
           <v-select
-            v-model="examType"
+            v-model="exam_type"
             :items="examTypes"
             :rules="[rules.required]"
             label="Type of Exam"
@@ -63,13 +63,14 @@
 <script>
 //TODO::disable duration field when editing
 import { examTypes } from "@/common/constants.js";
+/*eslint-disable*/
 export default {
   props: ["value"],
   data: () => ({
     valid: true,
     description: "",
     notes: "",
-    examType: null,
+    exam_type: null,
     duration: 15,
     examTypes: examTypes,
     rules: {

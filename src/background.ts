@@ -146,7 +146,7 @@ function createPrintCanvasWindow(data) {
       style += `margin-right: 15px;`;
     }
     windowContent += `<div style="${style}">`;
-    windowContent += `<div>${data[i].type} - ${data[i].datetime}</div>`;
+    windowContent += `<div>${data[i].exam_type} - ${data[i].created_at}</div>`;
     windowContent += '<div><img src="' + data[i].image + '"></div>';
     windowContent += "</div>";
   }

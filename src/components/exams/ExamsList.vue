@@ -44,7 +44,7 @@
         <v-list-item-content>
           <v-list-item-title>{{ exam.created_at }}</v-list-item-title>
           <v-list-item-subtitle>{{
-            examTypes.find(item => item.type === exam.examType).text
+            examTypes.find(item => item.type === exam.exam_type).text
           }}</v-list-item-subtitle>
         </v-list-item-content>
         <v-list-item-action>

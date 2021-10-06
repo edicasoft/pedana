@@ -53,7 +53,6 @@
 <script>
 import Vue from "vue";
 import LineChart from "@/common/LineChart.js";
-import { mapState } from "vuex";
 import {
   idealBarycenterLeftX,
   idealBarycenterRightX,
@@ -119,9 +118,6 @@ export default Vue.extend({
       optionsRight: _.cloneDeep(initialOptions)
     };
   },
-  computed: {
-    ...mapState("exams", ["selectedExams"])
-  },
   created() {
     this.calculateFormulas();
     this.fillData();
@@ -131,16 +127,16 @@ export default Vue.extend({
       return `${ev.color}--text`;
     },
     calculateFormulas() {
-      for (let i = 0; i < this.selectedExams.length; i++) {
+      for (let i = 0; i < this.exams.length; i++) {
         const color = this.colors[i];
 
         const barycenterLeft = new Barycenter(leftPlatformCells, color);
         const barycenterRight = new Barycenter(rightPlatformCells, color);
 
-        const leftWeights = this.selectedExams[i].weightsData.map(item =>
+        const leftWeights = this.exams[i].weightsData.map(item =>
           item.slice(0, 3)
         );
-        const rightWeights = this.selectedExams[i].weightsData.map(item =>
+        const rightWeights = this.exams[i].weightsData.map(item =>
           item.slice(3, 6)
         );
 
@@ -174,7 +170,7 @@ export default Vue.extend({
 
         exam.leftBarycenterHistory = barycenterLeft.getHistory();
         exam.rightBarycenterHistory = barycenterRight.getHistory();
-        exam.type = this.selectedExams[i].examType;
+        exam.type = this.exams[i].exam_type;
 
         this.calculations.push(exam);
       }

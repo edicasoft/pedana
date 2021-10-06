@@ -24,10 +24,6 @@
       </v-row>
 
       <div class="pa-5">
-        <!-- <div>
-          Angle opposite of X-axis:
-          <strong>{{ oppositeXAngle.toFixed(2) }}</strong>
-        </div> -->
         <div>
           Angle next to X-axis: <strong>{{ nextToXAngle.toFixed(2) }}</strong>
         </div>

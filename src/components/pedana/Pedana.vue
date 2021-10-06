@@ -58,9 +58,8 @@
             <v-list subheader two-line flat>
               <v-subheader
                 >Current Exam
-                <template v-if="currentExam"
-                  >{{ currentExam.created_at }}
-                  {{ currentExam.examType }}</template
+                <b v-if="exam">
+                  : {{ exam.exam_type }} - {{ exam.created_at }}</b
                 ></v-subheader
               >
               <!-- Reset ---->
@@ -252,7 +251,6 @@ import ExportToFileBtn from "@/components/file/ExportToFileBtn.vue";
 import _ from "lodash";
 import pedanaCanvasMixin from "@/mixins/PedanaCanvasMixin.vue";
 import Vue from "vue";
-import { examTypes } from "@/common/constants.js";
 
 /* eslint-disable */
 const electron = window.require("electron"),
@@ -306,7 +304,7 @@ export default Vue.extend({
     leftBarycenter,
     rightBarycenter,
     examDuration: null,
-    currentExam: null
+    exam: null
   }),
   destroyed() {
     this.c.clear();
@@ -366,12 +364,12 @@ export default Vue.extend({
   methods: {
     onPlayExam(exam) {
       this.onImport(exam.weightsData, this.start);
-      this.currentExam = exam;
+      this.exam = exam;
     },
     onSelectExam(exam) {
       if (exam) {
         this.onImport(exam.weightsData);
-        this.currentExam = exam;
+        this.exam = exam;
       } else {
         this.reset();
       }
@@ -434,7 +432,7 @@ export default Vue.extend({
     reset() {
       this.readingsData = [];
       this.restart();
-      this.currentExam = null;
+      this.exam = null;
     },
     restart() {
       this.readingsIdx = 0;
