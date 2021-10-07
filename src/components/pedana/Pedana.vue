@@ -79,7 +79,7 @@
                 <v-btn @click="showMainChart = true" class="mr-3" small>
                   Main
                 </v-btn>
-                <v-btn @click="showTortionChart = true" class="mr-3" small>
+                <v-btn @click="showTorsionChart = true" class="mr-3" small>
                   Torsion
                 </v-btn>
                 <v-btn @click="showGeneralChart = true" class="mr-3" small
@@ -195,7 +195,7 @@
         </v-col>
       </v-row>
     </v-container>
-    <TortionChart v-if="showTortionChart" :value.sync="showTortionChart" />
+    <TorsionChart v-if="showTorsionChart" :value.sync="showTorsionChart" />
     <MainChart v-if="showMainChart" :value.sync="showMainChart" />
     <GeneralBarycenterChart
       v-if="showGeneralChart"
@@ -237,7 +237,7 @@ import {
 } from "@/common/barycenters.service.js";
 
 import MainChart from "@/components/exams/current/MainChart.vue";
-import TortionChart from "@/components/exams/current/TortionChart.vue";
+import TorsionChart from "@/components/exams/current/TorsionChart.vue";
 import GeneralBarycenterChart from "@/components/exams/current/GeneralBarycenterChart.vue";
 import LeftRightBarycenterChart from "@/components/exams/current/LeftRightBarycenterChart.vue";
 
@@ -266,7 +266,7 @@ export default Vue.extend({
   components: {
     BackgroundLayer,
     MainChart,
-    TortionChart,
+    TorsionChart,
     GeneralBarycenterChart,
     LeftRightBarycenterChart,
     ImportFileBtn,
@@ -280,7 +280,7 @@ export default Vue.extend({
   data: () => ({
     showExamDialog: false,
     showMainChart: false,
-    showTortionChart: false,
+    showTorsionChart: false,
     showGeneralChart: false,
     showLeftRightChart: false,
     width: pedanaWidth,

@@ -12,10 +12,12 @@
         <v-col>
           <line-chart
             :style="{
-              height: '100vh',
               position: 'relative',
-              maxHeight: '600px',
-              maxWidth: '1200px'
+              display: 'flex',
+              alignItems: 'center',
+              overflow: 'hidden',
+              maxHeight: '500px',
+              maxWidth: '1000px'
             }"
             :chart-data="datacollection"
             :options="options"
@@ -54,7 +56,7 @@ const minHeight = 200;
 const minWidth = 400;
 
 export default Vue.extend({
-  name: "TortionChart",
+  name: "TorsionChart",
   props: ["value"],
 
   components: {
@@ -68,7 +70,7 @@ export default Vue.extend({
       y1: leftBarycenter.calculateBy(),
       y2: rightBarycenter.calculateBy(),
       options: {
-        maintainAspectRatio: false,
+        maintainAspectRatio: true,
         responsive: true,
         plugins: {
           legend: false

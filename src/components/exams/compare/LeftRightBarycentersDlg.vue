@@ -123,9 +123,6 @@ export default Vue.extend({
     this.fillData();
   },
   methods: {
-    rowColor(ev) {
-      return `${ev.color}--text`;
-    },
     calculateFormulas() {
       for (let i = 0; i < this.exams.length; i++) {
         const color = this.colors[i];

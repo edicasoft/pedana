@@ -16,7 +16,7 @@
           <v-list-item @click="showGeneralBcentersDlg = true">
             <v-list-item-title>General</v-list-item-title>
           </v-list-item>
-          <v-list-item>
+          <v-list-item @click="showTorsionsDlg = true">
             <v-list-item-title>Torsion</v-list-item-title>
           </v-list-item>
           <v-list-item @click="showRightLeftBcentersDlg = true">
@@ -66,6 +66,7 @@
       v-if="showRightLeftBcentersDlg"
       :value.sync="showRightLeftBcentersDlg"
     />
+    <TorsionsDialog v-if="showTorsionsDlg" :value.sync="showTorsionsDlg" />
   </v-card>
 </template>
 <script>
@@ -74,12 +75,14 @@ import { examTypes } from "@/common/constants.js";
 import ComparePedanasDialog from "@/components/exams/compare/ComparePedanasDlg.vue";
 import GeneralBarycentersDialog from "@/components/exams/compare/GeneralBarycentersDlg.vue";
 import LeftRightBarycentersDialog from "@/components/exams/compare/LeftRightBarycentersDlg.vue";
+import TorsionsDialog from "@/components/exams/compare/TorsionsDlg.vue";
 
 export default {
   components: {
     ComparePedanasDialog,
     GeneralBarycentersDialog,
-    LeftRightBarycentersDialog
+    LeftRightBarycentersDialog,
+    TorsionsDialog
   },
   data() {
     return {
@@ -87,7 +90,8 @@ export default {
       examTypes,
       showComparePedanasDlg: false,
       showGeneralBcentersDlg: false,
-      showRightLeftBcentersDlg: false
+      showRightLeftBcentersDlg: false,
+      showTorsionsDlg: false
     };
   },
   watch: {

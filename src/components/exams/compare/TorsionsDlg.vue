@@ -12,10 +12,12 @@
         <v-col>
           <line-chart
             :style="{
-              height: '100vh',
               position: 'relative',
-              maxHeight: '600px',
-              maxWidth: '1200px'
+              display: 'flex',
+              alignItems: 'center',
+              overflow: 'hidden',
+              maxHeight: '500px',
+              maxWidth: '1000px'
             }"
             :chart-data="datacollection"
             :options="options"
@@ -24,47 +26,49 @@
       </v-row>
 
       <div class="pa-5">
-        <div>
-          Angle next to X-axis: <strong>{{ nextToXAngle.toFixed(2) }}</strong>
-        </div>
+        <v-data-table
+          :headers="headers"
+          :items="calculations"
+          hide-default-footer
+          :disable-sort="true"
+          :item-class="rowColor"
+        ></v-data-table>
       </div>
     </v-card>
   </v-dialog>
 </template>
 
-<script lang="ts">
+<script>
 import Vue from "vue";
 import LineChart from "@/common/LineChart.js";
-import { ChartData } from "chart.js";
-import {
-  leftBarycenter,
-  rightBarycenter
-} from "@/common/barycenters.service.js";
 import {
   idealBarycenterLeftX,
-  idealBarycenterRightX
+  idealBarycenterRightX,
+  leftPlatformCells,
+  rightPlatformCells
 } from "@/common/constants.js";
-import { mapState } from "vuex";
+import ChartMixin from "@/mixins/ChartMixin";
+import Barycenter from "@/entities/Barycenter";
 
 const minHeight = 200;
 const minWidth = 400;
 
 export default Vue.extend({
-  name: "TortionChart",
   props: ["value"],
-
   components: {
     LineChart
   },
+  mixins: [ChartMixin],
   data() {
     return {
-      datacollection: {} as ChartData,
-      x1: leftBarycenter.calculateBx(),
-      x2: rightBarycenter.calculateBx(),
-      y1: leftBarycenter.calculateBy(),
-      y2: rightBarycenter.calculateBy(),
+      headers: [
+        { text: "", value: "type" },
+        { text: "Angle next to X-axis", value: "nextToXAngle" }
+      ],
+      datacollection: { labels: [""], datasets: [] },
+      calculations: [],
       options: {
-        maintainAspectRatio: false,
+        maintainAspectRatio: true,
         responsive: true,
         plugins: {
           legend: false
@@ -74,97 +78,103 @@ export default Vue.extend({
             {
               title: "X",
               type: "linear",
-              position: "bottom"
+              position: "center",
+              ticks: {
+                min: 50,
+                max: 50
+              }
+            }
+          ],
+          yAxes: [
+            {
+              title: "Y",
+              ticks: {
+                min: 50,
+                max: 50
+              }
             }
           ]
         }
       }
     };
   },
-  computed: {
-    ...mapState("pedana", ["weights"]),
-    oppositeXAngle(): number {
-      const deltaX = Math.abs(this.x2 - this.x1);
-      const deltaY = Math.abs(this.y2 - this.y1);
-      const sqrt = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
-      const angle = sqrt ? (Math.acos(deltaX / sqrt) * 180) / Math.PI : 0;
-      return this.y2 > this.y1 ? -1 * angle : angle;
-    },
-    nextToXAngle(): number {
-      return 90 - Math.abs(this.oppositeXAngle);
-    }
-  },
   created() {
+    this.calculateFormulas();
     this.fillData();
   },
-  watch: {
-    weights() {
-      this.fillData();
-    }
-  },
   methods: {
-    fillData() {
-      this.x1 = leftBarycenter.calculateBx();
-      this.y1 = leftBarycenter.calculateBy();
-      this.x2 = rightBarycenter.calculateBx();
-      this.y2 = rightBarycenter.calculateBy();
-      const intersectLineStyle = {
-        label: "",
-        borderColor: "blue",
-        pointBackgroundColor: "blue",
-        pointRadius: 0,
-        fill: false,
-        borderWidth: 1,
-        borderDash: [5, 5, 2, 5]
-      };
+    setTicksRange() {
+      const minX = Math.min(
+        ...this.calculations.map(item =>
+          Math.min(item.bxL, item.bxR, -minWidth / 2)
+        )
+      );
+      this.options.scales.xAxes[0].ticks.min = Math.floor(minX);
+
+      const maxX = Math.max(
+        ...this.calculations.map(item =>
+          Math.max(item.bxL, item.bxR, minWidth / 2)
+        )
+      );
+      this.options.scales.xAxes[0].ticks.max = Math.ceil(maxX);
+
+      const minY = Math.min(
+        ...this.calculations.map(item =>
+          Math.min(item.byL, item.byR, -minHeight / 2)
+        )
+      );
+      this.options.scales.yAxes[0].ticks.min = Math.floor(minY);
+
       const maxY = Math.max(
-        Math.abs(this.y1) + 20,
-        minHeight / 2,
-        Math.abs(this.y2) + 20
+        ...this.calculations.map(item =>
+          Math.max(item.byL, item.byR, minHeight / 2)
+        )
+      );
+      this.options.scales.yAxes[0].ticks.max = Math.ceil(maxY);
+      console.log(minY, maxY);
+      //console.log(minY, maxY);
+    },
+    calculateFormulas() {
+      for (let i = 0; i < this.exams.length; i++) {
+        const color = this.colors[i];
+
+        const barycenterLeft = new Barycenter(leftPlatformCells, color);
+        const barycenterRight = new Barycenter(rightPlatformCells, color);
+
+        const leftWeights = this.exams[i].weightsData.map(item =>
+          item.slice(0, 3)
+        );
+        const rightWeights = this.exams[i].weightsData.map(item =>
+          item.slice(3, 6)
+        );
+
+        this.calcBarycenterCoordinates(barycenterLeft, leftWeights);
+        this.calcBarycenterCoordinates(barycenterRight, rightWeights);
+
+        const exam = { color };
+        exam.type = this.exams[i].exam_type;
+        exam.bxR = barycenterRight.calculateBx();
+        exam.byR = barycenterRight.calculateBy();
+        exam.bxL = barycenterLeft.calculateBx();
+        exam.byL = barycenterLeft.calculateBy();
+        exam.oppositeXAngle = this.oppositeXAngle(exam).toFixed(2);
+        exam.nextToXAngle = this.nextToXAngle(exam.oppositeXAngle).toFixed(2);
+        this.calculations.push(exam);
+      }
+    },
+    fillData() {
+      const maxY = Math.max(
+        ...this.calculations.map(item =>
+          Math.max(Math.abs(item.byL), Math.abs(item.byR), minHeight / 2)
+        )
       );
       const maxX = Math.max(
-        Math.abs(this.x1) + 20,
-        minWidth / 2,
-        Math.abs(this.x2) + 20
+        ...this.calculations.map(item =>
+          Math.max(Math.abs(item.bxL), Math.abs(item.bxR), minWidth / 2)
+        )
       );
-      const axes = [
-        {
-          label: "X",
-          borderColor: "black",
-          pointBackgroundColor: "black",
-          pointRadius: 0,
-          fill: false,
-          borderWidth: 1,
-          data: [
-            {
-              x: -maxX,
-              y: 0
-            },
-            {
-              x: maxX,
-              y: 0
-            }
-          ]
-        },
-        {
-          label: "Y",
-          borderColor: "black",
-          pointBackgroundColor: "black",
-          fill: false,
-          borderWidth: 1,
-          pointRadius: 0,
-          data: [
-            {
-              x: 0,
-              y: maxY
-            },
-            {
-              x: 0,
-              y: -maxY
-            }
-          ]
-        }
-      ];
+      this.maxY = this.maxX = Math.max(maxX, maxY);
+      this.setTicksRange();
 
       const ideal = [
         {
@@ -176,11 +186,11 @@ export default Vue.extend({
           data: [
             {
               x: idealBarycenterLeftX,
-              y: -maxY
+              y: -this.maxY
             },
             {
               x: idealBarycenterLeftX,
-              y: maxY
+              y: this.maxY
             }
           ]
         },
@@ -193,92 +203,93 @@ export default Vue.extend({
           data: [
             {
               x: idealBarycenterRightX,
-              y: -maxY
+              y: -this.maxY
             },
             {
               x: idealBarycenterRightX,
-              y: maxY
+              y: this.maxY
             }
           ]
         }
       ];
-      this.datacollection = {
-        labels: [""],
-        datasets: [
-          ...axes,
-          ...ideal,
+      this.datacollection.datasets = [...this.axes, ...ideal];
+
+      for (let i = 0; i < this.calculations.length; i++) {
+        const exam = this.calculations[i];
+        this.intersectLineStyle.borderColor = exam.color;
+        this.intersectLineStyle.pointBackgroundColor = exam.color;
+        this.datacollection.datasets = this.datacollection.datasets.concat([
           {
-            ...intersectLineStyle,
+            ...this.intersectLineStyle,
             data: [
               {
                 x: -20,
-                y: this.y1
+                y: exam.byL
               },
               {
-                x: -maxX,
-                y: this.y1
+                x: -this.maxX,
+                y: exam.byL
               }
             ]
           },
           {
-            ...intersectLineStyle,
+            ...this.intersectLineStyle,
             data: [
               {
-                x: this.x1,
-                y: maxY
+                x: exam.bxL,
+                y: this.maxY
               },
               {
-                x: this.x1,
-                y: -maxY
+                x: exam.bxL,
+                y: -this.maxY
               }
             ]
           },
           {
-            ...intersectLineStyle,
+            ...this.intersectLineStyle,
             data: [
               {
                 x: 20,
-                y: this.y2
+                y: exam.byR
               },
               {
-                x: maxX,
-                y: this.y2
+                x: this.maxX,
+                y: exam.byR
               }
             ]
           },
           {
-            ...intersectLineStyle,
+            ...this.intersectLineStyle,
             data: [
               {
-                x: this.x2,
-                y: maxY
+                x: exam.bxR,
+                y: this.maxY
               },
               {
-                x: this.x2,
-                y: -maxY
+                x: exam.bxR,
+                y: -this.maxY
               }
             ]
           },
           {
-            label: "",
-            borderColor: "blue",
-            pointBackgroundColor: "blue",
+            borderColor: exam.color,
+            pointBackgroundColor: exam.color,
             pointRadius: 0,
             fill: false,
             borderWidth: 1,
             data: [
               {
-                x: this.x1,
-                y: this.y1
+                x: exam.bxL,
+                y: exam.byL
               },
               {
-                x: this.x2,
-                y: this.y2
+                x: exam.bxR,
+                y: exam.byR
               }
             ]
           }
-        ]
-      };
+        ]);
+      }
     },
     close() {
       this.$emit("update:value", false);

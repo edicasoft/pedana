@@ -118,6 +118,7 @@ export default Vue.extend({
         ...this.calculations.map(item => Math.abs(item.maxX))
       );
       this.maxY = this.maxX = Math.max(maxX, maxY);
+      this.datacollection.datasets = [...this.axes];
 
       for (let i = 0; i < this.calculations.length; i++) {
         const exam = this.calculations[i];
@@ -133,7 +134,6 @@ export default Vue.extend({
             fill: false,
             borderWidth: 1
           },
-          ...this.axes,
           {
             ...this.intersectLineStyle,
             data: [

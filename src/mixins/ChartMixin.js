@@ -70,10 +70,23 @@ export default Vue.extend({
     }
   },
   methods: {
+    rowColor(ev) {
+      return `${ev.color}--text`;
+    },
     calcBarycenterCoordinates(bar, weights) {
       for (let i = 0; i < weights.length; i++) {
         bar.move(weights[i]);
       }
+    },
+    nextToXAngle(oppositeXAngle) {
+      return 90 - Math.abs(oppositeXAngle);
+    },
+    oppositeXAngle({ bxL, bxR, byR, byL }) {
+      const deltaX = Math.abs(bxR - bxL);
+      const deltaY = Math.abs(byR - byL);
+      const sqrt = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
+      const angle = sqrt ? (Math.acos(deltaX / sqrt) * 180) / Math.PI : 0;
+      return byR > byL ? -1 * angle : angle;
     }
   }
 });
