@@ -38,7 +38,7 @@
       >
 
       <v-spacer></v-spacer>
-      <v-btn class="ml-2"
+      <v-btn class="ml-2" @click="showPatientsDialog = true"
         ><v-icon left>mdi-account-group</v-icon>Patients</v-btn
       >
       <!-- Charts Buttons -->
@@ -206,6 +206,7 @@
       :value.sync="showLeftRightChart"
     />
     <!-- END CHARTS  -->
+    <Patients v-if="showPatientsDialog" :value.sync="showPatientsDialog" />
 
     <v-overlay :value="isLoading">
       <v-progress-circular indeterminate size="64"></v-progress-circular>
@@ -245,6 +246,7 @@ import ErrorDialog from "@/components/dialogs/ErrorDialog.vue";
 import ConnectingDialog from "@/components/dialogs/ConnectingDialog.vue";
 import ExamDialog from "@/components/exams/ExamDialog.vue";
 import ExamsList from "@/components/exams/ExamsList.vue";
+import Patients from "@/components/patients/Patients.vue";
 
 import ImportFileBtn from "@/components/file/ImportFileBtn.vue";
 import ExportToFileBtn from "@/components/file/ExportToFileBtn.vue";
@@ -275,10 +277,12 @@ export default Vue.extend({
     ErrorDialog,
     ConnectingDialog,
     ExamDialog,
-    ExamsList
+    ExamsList,
+    Patients
   },
   data: () => ({
     showExamDialog: false,
+    showPatientsDialog: false,
     showMainChart: false,
     showTorsionChart: false,
     showGeneralChart: false,

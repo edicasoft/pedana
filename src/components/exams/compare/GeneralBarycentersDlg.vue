@@ -1,5 +1,5 @@
 <template>
-  <v-dialog :value="value" :max-width="1200" fullscreen persistent>
+  <v-dialog :value="value" :style="{ zIndex: 1000 }" fullscreen persistent>
     <v-card class="pa-3">
       <div class="d-flex align-center justify-space-between pb-3">
         <v-card-title class="pt-0 pb-0">General Barycenter</v-card-title>
