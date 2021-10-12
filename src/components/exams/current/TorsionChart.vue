@@ -53,7 +53,7 @@ import {
 import { mapState } from "vuex";
 
 const minHeight = 200;
-const minWidth = 400;
+const minWidth = 200;
 
 export default Vue.extend({
   name: "TorsionChart",

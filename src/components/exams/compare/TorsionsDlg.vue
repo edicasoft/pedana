@@ -51,7 +51,6 @@ import ChartMixin from "@/mixins/ChartMixin";
 import Barycenter from "@/entities/Barycenter";
 
 const minHeight = 200;
-const minWidth = 400;
 
 export default Vue.extend({
   props: ["value"],
@@ -78,20 +77,20 @@ export default Vue.extend({
             {
               title: "X",
               type: "linear",
-              position: "center",
-              ticks: {
-                min: 50,
-                max: 50
-              }
+              position: "center"
+              // ticks: {
+              //   min: 50,
+              //   max: 50
+              // }
             }
           ],
           yAxes: [
             {
-              title: "Y",
-              ticks: {
-                min: 50,
-                max: 50
-              }
+              title: "Y"
+              // ticks: {
+              //   min: 50,
+              //   max: 50
+              // }
             }
           ]
         }
@@ -103,37 +102,37 @@ export default Vue.extend({
     this.fillData();
   },
   methods: {
-    setTicksRange() {
-      const minX = Math.min(
-        ...this.calculations.map(item =>
-          Math.min(item.bxL, item.bxR, -minWidth / 2)
-        )
-      );
-      this.options.scales.xAxes[0].ticks.min = Math.floor(minX);
+    // setTicksRange() {
+    //   const minX = Math.min(
+    //     ...this.calculations.map(item =>
+    //       Math.min(item.bxL, item.bxR, -minHeight / 2)
+    //     )
+    //   );
+    //   this.options.scales.xAxes[0].ticks.min = Math.floor(minX);
 
-      const maxX = Math.max(
-        ...this.calculations.map(item =>
-          Math.max(item.bxL, item.bxR, minWidth / 2)
-        )
-      );
-      this.options.scales.xAxes[0].ticks.max = Math.ceil(maxX);
+    //   const maxX = Math.max(
+    //     ...this.calculations.map(item =>
+    //       Math.max(item.bxL, item.bxR, minHeight / 2)
+    //     )
+    //   );
+    //   this.options.scales.xAxes[0].ticks.max = Math.ceil(maxX);
 
-      const minY = Math.min(
-        ...this.calculations.map(item =>
-          Math.min(item.byL, item.byR, -minHeight / 2)
-        )
-      );
-      this.options.scales.yAxes[0].ticks.min = Math.floor(minY);
+    //   const minY = Math.min(
+    //     ...this.calculations.map(item =>
+    //       Math.min(item.byL, item.byR, -minHeight / 2)
+    //     )
+    //   );
+    //   this.options.scales.yAxes[0].ticks.min = Math.floor(minY);
 
-      const maxY = Math.max(
-        ...this.calculations.map(item =>
-          Math.max(item.byL, item.byR, minHeight / 2)
-        )
-      );
-      this.options.scales.yAxes[0].ticks.max = Math.ceil(maxY);
-      console.log(minY, maxY);
-      //console.log(minY, maxY);
-    },
+    //   const maxY = Math.max(
+    //     ...this.calculations.map(item =>
+    //       Math.max(item.byL, item.byR, minHeight / 2)
+    //     )
+    //   );
+    //   this.options.scales.yAxes[0].ticks.max = Math.ceil(maxY);
+    //   console.log(minY, maxY);
+    //   //console.log(minY, maxY);
+    // },
     calculateFormulas() {
       for (let i = 0; i < this.exams.length; i++) {
         const color = this.colors[i];
@@ -170,11 +169,35 @@ export default Vue.extend({
       );
       const maxX = Math.max(
         ...this.calculations.map(item =>
-          Math.max(Math.abs(item.bxL), Math.abs(item.bxR), minWidth / 2)
+          Math.max(Math.abs(item.bxL), Math.abs(item.bxR), minHeight / 2)
         )
       );
-      this.maxY = this.maxX = Math.max(maxX, maxY);
-      this.setTicksRange();
+      // const minX = Math.min(
+      //   ...this.calculations.map(item =>
+      //     Math.min(item.bxL, item.bxR, -minWidth / 2)
+      //   )
+      // );
+
+      // const maxX = Math.max(
+      //   ...this.calculations.map(item =>
+      //     Math.max(item.bxL, item.bxR, minWidth / 2)
+      //   )
+      // );
+
+      // const minY = Math.min(
+      //   ...this.calculations.map(item =>
+      //     Math.min(item.byL, item.byR, -minHeight / 2)
+      //   )
+      // );
+
+      // const maxY = Math.max(
+      //   ...this.calculations.map(item =>
+      //     Math.max(item.byL, item.byR, minHeight / 2)
+      //   )
+      // );
+      this.maxY = this.maxX = Math.max(maxX, maxY) + 20;
+
+      // this.setTicksRange();
 
       const ideal = [
         {
