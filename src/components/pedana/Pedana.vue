@@ -33,8 +33,9 @@
 
       <v-spacer></v-spacer>
 
-      <v-toolbar-title>
-        <v-icon>mdi-account</v-icon> Solange Di Rocca</v-toolbar-title
+      <v-toolbar-title v-if="selectedPatient">
+        <v-icon>mdi-account</v-icon>
+        {{ selectedPatient.fullname }}</v-toolbar-title
       >
 
       <v-spacer></v-spacer>
@@ -206,7 +207,12 @@
       :value.sync="showLeftRightChart"
     />
     <!-- END CHARTS  -->
-    <Patients v-if="showPatientsDialog" :value.sync="showPatientsDialog" />
+    <Patients
+      v-if="showPatientsDialog"
+      :value.sync="showPatientsDialog"
+      @newExam="startStreaming"
+      :isReady="isReady"
+    />
 
     <v-overlay :value="isLoading">
       <v-progress-circular indeterminate size="64"></v-progress-circular>
@@ -346,6 +352,7 @@ export default Vue.extend({
   },
   computed: {
     ...mapState("pedana", ["weights", "weightsHistory"]),
+    ...mapState("patients", ["selectedPatient"]),
     currentTiming() {
       return this.readingsIdx > 0 ? (this.readingsIdx / Hz).toFixed(2) : 0;
     }
@@ -367,12 +374,12 @@ export default Vue.extend({
   },
   methods: {
     onPlayExam(exam) {
-      this.onImport(exam.weightsData, this.start);
+      this.onImport(exam.weight_data, this.start);
       this.exam = exam;
     },
     onSelectExam(exam) {
       if (exam) {
-        this.onImport(exam.weightsData);
+        this.onImport(exam.weight_data);
         this.exam = exam;
       } else {
         this.reset();
@@ -455,6 +462,15 @@ export default Vue.extend({
     },
     startStreaming() {
       console.log("start streaming");
+      if (!this.isReady) {
+        alert("Pedana is not connected");
+        return;
+      }
+      if (!this.selectedPatient) {
+        alert("Select a patient first");
+        return;
+      }
+
       this.isEndStreaming = false;
       this.reset();
       this.showExamDialog = true;

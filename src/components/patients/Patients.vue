@@ -7,19 +7,40 @@
       <v-row>
         <v-col>
           <v-data-table
+            v-model="selected"
             :headers="headers"
             :items="patients"
             :options.sync="options"
             :server-items-length="totalPatients"
             :loading="loading"
+            :single-select="true"
+            show-select
           >
+            <!-- eslint-disable -->
+            <template v-slot:footer.prepend>
+              <v-btn
+                v-if="selected.length"
+                @click="submitSelection"
+                small
+                color="primary"
+                >Submit</v-btn
+              >
+              <v-btn
+                v-if="selected.length"
+                @click="cancelSelection"
+                class="ml-2"
+                small
+                >Cancel</v-btn
+              >
+            </template>
             <template v-slot:top>
-              <v-toolbar flat>
+              <v-toolbar flat height="40">
                 <v-dialog v-model="dialog" max-width="500px">
                   <template v-slot:activator="{ on, attrs }">
                     <v-btn
                       color="primary"
                       dark
+                      small
                       class="mb-2"
                       v-bind="attrs"
                       v-on="on"
@@ -77,17 +98,15 @@
                 <v-dialog v-model="dialogDelete" max-width="500px">
                   <v-card>
                     <v-card-title class="text-h5"
-                      >Are you sure you want to delete this item?</v-card-title
+                      >Are you sure you want to delete this
+                      patient?</v-card-title
                     >
                     <v-card-actions>
                       <v-spacer></v-spacer>
                       <v-btn color="blue darken-1" text @click="closeDelete"
                         >Cancel</v-btn
                       >
-                      <v-btn
-                        color="blue darken-1"
-                        text
-                        @click="deleteItemConfirm"
+                      <v-btn color="blue darken-1" @click="deleteItemConfirm"
                         >OK</v-btn
                       >
                       <v-spacer></v-spacer>
@@ -104,10 +123,31 @@
                   hide-details
                 ></v-text-field>
                 <v-spacer> </v-spacer>
-                Latest Exam Date
+                <v-btn text small color="blue" class="text-capitalize">
+                  <u>Filter by Exam</u></v-btn
+                >
+              </v-toolbar>
+              <v-toolbar flat>
+                <v-btn
+                  @click="clearFilters"
+                  small
+                  color="blue"
+                  text
+                  class="text-capitalize"
+                  >All</v-btn
+                >
+                <v-btn
+                  small
+                  class="pa-0"
+                  text
+                  :style="{ minWidth: '25px' }"
+                  v-for="(letter, idx) in alphabet"
+                  :key="idx"
+                  @click="filterByLetter(letter)"
+                  >{{ letter }}</v-btn
+                >
               </v-toolbar>
             </template>
-            <!-- eslint-disable -->
             <template v-slot:item.actions="{ item }">
               <v-icon small class="mr-2" @click="editItem(item)">
                 mdi-pencil
@@ -123,16 +163,28 @@
             </template></v-data-table
           >
         </v-col>
-        <v-col> </v-col>
+        <v-col>
+          <ExamsList
+            v-if="selected.length"
+            @newExam="newExam"
+            :patient="selected[0]"
+            :isReady="isReady"
+          />
+        </v-col>
       </v-row>
     </v-card>
   </v-dialog>
 </template>
 <script>
 import Vue from "vue";
+import { mapActions, mapState } from "vuex";
+import ExamsList from "@/components/patients/ExamsList.vue";
 /*eslint-disable*/
 export default Vue.extend({
-  props: ["value"],
+  props: ["value", "isReady"],
+  components: {
+    ExamsList
+  },
   data() {
     return {
       totalPatients: 3,
@@ -140,6 +192,7 @@ export default Vue.extend({
       dialog: false,
       dialogDelete: false,
       search: "",
+      selected: [],
       patients: [
         {
           id: 1,
@@ -178,26 +231,21 @@ export default Vue.extend({
         { text: "", value: "actions", sortable: false }
       ],
       editedIndex: -1,
-      editedItem: {
-        name: "",
-        calories: 0,
-        fat: 0,
-        carbs: 0,
-        protein: 0
-      },
-      defaultItem: {
-        name: "",
-        calories: 0,
-        fat: 0,
-        carbs: 0,
-        protein: 0
-      }
+      editedItem: {}
     };
   },
-
+  mounted() {
+    if (this.selectedPatient) this.selected.push(this.selectedPatient);
+    this.getDataFromApi();
+  },
   computed: {
+    ...mapState("patients", ["selectedPatient"]),
+    alphabet() {
+      const alpha = Array.from(Array(26)).map((e, i) => i + 65);
+      return alpha.map(x => String.fromCharCode(x));
+    },
     formTitle() {
-      return this.editedIndex === -1 ? "New Item" : "Edit Item";
+      return this.editedIndex === -1 ? "New Patient" : "Edit Patient";
     }
   },
   watch: {
@@ -214,11 +262,27 @@ export default Vue.extend({
       val || this.closeDelete();
     }
   },
-  mounted() {
-    this.getDataFromApi();
-  },
 
   methods: {
+    ...mapActions("patients", ["selectPatient"]),
+    cancelSelection() {
+      this.selected = [];
+      this.selectPatient(null);
+      this.close();
+    },
+    submitSelection() {
+      if (this.selected.length) {
+        this.selectPatient(this.selected[0]);
+        this.close();
+      }
+    },
+    newExam() {
+      this.$emit("newExam");
+    },
+    filterByLetter(letter) {
+      console.log("filterByLetter", letter);
+    },
+    clearFilters() {},
     getDataFromApi() {
       const { sortBy, sortDesc, page, itemsPerPage } = this.options;
       // this.loading = true;
@@ -251,7 +315,7 @@ export default Vue.extend({
     cancel() {
       this.dialog = false;
       this.$nextTick(() => {
-        this.editedItem = Object.assign({}, this.defaultItem);
+        this.editedItem = {};
         this.editedIndex = -1;
       });
     },
@@ -259,7 +323,7 @@ export default Vue.extend({
     closeDelete() {
       this.dialogDelete = false;
       this.$nextTick(() => {
-        this.editedItem = Object.assign({}, this.defaultItem);
+        this.editedItem = {};
         this.editedIndex = -1;
       });
     },
