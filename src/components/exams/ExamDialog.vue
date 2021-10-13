@@ -2,7 +2,9 @@
   <v-dialog :value="value" :max-width="800" persistent>
     <v-card class="pa-3">
       <div class="d-flex align-center justify-space-between pb-3">
-        <v-card-title class="pt-0 pb-0 text-center">New Exam</v-card-title>
+        <v-card-title class="pt-0 pb-0 text-center"
+          >{{ exam.id ? "Edit" : "New" }} Exam</v-card-title
+        >
         <v-btn @click="close" icon>
           <v-icon color="error">mdi-close-circle</v-icon></v-btn
         >
@@ -27,6 +29,7 @@
               type="number"
               v-model="duration"
               label="Duration"
+              :disabled="!!exam.id"
               :rules="[rules.required, rules.positive, rules.maxDuration]"
               required
             >
@@ -65,7 +68,7 @@
 import { examTypes } from "@/common/constants.js";
 /*eslint-disable*/
 export default {
-  props: ["value"],
+  props: ["value", "exam"],
   data: () => ({
     valid: true,
     description: "",
@@ -79,14 +82,35 @@ export default {
       maxDuration: value => value <= 60 || `Maximum is 60`
     }
   }),
+  mounted() {
+    console.log(this.exam);
+    if (this.exam) {
+      this.description = this.exam.description;
+      this.notes = this.exam.notes;
+      this.exam_type = this.getType(this.exam.exam_type);
+      this.duration = this.exam.duration;
+    }
+  },
 
   methods: {
+    getType(type) {
+      return this.examTypes.find(item => item.type === type);
+    },
     submit() {
       this.validate();
       this.$nextTick(() => {
         console.log("isValid", this.valid);
         if (this.valid) {
-          this.$emit("created", this.duration); //or updated
+          if (this.exam) {
+            this.$emit("update", {
+              duration: this.duration,
+              exam_type: this.exam_type,
+              notes: this.notes,
+              description: this.description
+            });
+          } else {
+            this.$emit("created", this.duration);
+          }
           this.close();
         }
       });

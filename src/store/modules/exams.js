@@ -6,6 +6,7 @@ const state = {
       id: 1,
       exam_type: "NO",
       created_at: "2021-09-18T09:50",
+      duration: 1.0,
       weight_data: [
         [
           8.0859375,

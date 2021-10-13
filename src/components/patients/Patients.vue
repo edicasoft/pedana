@@ -140,7 +140,7 @@
                 <!-- DELETE PATIENT -->
                 <v-dialog v-model="dialogDelete" max-width="500px">
                   <v-card>
-                    <v-card-title class="text-h7"
+                    <v-card-title class="text-h7 mb-2"
                       >Are you sure you want to delete this
                       patient?</v-card-title
                     >
@@ -229,9 +229,7 @@
               </v-icon>
             </template>
             <template v-slot:no-data>
-              <v-btn color="primary" @click="initialize">
-                Reset
-              </v-btn>
+              No patients
             </template></v-data-table
           >
         </v-col>
@@ -363,7 +361,11 @@ export default Vue.extend({
       }
     },
     newExam() {
+      if (this.selected.length) {
+        this.selectPatient(this.selected[0]);
+      }
       this.$emit("newExam");
+      this.close();
     },
     filterByLetter(letter) {
       console.log("filterByLetter", letter);
@@ -394,6 +396,10 @@ export default Vue.extend({
     },
 
     deleteItemConfirm() {
+      if (this.selected.length && this.selected[0].id === this.editedItem.id) {
+        this.selectPatient(null);
+        this.selected = [];
+      }
       this.patients.splice(this.editedIndex, 1);
       this.closeDelete();
     },

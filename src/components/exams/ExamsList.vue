@@ -96,7 +96,7 @@ export default {
   },
   watch: {
     "selectedItems.length": {
-      handler(val) {
+      handler() {
         this.setSelectedExams(this.selectedItems);
       }
     },
