@@ -20,7 +20,7 @@
 
       <ImportFileBtn
         v-if="isEndStreaming"
-        @importData="onImport"
+        @importData="onImportExam"
         @onLoading="onLoading"
         class="ml-2"
       />
@@ -178,7 +178,7 @@
             >
           </div> -->
               </v-sheet>
-              <v-toolbar dense flat>
+              <v-toolbar v-if="readingsData.length" dense flat>
                 <v-btn icon @click="print">
                   <v-icon>mdi-printer</v-icon>
                 </v-btn>
@@ -192,7 +192,11 @@
         <!--- END WEIGHTS --->
 
         <v-col>
-          <ExamsList @play="onPlayExam" @select="onSelectExam" />
+          <ExamsList
+            v-if="selectedPatient"
+            @play="onPlayExam"
+            @select="onSelectExam"
+          />
         </v-col>
       </v-row>
     </v-container>
@@ -353,6 +357,10 @@ export default Vue.extend({
   computed: {
     ...mapState("pedana", ["weights", "weightsHistory"]),
     ...mapState("patients", ["selectedPatient"]),
+    patient() {
+      console.log("patient", this.selectedPatient);
+      return this.selectedPatient;
+    },
     currentTiming() {
       return this.readingsIdx > 0 ? (this.readingsIdx / Hz).toFixed(2) : 0;
     }
@@ -370,17 +378,20 @@ export default Vue.extend({
     currentTiming(val) {
       if (this.examDuration !== null && val >= parseFloat(this.examDuration))
         this.stopStreaming();
+    },
+    exam(val) {
+      console.log("exam", val);
+      if (val) this.setSelectedExams([val]);
+      else this.setSelectedExams([]);
     }
   },
   methods: {
     onPlayExam(exam) {
-      this.onImport(exam.weight_data, this.start);
-      this.exam = exam;
+      this.onImportExam(exam, this.start);
     },
     onSelectExam(exam) {
       if (exam) {
-        this.onImport(exam.weight_data);
-        this.exam = exam;
+        this.onImportExam(exam);
       } else {
         this.reset();
       }
@@ -394,9 +405,10 @@ export default Vue.extend({
     onLoading(e) {
       this.isLoading = e;
     },
-    onImport(data, callback) {
+    onImportExam(exam, callback) {
+      this.exam = exam;
       this.examDuration = null;
-      this.readingsData = data;
+      this.readingsData = exam.weight_data;
       this.restart();
       while (this.readingsIdx < this.readingsData.length) {
         const res = this.setWeights(this.readingsData[this.readingsIdx]);
@@ -420,6 +432,7 @@ export default Vue.extend({
       "rewindData",
       "setMeasurements"
     ]),
+    ...mapActions("exams", ["setSelectedExams"]),
 
     back() {
       if (this.readingsIdx <= 0) return;

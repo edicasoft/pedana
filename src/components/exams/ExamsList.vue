@@ -2,7 +2,7 @@
   <v-card>
     <v-subheader
       >Patient Exams
-      <v-menu bottom :offset-y="true" v-if="selectedExams.length > 1">
+      <v-menu bottom :offset-y="true" v-if="selectedItems.length > 1">
         <template v-slot:activator="{ on, attrs }">
           <v-btn small color="primary" v-bind="attrs" v-on="on" class="ml-auto">
             Compare Selected
@@ -34,8 +34,8 @@
       <v-list-item v-for="exam in exams" :key="exam.id">
         <v-list-item-action>
           <v-checkbox
-            v-model="selectedExams"
-            @change="selectExam($event, exam)"
+            v-model="selectedItems"
+            @change="selectExam($event)"
             color="primary"
             :value="exam"
           ></v-checkbox>
@@ -86,7 +86,7 @@ export default {
   },
   data() {
     return {
-      selectedExams: [],
+      selectedItems: [],
       examTypes,
       showComparePedanasDlg: false,
       showGeneralBcentersDlg: false,
@@ -95,22 +95,23 @@ export default {
     };
   },
   watch: {
-    "selectedExams.length": {
-      handler() {
-        this.setSelectedExams(this.selectedExams);
+    "selectedItems.length": {
+      handler(val) {
+        this.setSelectedExams(this.selectedItems);
       }
+    },
+    selectedExams(val) {
+      this.selectedItems = val;
     }
   },
   computed: {
-    ...mapState("exams", ["exams"])
+    ...mapState("exams", ["exams", "selectedExams"])
   },
   methods: {
     ...mapActions("exams", ["setSelectedExams"]),
-    selectExam(evt, exam) {
-      console.log(evt, exam);
-      //if (evt.some(item => item.id === exam.id)) {
+    selectExam(evt) {
+      //console.log(evt, exam);
       this.$emit("select", evt[0]);
-      //}
     },
     play(exam) {
       this.$emit("play", exam);

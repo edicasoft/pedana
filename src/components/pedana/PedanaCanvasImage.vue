@@ -38,7 +38,7 @@ export default {
   components: {
     BackgroundLayer
   },
-  props: ["exam", "idx"],
+  props: ["exam", "idx", "patient"],
   data: () => ({
     width: pedanaWidth,
     height: pedanaHeight,

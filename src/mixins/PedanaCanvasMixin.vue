@@ -46,18 +46,38 @@ export default Vue.extend({
       return printC.canvas.toDataURL();
     },
     saveAsPdf() {
-      console.log("save");
-      ipcRenderer.send("canvas:pdf", [
-        { ...this.exam, image: this.combineCanvasesToImage() }
-      ]);
-      console.log("saveAsPdf", [
-        { ...this.exam, image: this.combineCanvasesToImage() }
-      ]);
+      // console.log(
+      //   "saveAsPdf",
+      //   [
+      //     {
+      //       ...this.exam,
+      //       image: this.combineCanvasesToImage()
+      //     }
+      //   ],
+      //   this.patient.fullname
+      // );
+      ipcRenderer.send(
+        "canvas:pdf",
+        [
+          {
+            ...this.exam,
+            image: this.combineCanvasesToImage()
+          }
+        ],
+        this.patient ? this.patient.fullname : ""
+      );
     },
     print() {
-      ipcRenderer.send("canvas:print", [
-        { ...this.exam, image: this.combineCanvasesToImage() }
-      ]);
+      ipcRenderer.send(
+        "canvas:print",
+        [
+          {
+            ...this.exam,
+            image: this.combineCanvasesToImage()
+          }
+        ],
+        this.patient ? this.patient.fullname : ""
+      );
       console.log("print");
     },
     drawConnectBarycentersHistory() {

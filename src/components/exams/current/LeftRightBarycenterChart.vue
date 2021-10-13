@@ -63,7 +63,6 @@
 <script>
 import Vue from "vue";
 import LineChart from "@/common/LineChart.js";
-import { ChartData } from "chart.js";
 import {
   leftBarycenter,
   rightBarycenter

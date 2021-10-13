@@ -5,6 +5,7 @@ import { app, protocol, BrowserWindow, dialog } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import Device from "@/driver/main.js";
+import { slugify } from "@/common/helpers";
 /*eslint-disable*/
 const ipc = require("electron").ipcMain;
 const fs = require("fs");
@@ -112,8 +113,8 @@ function saveAsPdf(win, options, fileName = "Patient_Name.pdf") {
         .then(data => {
           fs.writeFile(res.filePath, data, function(err) {
             if (err) {
-              //TODO::show message box
-              alert(err);
+              dialog.showErrorBox("Save File Error", err);
+
               console.log(err);
             } else {
               console.log("PDF Generated Successfully");
@@ -129,7 +130,7 @@ function saveAsPdf(win, options, fileName = "Patient_Name.pdf") {
       console.log(err);
     });
 }
-function createPrintCanvasWindow(data) {
+function createPrintCanvasWindow(data, fullname) {
   let win = new BrowserWindow({
     show: true, //TODO::set to false
     webPreferences: {
@@ -138,7 +139,7 @@ function createPrintCanvasWindow(data) {
   });
   let windowContent = "<!DOCTYPE html>";
   windowContent += "<html>";
-  windowContent += "<head><title>Patient Name</title></head>";
+  windowContent += `<head><title>${fullname}</title></head>`;
   windowContent += "<body>";
   for (let i = 0; i < data.length; i++) {
     let style = `display: inline-block;`;
@@ -156,8 +157,8 @@ function createPrintCanvasWindow(data) {
   win.loadURL("data:text/html;charset=utf-8," + encodeURI(windowContent));
   return win;
 }
-ipc.on("canvas:pdf", (event, data) => {
-  console.log("on canvas:pdf", data);
+ipc.on("canvas:pdf", (event, data, fullname) => {
+  console.log("on canvas:pdf ", fullname);
   let options = {
     silent: false,
     printBackground: false,
@@ -170,15 +171,22 @@ ipc.on("canvas:pdf", (event, data) => {
   };
   if (data.length === 3) options.scaleFactor = 67;
 
-  const win = createPrintCanvasWindow(data);
-  //TODO::set proper name for the file
+  const win = createPrintCanvasWindow(data, fullname);
   win.webContents.on("did-finish-load", () => {
     win.webContents.openDevTools();
-    saveAsPdf(win, options, "Patient_Name.pdf");
-    //TODO::show message box on success
+
+    let secondPart =
+      data.length > 1
+        ? data[0].created_at
+        : `${data[0].exam_type}-${data[0].created_at}`;
+    const filename =
+      fullname && data.length
+        ? `${slugify(`${fullname}-${secondPart}`)}.pdf`
+        : "Unknown_Name";
+    saveAsPdf(win, options, filename);
   });
 });
-ipc.on("canvas:print", (event, data) => {
+ipc.on("canvas:print", (event, data, fullname) => {
   console.log("on canvas:data", data);
   let options = {
     silent: false,
@@ -191,8 +199,7 @@ ipc.on("canvas:print", (event, data) => {
     pageSize: "A4"
   };
   if (data.length === 3) options.scaleFactor = 67;
-  const win = createPrintCanvasWindow(data);
-  //TODO::set proper name for the file
+  const win = createPrintCanvasWindow(data, fullname);
   win.webContents.on("did-finish-load", () => {
     win.webContents.openDevTools();
     win.webContents.print(options, (success, failureReason) => {

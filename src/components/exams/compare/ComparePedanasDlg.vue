@@ -18,7 +18,7 @@
         class="d-flex align-items-center justify-space-around pl-1"
       >
         <div v-for="(exam, idx) in exams" :key="idx" class="pr-2">
-          <PedanaCanvas :exam="exam" :idx="idx" />
+          <PedanaCanvas :exam="exam" :idx="idx" :patient="selectedPatient" />
         </div>
       </div>
     </v-card>
@@ -34,6 +34,7 @@ export default {
   },
   computed: {
     ...mapState("exams", ["selectedExams"]),
+    ...mapState("patients", ["selectedPatient"]),
     exams() {
       return this.selectedExams.slice(0, 3);
     }

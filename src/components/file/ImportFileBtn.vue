@@ -45,7 +45,8 @@ export default {
                 const arr = item.split(",");
                 return arr.map(el => parseFloat(el));
               });
-            this.$emit("importData", res);
+            /*eslint-disable*/
+            this.$emit("importData", { weight_data: res });
             this.isProcessing = false;
             this.$emit("onLoading", false);
 

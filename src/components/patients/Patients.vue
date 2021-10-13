@@ -33,6 +33,7 @@
                 >Cancel</v-btn
               >
             </template>
+            <!-- NEW PATIENT -->
             <template v-slot:top>
               <v-toolbar flat height="40">
                 <v-dialog v-model="dialog" max-width="500px">
@@ -56,29 +57,68 @@
                     <v-card-text>
                       <v-container>
                         <v-row>
-                          <v-col cols="12" sm="6" md="4">
+                          <v-col cols="4">
                             <v-text-field
                               v-model="editedItem.title"
                               label="Title"
                             ></v-text-field>
                           </v-col>
-                          <v-col cols="12" sm="6" md="4">
+                          <v-col cols="8">
                             <v-text-field
                               v-model="editedItem.fullname"
                               label="Full Name"
                             ></v-text-field>
                           </v-col>
-                          <v-col cols="12" sm="6" md="4">
-                            <v-text-field
+                        </v-row>
+                        <v-row>
+                          <v-col cols="5">
+                            <v-radio-group
                               v-model="editedItem.sex"
-                              label="Sex"
-                            ></v-text-field>
+                              row
+                              mandatory
+                            >
+                              <template v-slot:label>
+                                <div>
+                                  Sex
+                                </div>
+                              </template>
+                              <v-radio label="F" value="F"></v-radio>
+                              <v-radio label="M" value="M"></v-radio>
+                            </v-radio-group>
                           </v-col>
-                          <v-col cols="12" sm="6" md="4">
-                            <v-text-field
-                              v-model="editedItem.date_of_birth"
-                              label="Date Of Birth"
-                            ></v-text-field>
+                          <v-col cols="7">
+                            <v-menu
+                              ref="menu"
+                              v-model="menu"
+                              :close-on-content-click="false"
+                              transition="scale-transition"
+                              offset-y
+                              min-width="auto"
+                            >
+                              <template v-slot:activator="{ on, attrs }">
+                                <v-text-field
+                                  v-model="editedItem.date_of_birth"
+                                  label="Date of Birth"
+                                  prepend-icon="mdi-calendar"
+                                  readonly
+                                  v-bind="attrs"
+                                  v-on="on"
+                                ></v-text-field>
+                              </template>
+                              <v-date-picker
+                                v-model="editedItem.date_of_birth"
+                                @change="saveBirthday"
+                                :active-picker="activePicker"
+                                :max="
+                                  new Date(
+                                    Date.now() -
+                                      new Date().getTimezoneOffset() * 60000
+                                  )
+                                    .toISOString()
+                                    .substr(0, 10)
+                                "
+                              ></v-date-picker>
+                            </v-menu>
                           </v-col>
                         </v-row>
                       </v-container>
@@ -95,25 +135,30 @@
                     </v-card-actions>
                   </v-card>
                 </v-dialog>
+                <!-- NEW PATIENT END-->
+
+                <!-- DELETE PATIENT -->
                 <v-dialog v-model="dialogDelete" max-width="500px">
                   <v-card>
-                    <v-card-title class="text-h5"
+                    <v-card-title class="text-h7"
                       >Are you sure you want to delete this
                       patient?</v-card-title
                     >
+                    <v-card-subtitle>{{ editedItem.fullname }}</v-card-subtitle>
+
                     <v-card-actions>
                       <v-spacer></v-spacer>
-                      <v-btn color="blue darken-1" text @click="closeDelete"
-                        >Cancel</v-btn
-                      >
-                      <v-btn color="blue darken-1" @click="deleteItemConfirm"
+                      <v-btn text @click="closeDelete">Cancel</v-btn>
+                      <v-btn color="primary" @click="deleteItemConfirm"
                         >OK</v-btn
                       >
                       <v-spacer></v-spacer>
                     </v-card-actions>
                   </v-card>
                 </v-dialog>
+                <!--  DELETE PATIENT END -->
               </v-toolbar>
+              <!-- SEARCH -->
               <v-toolbar flat>
                 <v-text-field
                   v-model="search"
@@ -122,11 +167,36 @@
                   single-line
                   hide-details
                 ></v-text-field>
+                <!-- END SEARCH -->
                 <v-spacer> </v-spacer>
-                <v-btn text small color="blue" class="text-capitalize">
-                  <u>Filter by Exam</u></v-btn
+                <!-- FILTER BY EXAM DATE -->
+                <v-menu
+                  v-model="menuFilter"
+                  ref="menuFilter"
+                  :close-on-content-click="false"
+                  max-width="290"
                 >
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-text-field
+                      clearable
+                      v-model="dateFilter"
+                      label="Filter by Exam"
+                      readonly
+                      v-bind="attrs"
+                      v-on="on"
+                      @click:clear="dateFilter = null"
+                      single-line
+                      hide-details
+                    ></v-text-field>
+                  </template>
+                  <v-date-picker
+                    v-model="dateFilter"
+                    @change="saveExamDateFilter"
+                  ></v-date-picker>
+                </v-menu>
+                <!-- END FILTER BY EXAM DATE -->
               </v-toolbar>
+              <!-- FILTER BY LETTER -->
               <v-toolbar flat>
                 <v-btn
                   @click="clearFilters"
@@ -148,6 +218,8 @@
                 >
               </v-toolbar>
             </template>
+            <!-- END FILTER BY LETTER -->
+
             <template v-slot:item.actions="{ item }">
               <v-icon small class="mr-2" @click="editItem(item)">
                 mdi-pencil
@@ -200,7 +272,7 @@ export default Vue.extend({
           title: "Ms",
           sex: "F",
           latest_exam: "2021-09-18T09:50:01",
-          date_of_birth: "1989-09-18T09:50:01"
+          date_of_birth: "1989-09-18"
         },
         {
           id: 2,
@@ -208,7 +280,7 @@ export default Vue.extend({
           title: "Mr",
           sex: "M",
           latest_exam: "2021-09-18T09:50:01",
-          date_of_birth: "1954-04-05T09:50:01"
+          date_of_birth: "1954-04-05"
         },
         {
           id: 3,
@@ -216,7 +288,7 @@ export default Vue.extend({
           title: "Ms",
           sex: "F",
           latest_exam: "2021-09-18T09:50:01",
-          date_of_birth: "1993-01-11T09:50:01"
+          date_of_birth: "1993-01-11"
         }
       ],
       options: {},
@@ -231,7 +303,11 @@ export default Vue.extend({
         { text: "", value: "actions", sortable: false }
       ],
       editedIndex: -1,
-      editedItem: {}
+      editedItem: {},
+      menu: false,
+      activePicker: null,
+      dateFilter: null,
+      menuFilter: false
     };
   },
   mounted() {
@@ -249,6 +325,9 @@ export default Vue.extend({
     }
   },
   watch: {
+    menu(val) {
+      val && setTimeout(() => (this.activePicker = "YEAR"));
+    },
     options: {
       handler() {
         this.getDataFromApi();
@@ -265,6 +344,13 @@ export default Vue.extend({
 
   methods: {
     ...mapActions("patients", ["selectPatient"]),
+    saveBirthday(date) {
+      this.$refs.menu.save(date);
+    },
+    saveExamDateFilter(date) {
+      this.$refs.menuFilter.save(date);
+      //TODO::filter by exam date
+    },
     cancelSelection() {
       this.selected = [];
       this.selectPatient(null);
