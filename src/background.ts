@@ -132,7 +132,7 @@ function saveAsPdf(win, options, fileName = "Patient_Name.pdf") {
 }
 function createPrintCanvasWindow(data, fullname) {
   let win = new BrowserWindow({
-    show: true, //TODO::set to false
+    show: false, //TODO::set to false
     webPreferences: {
       nodeIntegration: true
     }
@@ -143,8 +143,8 @@ function createPrintCanvasWindow(data, fullname) {
   windowContent += "<body>";
   for (let i = 0; i < data.length; i++) {
     let style = `display: inline-block;`;
-    if (i > data.length - 1) {
-      style += `margin-right: 15px;`;
+    if (i < data.length - 1) {
+      style += `margin-right: 20px;`;
     }
     windowContent += `<div style="${style}">`;
     windowContent += `<div>${data[i].exam_type} - ${data[i].created_at}</div>`;
@@ -169,7 +169,7 @@ ipc.on("canvas:pdf", (event, data, fullname) => {
     copies: 1,
     pageSize: "A4"
   };
-  if (data.length === 3) options.scaleFactor = 67;
+  if (data.length === 3) options.scaleFactor = 70;
 
   const win = createPrintCanvasWindow(data, fullname);
   win.webContents.on("did-finish-load", () => {
@@ -198,7 +198,7 @@ ipc.on("canvas:print", (event, data, fullname) => {
     copies: 1,
     pageSize: "A4"
   };
-  if (data.length === 3) options.scaleFactor = 67;
+  if (data.length === 3) options.scaleFactor = 70;
   const win = createPrintCanvasWindow(data, fullname);
   win.webContents.on("did-finish-load", () => {
     win.webContents.openDevTools();

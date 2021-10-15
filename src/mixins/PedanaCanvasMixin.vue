@@ -34,10 +34,10 @@ export default Vue.extend({
     }
   },
   methods: {
-    combineCanvasesToImage(k = 1) {
+    combineCanvasesToImage() {
       //TODO::destroy canvas
-      const width = k * pedanaWidth;
-      const height = k * pedanaHeight;
+      const width = pedanaWidth;
+      const height = pedanaHeight;
       const printC = new Canvas("print", width, height);
       printC.clear();
       const bg = document.getElementById(this.backgroundCanvasId);
