@@ -12,7 +12,7 @@ module.exports = {
       nodeIntegration: true,
       buildDependenciesFromSource: true,
       npmRebuild: false,
-      externals: ["serialport"]
+      externals: ["serialport", "knex", "sqlite3"]
     }
   }
 };

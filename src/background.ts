@@ -18,6 +18,43 @@ protocol.registerSchemesAsPrivileged([
 ]);
 let win = null;
 
+const path = require("path");
+const userData = app.getPath("userData");
+console.log(userData);
+const dbFile = path.resolve(userData, "database.sqlite");
+
+import { PrepareDatabase } from "@/prepareDb.js";
+const prepare = new PrepareDatabase();
+
+const knex = require("knex")({
+  client: "sqlite3",
+  connection: {
+    filename: dbFile
+  },
+  useNullAsDefault: true
+});
+knex.schema.hasTable("patient").then(function(exists) {
+  if (!exists) {
+    prepare.createTablePatient(knex);
+  }
+});
+
+ipc.on("getPatients", (event, data) => {
+  let knex = con.connect()
+  knex
+    .from("patient")
+    .select("*")
+    .then((rows) => {
+      mainWindow.webContents.send("getPatientsResult", rows)
+    })
+    .catch((err) => {
+      mainWindow.webContents.send("getPatientsResult", err)
+    })
+    .finally(() => {
+      knex.destroy()
+    })
+})
+
 async function createWindow() {
   // Create the browser window.
   win = new BrowserWindow({
