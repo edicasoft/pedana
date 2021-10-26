@@ -35,7 +35,7 @@ const knex = require("knex")({
 });
 knex.schema.hasTable("patient").then(function(exists) {
   if (!exists) {
-    prepare.createTablePatient(knex);
+   return prepare.createTablePatient(knex);
   }
 });
 
