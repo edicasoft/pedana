@@ -8,3 +8,7 @@
 .v-snack:not(.v-snack--absolute) {
   z-index: 200;
 }
+.is-disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}

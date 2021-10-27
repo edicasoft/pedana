@@ -35,25 +35,58 @@ const knex = require("knex")({
 });
 knex.schema.hasTable("patient").then(function(exists) {
   if (!exists) {
-   return prepare.createTablePatient(knex);
+    return prepare.createTablePatient(knex);
   }
 });
 
-ipc.on("getPatients", (event, data) => {
-  let knex = con.connect()
+ipc.on("get:patients", (event, data) => {
   knex
     .from("patient")
     .select("*")
-    .then((rows) => {
-      mainWindow.webContents.send("getPatientsResult", rows)
+    .then(rows => {
+      win.webContents.send("get:patients:result", rows);
     })
-    .catch((err) => {
-      mainWindow.webContents.send("getPatientsResult", err)
+    .catch(err => {
+      win.webContents.send("get:patients:error", err);
+    });
+});
+
+ipc.on("create:patient", (event, data) => {
+  knex("patient")
+    .insert(data)
+    .then(rows => {
+      if (rows && rows.length) {
+        win.webContents.send("create:patient:result", rows[0]);
+      }
     })
-    .finally(() => {
-      knex.destroy()
+    .catch(err => {
+      win.webContents.send("create:patient:error", err);
+    });
+});
+
+ipc.on("update:patient", (event, { id, data }) => {
+  knex("patient")
+    .where({ id })
+    .update(data)
+    .then(rows => {
+      win.webContents.send("update:patient:result", rows);
     })
-})
+    .catch(err => {
+      win.webContents.send("update:patient:error", err);
+    });
+});
+
+ipc.on("delete:patient", (event, id) => {
+  knex("patient")
+    .where({ id })
+    .del()
+    .then(rows => {
+      win.webContents.send("delete:patient:result", rows);
+    })
+    .catch(err => {
+      win.webContents.send("delete:patient:error", err);
+    });
+});
 
 async function createWindow() {
   // Create the browser window.
