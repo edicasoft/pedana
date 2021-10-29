@@ -6,6 +6,8 @@ import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import Device from "@/driver/main.js";
 import { slugify } from "@/common/helpers";
+import DbService from "@/db/dbService.js";
+
 /*eslint-disable*/
 const ipc = require("electron").ipcMain;
 const fs = require("fs");
@@ -17,76 +19,6 @@ protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true } }
 ]);
 let win = null;
-
-const path = require("path");
-const userData = app.getPath("userData");
-console.log(userData);
-const dbFile = path.resolve(userData, "database.sqlite");
-
-import { PrepareDatabase } from "@/prepareDb.js";
-const prepare = new PrepareDatabase();
-
-const knex = require("knex")({
-  client: "sqlite3",
-  connection: {
-    filename: dbFile
-  },
-  useNullAsDefault: true
-});
-knex.schema.hasTable("patient").then(function(exists) {
-  if (!exists) {
-    return prepare.createTablePatient(knex);
-  }
-});
-
-ipc.on("get:patients", (event, data) => {
-  knex
-    .from("patient")
-    .select("*")
-    .then(rows => {
-      win.webContents.send("get:patients:result", rows);
-    })
-    .catch(err => {
-      win.webContents.send("get:patients:error", err);
-    });
-});
-
-ipc.on("create:patient", (event, data) => {
-  knex("patient")
-    .insert(data)
-    .then(rows => {
-      if (rows && rows.length) {
-        win.webContents.send("create:patient:result", rows[0]);
-      }
-    })
-    .catch(err => {
-      win.webContents.send("create:patient:error", err);
-    });
-});
-
-ipc.on("update:patient", (event, { id, data }) => {
-  knex("patient")
-    .where({ id })
-    .update(data)
-    .then(rows => {
-      win.webContents.send("update:patient:result", rows);
-    })
-    .catch(err => {
-      win.webContents.send("update:patient:error", err);
-    });
-});
-
-ipc.on("delete:patient", (event, id) => {
-  knex("patient")
-    .where({ id })
-    .del()
-    .then(rows => {
-      win.webContents.send("delete:patient:result", rows);
-    })
-    .catch(err => {
-      win.webContents.send("delete:patient:error", err);
-    });
-});
 
 async function createWindow() {
   // Create the browser window.
@@ -136,6 +68,7 @@ async function createWindow() {
   });
 
   win.webContents.send("is-connected", pedana.isConnected);
+  const db = new DbService(win);
 }
 
 // Quit when all windows are closed.

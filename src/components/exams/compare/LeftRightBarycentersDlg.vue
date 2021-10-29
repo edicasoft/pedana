@@ -130,10 +130,10 @@ export default Vue.extend({
         const barycenterLeft = new Barycenter(leftPlatformCells, color);
         const barycenterRight = new Barycenter(rightPlatformCells, color);
 
-        const leftWeights = this.exams[i].weight_data.map(item =>
+        const leftWeights = this.exams[i].weights_data.map(item =>
           item.slice(0, 3)
         );
-        const rightWeights = this.exams[i].weight_data.map(item =>
+        const rightWeights = this.exams[i].weights_data.map(item =>
           item.slice(3, 6)
         );
 

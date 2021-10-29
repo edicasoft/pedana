@@ -3,7 +3,7 @@
     <v-card class="pa-3">
       <div class="d-flex align-center justify-space-between pb-3">
         <v-card-title class="pt-0 pb-0 text-center"
-          >{{ exam.id ? "Edit" : "New" }} Exam</v-card-title
+          >{{ exam ? "Edit" : "New" }} Exam</v-card-title
         >
         <v-btn @click="close" icon>
           <v-icon color="error">mdi-close-circle</v-icon></v-btn
@@ -18,6 +18,7 @@
         <v-sheet width="600px" class="mx-auto">
           <v-select
             v-model="exam_type"
+            item-value="type"
             :items="examTypes"
             :rules="[rules.required]"
             label="Type of Exam"
@@ -29,7 +30,7 @@
               type="number"
               v-model="duration"
               label="Duration"
-              :disabled="!!exam.id"
+              :disabled="exam"
               :rules="[rules.required, rules.positive, rules.maxDuration]"
               required
             >
@@ -52,7 +53,7 @@
               :disabled="!valid"
               color="primary"
             >
-              Save
+              {{ exam ? "Save" : "Start" }}
             </v-btn>
             <v-btn @click="close">
               Cancel
@@ -66,6 +67,7 @@
 <script>
 //TODO::disable duration field when editing
 import { examTypes } from "@/common/constants.js";
+
 /*eslint-disable*/
 export default {
   props: ["value", "exam"],
@@ -99,17 +101,18 @@ export default {
     submit() {
       this.validate();
       this.$nextTick(() => {
-        console.log("isValid", this.valid);
+        console.log("isValid", this.valid, this.exam_type);
         if (this.valid) {
+          const data = {
+            duration: this.duration,
+            exam_type: this.exam_type,
+            notes: this.notes,
+            description: this.description
+          };
           if (this.exam) {
-            this.$emit("update", {
-              duration: this.duration,
-              exam_type: this.exam_type,
-              notes: this.notes,
-              description: this.description
-            });
+            this.$emit("update", data);
           } else {
-            this.$emit("created", this.duration);
+            this.$emit("create", data);
           }
           this.close();
         }

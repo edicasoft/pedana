@@ -46,7 +46,7 @@ export default {
                 return arr.map(el => parseFloat(el));
               });
             /*eslint-disable*/
-            this.$emit("importData", { weight_data: res });
+            this.$emit("importData", { weights_data: res });
             this.isProcessing = false;
             this.$emit("onLoading", false);
 

@@ -57,7 +57,7 @@ export default {
       return `pedana-bg-${this.idx}`;
     },
     readingsData() {
-      return this.exam.weight_data;
+      return this.exam.weights_data;
     }
   },
   destroyed() {

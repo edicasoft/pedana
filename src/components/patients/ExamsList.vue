@@ -36,12 +36,10 @@
         </v-icon>
       </template>
       <template v-slot:no-data>
-        <v-btn color="primary" @click="initialize">
-          Reset
-        </v-btn>
+        No exams
       </template></v-data-table
     >
-    <!-- EXAM DIALOG-->
+    <!-- EXAM DIALOG ONLY TO EDIT EXAM-->
     <ExamDialog
       v-if="dialog"
       :value.sync="dialog"
@@ -73,9 +71,10 @@
 </template>
 <script>
 import Vue from "vue";
-import { mapState } from "vuex";
+import { mapState, mapActions } from "vuex";
 import { examTypes } from "@/common/constants.js";
 import ExamDialog from "@/components/exams/ExamDialog.vue";
+import { ipcRenderer } from "electron";
 
 /*eslint-disable*/
 export default Vue.extend({
@@ -102,6 +101,9 @@ export default Vue.extend({
       ]
     };
   },
+  created() {
+    this.getData();
+  },
   computed: {
     examTypes: () => examTypes,
     ...mapState("exams", ["exams"])
@@ -118,6 +120,23 @@ export default Vue.extend({
     }
   },
   methods: {
+    ...mapActions("exams", ["setExams"]),
+    getData() {
+      if (this.loading) return;
+      this.loading = true;
+      ipcRenderer.send("get:exams", this.patient.id);
+      ipcRenderer.once("get:exams:result", (event, result) => {
+        console.log(result);
+        this.loading = false;
+        if (result) {
+          this.setExams(result);
+        }
+      });
+      ipcRenderer.once("get:exams:error", (event, er) => {
+        console.log(er);
+        this.loading = false;
+      });
+    },
     newExam() {
       this.$emit("newExam");
     },
@@ -147,6 +166,9 @@ export default Vue.extend({
     },
 
     save(data) {
+      if (this.editedIndex > -1) {
+        if (data) this.$set(this.items, this.editedIndex, this.editedItem);
+      }
       console.log(data);
     }
   }

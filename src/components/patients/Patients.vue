@@ -392,13 +392,13 @@ export default Vue.extend({
         this.selectPatient(this.selected[0]);
       }
       this.$emit("newExam");
-      this.close();
     },
     filterByLetter(letter) {
       console.log("filterByLetter", letter);
     },
     clearFilters() {},
     getDataFromApi() {
+      if (this.loading) return;
       const { sortBy, sortDesc, page, itemsPerPage } = this.options;
       this.loading = true;
       ipcRenderer.send("get:patients");
@@ -530,7 +530,6 @@ export default Vue.extend({
       this.$refs.form.validate();
     },
     rowClass(item) {
-      console.log(item);
       if (this.loading) return "is-disabled";
     }
   }

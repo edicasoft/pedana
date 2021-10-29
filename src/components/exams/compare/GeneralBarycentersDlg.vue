@@ -92,7 +92,7 @@ export default Vue.extend({
           leftPlatformCells.concat(rightPlatformCells),
           color
         );
-        this.calcBarycenterCoordinates(barycenter, this.exams[i].weight_data);
+        this.calcBarycenterCoordinates(barycenter, this.exams[i].weights_data);
 
         const exam = { color };
         exam.Ammq = barycenter.calculateAMmq().toFixed(2);

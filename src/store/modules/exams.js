@@ -7,7 +7,7 @@ const state = {
       exam_type: "NO",
       created_at: "2021-09-18T09:50",
       duration: 1.0,
-      weight_data: [
+      weights_data: [
         [
           8.0859375,
           11.54296875,
@@ -69,7 +69,7 @@ const state = {
       id: 2,
       exam_type: "O",
       created_at: "2021-09-18T09:52",
-      weight_data: [
+      weights_data: [
         [6.2109375, 7.3828125, 8.046875, 13.0859375, 19.47265625, 15.64453125],
         [5.15625, 5.8984375, 6.69921875, 13.88671875, 21.328125, 16.9140625],
         [4.58984375, 5.56640625, 6.09375, 14.51171875, 21.15234375, 17.8515625],
@@ -122,7 +122,7 @@ const state = {
       id: 3,
       exam_type: "EC",
       created_at: "2021-09-18T09:56",
-      weight_data: [
+      weights_data: [
         [
           8.18359375,
           11.6796875,
@@ -163,7 +163,7 @@ const state = {
       id: 4,
       exam_type: "CR",
       created_at: "2021-10-18T09:56",
-      weight_data: [
+      weights_data: [
         [
           7.91015625,
           11.66015625,
@@ -218,11 +218,23 @@ const getters = {};
 const mutations = {
   SET_SELECTED_EXAMS(store, val) {
     store.selectedExams = val;
+  },
+  SET_EXAMS(store, val) {
+    store.exams = val;
+  },
+  ADD_EXAM(store, val) {
+    store.exams.push(val);
   }
 };
 const actions = {
   setSelectedExams({ commit }, payload) {
     commit("SET_SELECTED_EXAMS", payload);
+  },
+  setExams({ commit }, payload) {
+    commit("SET_EXAMS", payload);
+  },
+  addExam({ commit }, payload) {
+    commit("ADD_EXAM", payload);
   }
 };
 export default {

@@ -15,7 +15,7 @@
       <ExamDialog
         v-if="showExamDialog"
         :value.sync="showExamDialog"
-        @created="onNewExam"
+        @create="startNewExam"
       />
 
       <ImportFileBtn
@@ -214,7 +214,7 @@
     <Patients
       v-if="showPatientsDialog"
       :value.sync="showPatientsDialog"
-      @newExam="startStreaming"
+      @newExam="showExamDialog = true"
       :isReady="isReady"
     />
 
@@ -227,7 +227,6 @@
 
 <script>
 //TODO::move player to separate component
-//TODO::display the name of a current exam
 import Canvas from "@/entities/Canvas";
 
 import { displayNumber } from "@/common/helpers";
@@ -318,7 +317,8 @@ export default Vue.extend({
     leftBarycenter,
     rightBarycenter,
     examDuration: null,
-    exam: null
+    exam: null,
+    newExamData: null
   }),
   destroyed() {
     this.c.clear();
@@ -386,6 +386,7 @@ export default Vue.extend({
     }
   },
   methods: {
+    ...mapActions("exams", ["addExam"]),
     onPlayExam(exam) {
       this.onImportExam(exam, this.start);
     },
@@ -396,10 +397,12 @@ export default Vue.extend({
         this.reset();
       }
     },
-    onNewExam(val) {
-      if (val && val > 0) {
-        this.examDuration = parseFloat(val);
-        this.reset();
+    startNewExam(exam) {
+      this.showPatientsDialog = false;
+      if (exam.duration && parseFloat(exam.duration) > 0) {
+        this.examDuration = parseFloat(exam.duration);
+        this.newExamData = _.cloneDeep(exam);
+        this.startStreaming();
       }
     },
     onLoading(e) {
@@ -408,7 +411,7 @@ export default Vue.extend({
     onImportExam(exam, callback) {
       this.exam = exam;
       this.examDuration = null;
-      this.readingsData = exam.weight_data;
+      this.readingsData = exam.weights_data;
       this.restart();
       while (this.readingsIdx < this.readingsData.length) {
         const res = this.setWeights(this.readingsData[this.readingsIdx]);
@@ -469,9 +472,86 @@ export default Vue.extend({
     },
     stopStreaming() {
       this.isEndStreaming = true;
-      this.readingsData = _.cloneDeep(this.weightsHistory);
+      //TODO::uncomment
+      // this.readingsData = _.cloneDeep(this.weightsHistory);
+      this.readingsData = [
+        [
+          8.0859375,
+          11.54296875,
+          11.81640625,
+          11.42578125,
+          13.0859375,
+          14.3359375
+        ],
+        [
+          8.0078125,
+          11.23046875,
+          12.67578125,
+          10.99609375,
+          12.34375,
+          14.98046875
+        ],
+        [
+          10.01953125,
+          15.09765625,
+          5.95703125,
+          14.8828125,
+          18.88671875,
+          6.97265625
+        ],
+        [
+          9.82421875,
+          14.6484375,
+          7.3828125,
+          14.12109375,
+          17.16796875,
+          8.84765625
+        ],
+        [
+          9.47265625,
+          13.61328125,
+          9.62890625,
+          13.1640625,
+          15.56640625,
+          10.25390625
+        ],
+        [8.828125, 12.34375, 11.484375, 11.81640625, 13.7890625, 12.75390625],
+        [8.4375, 11.77734375, 12.34375, 10.91796875, 12.59765625, 14.16015625],
+        [
+          9.19921875,
+          13.7109375,
+          7.2265625,
+          14.5703125,
+          18.06640625,
+          8.57421875
+        ],
+        [8.80859375, 12.9296875, 8.8671875, 14.140625, 17.0703125, 9.9609375],
+        [8.49609375, 12.109375, 10.91796875, 12.578125, 15.078125, 12.1875],
+        [8.3203125, 11.71875, 12.28515625, 11.3671875, 13.3203125, 13.84765625],
+        [8.18359375, 11.54296875, 13.125, 10.5859375, 12.28515625, 14.453125],
+        [9.27734375, 13.53515625, 8.65234375, 13.73046875, 16.875, 9.53125]
+      ];
       this.isEndReading = true;
-      //TODO::save to db
+      if (this.readingsData.length && this.newExamData) {
+        //TODO::return full data
+        ipc.send("create:exam", {
+          ...this.newExamData,
+          ...{
+            weights_data: this.readingsData,
+            patient_id: this.selectedPatient.id
+          }
+        });
+        ipc.once("create:exam:result", (event, res) => {
+          console.log(res);
+          if (res) {
+            this.addExam(res);
+          }
+        });
+        ipc.once("create:exam:error", (event, er) => {
+          console.log("create:exam:error", er);
+        });
+      }
+      console.log("stopStreaming", this.newExamData);
     },
     startStreaming() {
       console.log("start streaming");
@@ -486,7 +566,6 @@ export default Vue.extend({
 
       this.isEndStreaming = false;
       this.reset();
-      this.showExamDialog = true;
     },
     toggleStreaming() {
       this.isEndStreaming ? this.startStreaming() : this.stopStreaming();
