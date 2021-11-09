@@ -89,7 +89,7 @@ export default class DbService {
         .insert(data)
         .then(rows => {
           if (rows && rows.length) {
-            win.webContents.send("create:exam:result", rows[0]);
+            win.webContents.send("create:exam:result", rows);
           }
         })
         .catch(err => {

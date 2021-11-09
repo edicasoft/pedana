@@ -1,7 +1,7 @@
 <template>
-  <v-dialog :value="value" :max-width="800" persistent>
+  <v-dialog :value="value" :max-width="600" persistent>
     <v-card class="pa-3">
-      <div class="d-flex align-center justify-space-between pb-3">
+      <div class="d-flex align-center justify-space-between pb-3 mb-5">
         <v-card-title class="pt-0 pb-0 text-center"
           >{{ exam ? "Edit" : "New" }} Exam</v-card-title
         >
@@ -11,11 +11,12 @@
       </div>
       <v-form
         ref="form"
+        :loading="loading"
         lazy-validation
         @submit.prevent="submit"
         v-model="valid"
       >
-        <v-sheet width="600px" class="mx-auto">
+        <v-sheet width="500px" class="mx-auto">
           <v-select
             v-model="exam_type"
             item-value="type"
@@ -30,7 +31,7 @@
               type="number"
               v-model="duration"
               label="Duration"
-              :disabled="exam"
+              :disabled="!!exam"
               :rules="[rules.required, rules.positive, rules.maxDuration]"
               required
             >
@@ -42,10 +43,17 @@
           <v-textarea
             v-model="description"
             label="Description"
+            rows="3"
             outlined
             dense
           ></v-textarea>
-          <v-textarea v-model="notes" label="Notes" outlined dense></v-textarea>
+          <v-textarea
+            v-model="notes"
+            label="Notes"
+            outlined
+            dense
+            rows="3"
+          ></v-textarea>
           <div class="d-flex justify-space-between mb-5">
             <v-btn
               class="mr-4"
@@ -65,8 +73,8 @@
   </v-dialog>
 </template>
 <script>
-//TODO::disable duration field when editing
 import { examTypes } from "@/common/constants.js";
+import { ipcRenderer } from "electron";
 
 /*eslint-disable*/
 export default {
@@ -78,6 +86,7 @@ export default {
     exam_type: null,
     duration: 15,
     examTypes: examTypes,
+    loading: true,
     rules: {
       required: value => !!value || "This field is required",
       positive: value => value > 0 || "Invalid number",
@@ -101,7 +110,7 @@ export default {
     submit() {
       this.validate();
       this.$nextTick(() => {
-        console.log("isValid", this.valid, this.exam_type);
+        console.log("isValid", this.valid);
         if (this.valid) {
           const data = {
             duration: this.duration,
@@ -110,18 +119,31 @@ export default {
             description: this.description
           };
           if (this.exam) {
-            this.$emit("update", data);
+            ipcRenderer.send("update:exam", {
+              id: this.exam.id,
+              data
+            });
+            ipcRenderer.once("update:exam:result", (event, result) => {
+              console.log("update:exam:result", result);
+              this.loading = false;
+              if (result) this.$emit("updated", { ...this.exam, ...data });
+              this.close();
+            });
+            ipcRenderer.once("update:exam:error", (event, er) => {
+              console.log(er);
+              this.loading = false;
+              this.close();
+            });
           } else {
             this.$emit("create", data);
+            this.close();
           }
-          this.close();
         }
       });
-      // this.close();
     },
     close() {
-      this.$emit("update:value", false);
       this.reset();
+      this.$emit("update:value", false);
     },
     validate() {
       this.$refs.form.validate();

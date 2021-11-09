@@ -3,8 +3,9 @@
     <v-subheader v-if="patient">{{ patient.fullname }} exams</v-subheader>
     <v-data-table
       :headers="headers"
-      height="calc(100vh - 150px)"
+      height="calc(100vh - 200px)"
       :items="items"
+      :items-per-page="-1"
       :loading="loading"
       :hide-default-footer="true"
     >
@@ -44,7 +45,7 @@
       v-if="dialog"
       :value.sync="dialog"
       :exam="editedItem"
-      @update="save"
+      @updated="save"
     />
 
     <!-- DELETE  -->
@@ -75,7 +76,7 @@ import { mapState, mapActions } from "vuex";
 import { examTypes } from "@/common/constants.js";
 import ExamDialog from "@/components/exams/ExamDialog.vue";
 import { ipcRenderer } from "electron";
-
+import _ from "lodash";
 /*eslint-disable*/
 export default Vue.extend({
   props: ["value", "isReady", "patient"],
@@ -101,35 +102,40 @@ export default Vue.extend({
       ]
     };
   },
-  created() {
-    this.getData();
-  },
   computed: {
     examTypes: () => examTypes,
     ...mapState("exams", ["exams"])
   },
   watch: {
+    "patient.id": {
+      handler(val) {
+        if (val != null) this.getData();
+      },
+      immediate: true
+    },
     dialogDelete(val) {
       val || this.closeDelete();
     },
-    exams: {
-      handler(val) {
-        this.items = val;
-      },
-      immediate: true
-    }
+    // exams: {
+    //   handler(val) {
+    //     console.log("watch exams", val);
+    //     this.items = _.cloneDeep(val);
+    //   },
+    //   immediate: true
+    // }
   },
   methods: {
-    ...mapActions("exams", ["setExams"]),
+    // ...mapActions("exams", ["setExams"]),
     getData() {
       if (this.loading) return;
       this.loading = true;
       ipcRenderer.send("get:exams", this.patient.id);
       ipcRenderer.once("get:exams:result", (event, result) => {
-        console.log(result);
+        console.log("get:exams:result", result);
         this.loading = false;
         if (result) {
-          this.setExams(result);
+          this.items = result;
+          this.$emit("exams", result);
         }
       });
       ipcRenderer.once("get:exams:error", (event, er) => {
@@ -159,6 +165,9 @@ export default Vue.extend({
 
     closeDelete() {
       this.dialogDelete = false;
+      this.cancel();
+    },
+    cancel() {
       this.$nextTick(() => {
         this.editedItem = {};
         this.editedIndex = -1;
@@ -166,10 +175,11 @@ export default Vue.extend({
     },
 
     save(data) {
+      console.log("save", data, this.editedIndex);
       if (this.editedIndex > -1) {
-        if (data) this.$set(this.items, this.editedIndex, this.editedItem);
+        if (data) this.$set(this.items, this.editedIndex, data);
+        this.cancel();
       }
-      console.log(data);
     }
   }
 });

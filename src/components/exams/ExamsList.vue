@@ -31,13 +31,13 @@
       flat
       :style="{ overflow: 'auto', maxHeight: 'calc(100vh - 125px)' }"
     >
-      <v-list-item v-for="exam in exams" :key="exam.id">
+      <v-list-item v-for="exam in items" :key="exam.id">
         <v-list-item-action>
           <v-checkbox
             v-model="selectedItems"
             @change="selectExam($event)"
             color="primary"
-            :value="exam"
+            :value="exam.id"
           ></v-checkbox>
         </v-list-item-action>
 
@@ -76,7 +76,7 @@ import ComparePedanasDialog from "@/components/exams/compare/ComparePedanasDlg.v
 import GeneralBarycentersDialog from "@/components/exams/compare/GeneralBarycentersDlg.vue";
 import LeftRightBarycentersDialog from "@/components/exams/compare/LeftRightBarycentersDlg.vue";
 import TorsionsDialog from "@/components/exams/compare/TorsionsDlg.vue";
-
+import _ from "lodash";
 export default {
   components: {
     ComparePedanasDialog,
@@ -86,6 +86,7 @@ export default {
   },
   data() {
     return {
+      items: [],
       selectedItems: [],
       examTypes,
       showComparePedanasDlg: false,
@@ -96,12 +97,34 @@ export default {
   },
   watch: {
     "selectedItems.length": {
-      handler() {
-        this.setSelectedExams(this.selectedItems);
+      handler(val) {
+        if (val) {
+          const exams = this.selectedItems.map(id =>
+            this.exams.find(exam => exam.id === id)
+          );
+          console.log("watch.selectedItems.length", exams, this.selectedItems);
+
+          this.setSelectedExams(exams);
+        }
       }
     },
-    selectedExams(val) {
-      this.selectedItems = val;
+    selectedExams: {
+      handler(val) {
+        this.selectedItems = val.map(item => item.id);
+        console.log(
+          "watch.selectedExams: selectedItems = ",
+          this.selectedItems
+        );
+      },
+      immediate: true
+    },
+    exams: {
+      handler(val) {
+        console.log("watch exams.pedana display", val);
+        this.items = _.cloneDeep(val);
+        console.log("watch exams.pedana display = items", this.items);
+      },
+      immediate: true
     }
   },
   computed: {
@@ -110,10 +133,14 @@ export default {
   methods: {
     ...mapActions("exams", ["setSelectedExams"]),
     selectExam(evt) {
-      //console.log(evt, exam);
-      this.$emit("select", evt[0]);
+      console.log("selectExam", evt);
+      if (evt) {
+        const exam = this.exams.find(exam => exam.id === evt[0]);
+        this.$emit("select", exam);
+      }
     },
     play(exam) {
+      console.log("play", exam);
       this.$emit("play", exam);
     }
   }

@@ -8,6 +8,7 @@
         <v-col>
           <v-data-table
             v-model="selected"
+            height="calc(100vh - 290px)"
             :headers="headers"
             :items="patients"
             :options.sync="options"
@@ -16,24 +17,9 @@
             :single-select="true"
             :item-class="rowClass"
             show-select
+            :items-per-page="-1"
+            :hide-default-footer="true"
           >
-            <!-- eslint-disable -->
-            <template v-slot:footer.prepend>
-              <v-btn
-                v-if="selected.length"
-                @click="submitSelection"
-                small
-                color="primary"
-                >Submit</v-btn
-              >
-              <v-btn
-                v-if="selected.length"
-                @click="cancelSelection"
-                class="ml-2"
-                small
-                >Cancel</v-btn
-              >
-            </template>
             <!-- NEW PATIENT -->
             <template v-slot:top>
               <v-toolbar flat height="40">
@@ -252,11 +238,24 @@
               No patients
             </template></v-data-table
           >
+          <!-- eslint-disable -->
+          <div class="mt-5 ml-5 d-flex">
+            <v-btn
+              v-if="selected.length"
+              @click="submitSelection"
+              color="primary"
+              >Select</v-btn
+            >
+            <v-btn v-if="selected.length" @click="cancelSelection" class="ml-5"
+              >Cancel</v-btn
+            >
+          </div>
         </v-col>
         <v-col>
           <ExamsList
             v-if="selected.length"
             @newExam="newExam"
+            @exams="onGetExamsList"
             :patient="selected[0]"
             :isReady="isReady"
           />
@@ -332,7 +331,8 @@ export default Vue.extend({
       menu: false,
       activePicker: null,
       dateFilter: null,
-      menuFilter: false
+      menuFilter: false,
+      exams: []
     };
   },
   mounted() {
@@ -369,6 +369,10 @@ export default Vue.extend({
 
   methods: {
     ...mapActions("patients", ["selectPatient"]),
+    ...mapActions("exams", ["setExams"]),
+    onGetExamsList(e) {
+      this.exams = e;
+    },
     saveBirthday(date) {
       this.$refs.menu.save(date);
     },
@@ -384,6 +388,7 @@ export default Vue.extend({
     submitSelection() {
       if (this.selected.length) {
         this.selectPatient(this.selected[0]);
+        this.setExams(this.exams);
         this.close();
       }
     },
@@ -403,7 +408,7 @@ export default Vue.extend({
       this.loading = true;
       ipcRenderer.send("get:patients");
       ipcRenderer.once("get:patients:result", (event, result) => {
-        console.log(result);
+        console.log("get:patients:result", result);
         this.loading = false;
         if (result) this.patients = result;
       });
@@ -485,7 +490,7 @@ export default Vue.extend({
     },
     save() {
       if (this.editedIndex > -1) {
-        console.log(this.editedItem);
+        console.log("editedItem", this.editedItem);
         ipcRenderer.send("update:patient", {
           id: this.editedItem.id,
           data: {
@@ -496,7 +501,7 @@ export default Vue.extend({
           }
         });
         ipcRenderer.once("update:patient:result", (event, result) => {
-          console.log(result, this.editedItem);
+          console.log("update:patient:result", result, this.editedItem);
           this.loading = false;
           if (result)
             this.$set(this.patients, this.editedIndex, this.editedItem);

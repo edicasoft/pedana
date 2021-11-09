@@ -3,11 +3,20 @@
     <v-app-bar dark>
       <!--- Streaming from Pedana Play Control --->
       <template v-if="isReady">
-        <v-btn @click="toggleStreaming" class="mx-2" small>
+        <v-btn
+          v-if="isEndStreaming"
+          @click="showNewExamDialog"
+          class="mx-2"
+          small
+        >
           <v-icon left>
-            {{ isEndStreaming ? "mdi-play" : "mdi-pause" }}
+            mdi-play
           </v-icon>
-          {{ isEndStreaming ? "New Exam" : "STOP" }}
+          New Exam
+        </v-btn>
+        <v-btn v-else @click="toggleStreaming" class="mx-2" small>
+          <v-icon left>mdi-pause </v-icon>
+          STOP
         </v-btn>
       </template>
 
@@ -193,7 +202,7 @@
 
         <v-col>
           <ExamsList
-            v-if="selectedPatient"
+            v-if="selectedPatient && exams.length"
             @play="onPlayExam"
             @select="onSelectExam"
           />
@@ -214,7 +223,7 @@
     <Patients
       v-if="showPatientsDialog"
       :value.sync="showPatientsDialog"
-      @newExam="showExamDialog = true"
+      @newExam="showNewExamDialog"
       :isReady="isReady"
     />
 
@@ -230,14 +239,7 @@
 import Canvas from "@/entities/Canvas";
 
 import { displayNumber } from "@/common/helpers";
-import {
-  leftPlatformCells,
-  rightPlatformCells,
-  images,
-  Hz,
-  pedanaHeight,
-  pedanaWidth
-} from "@/common/constants.js";
+import { images, Hz, pedanaHeight, pedanaWidth } from "@/common/constants.js";
 import { mapState, mapActions } from "vuex";
 import BackgroundLayer from "@/components/pedana/BackgroundLayer.vue";
 import {
@@ -267,7 +269,6 @@ import Vue from "vue";
 const electron = window.require("electron"),
   ipc = electron.ipcRenderer;
 
-const cells = leftPlatformCells.concat(rightPlatformCells);
 // let c: Canvas;
 // let ctx: CanvasRenderingContext2D;
 
@@ -306,7 +307,9 @@ export default Vue.extend({
     isEndReading: false,
     isConnected: false,
     isEndStreaming: true,
-    isReady: false,
+
+    //TODO::
+    isReady: true,
     pedanaError: "",
     Hz: Hz,
     isLoading: false,
@@ -316,7 +319,7 @@ export default Vue.extend({
     generalBarycenter,
     leftBarycenter,
     rightBarycenter,
-    examDuration: null,
+    maxExamDuration: null,
     exam: null,
     newExamData: null
   }),
@@ -357,6 +360,7 @@ export default Vue.extend({
   computed: {
     ...mapState("pedana", ["weights", "weightsHistory"]),
     ...mapState("patients", ["selectedPatient"]),
+    ...mapState("exams", ["exams", "selectedExams"]),
     patient() {
       console.log("patient", this.selectedPatient);
       return this.selectedPatient;
@@ -375,14 +379,27 @@ export default Vue.extend({
   //   }
   // },
   watch: {
+    selectedExams: {
+      handler(val) {
+        console.log("watch selectedExams from pedana cmp", val);
+        if (val.length > 0) {
+          this.onLoadExam(val[0]);
+        } else {
+          this.reset();
+        }
+      }
+    },
     currentTiming(val) {
-      if (this.examDuration !== null && val >= parseFloat(this.examDuration))
+      if (
+        this.maxExamDuration !== null &&
+        parseFloat(val) >= parseFloat(this.maxExamDuration)
+      )
         this.stopStreaming();
     },
     exam(val) {
       console.log("exam", val);
-      if (val) this.setSelectedExams([val]);
-      else this.setSelectedExams([]);
+      // if (val) this.setSelectedExams([val]);
+      // else this.setSelectedExams([]);
     }
   },
   methods: {
@@ -391,16 +408,15 @@ export default Vue.extend({
       this.onImportExam(exam, this.start);
     },
     onSelectExam(exam) {
-      if (exam) {
-        this.onImportExam(exam);
-      } else {
+      console.log("onSelectExam", exam);
+      if (!exam) {
         this.reset();
       }
     },
     startNewExam(exam) {
       this.showPatientsDialog = false;
       if (exam.duration && parseFloat(exam.duration) > 0) {
-        this.examDuration = parseFloat(exam.duration);
+        this.maxExamDuration = parseFloat(exam.duration);
         this.newExamData = _.cloneDeep(exam);
         this.startStreaming();
       }
@@ -408,9 +424,9 @@ export default Vue.extend({
     onLoading(e) {
       this.isLoading = e;
     },
-    onImportExam(exam, callback) {
-      this.exam = exam;
-      this.examDuration = null;
+    loadExam(exam, callback) {
+      this.exam = _.cloneDeep(exam);
+      this.maxExamDuration = null;
       this.readingsData = exam.weights_data;
       this.restart();
       while (this.readingsIdx < this.readingsData.length) {
@@ -425,6 +441,16 @@ export default Vue.extend({
       this.isPlaying = false;
       this.isEndReading = true;
       if (callback) callback();
+    },
+    onLoadExam(exam) {
+      console.log("onLoadExam", exam);
+      if (!exam || (this.exam && this.exam.id === exam.id)) return;
+      this.loadExam(exam);
+    },
+    onImportExam(exam, callback) {
+      if (!exam) return;
+      this.loadExam(exam, callback);
+      this.setSelectedExams([exam]);
     },
     displayNumber,
     ...mapActions("pedana", [
@@ -472,7 +498,7 @@ export default Vue.extend({
     },
     stopStreaming() {
       this.isEndStreaming = true;
-      //TODO::uncomment
+      //TODO::uncomment, test, duration eventually should be the actual number of seconds passed
       // this.readingsData = _.cloneDeep(this.weightsHistory);
       this.readingsData = [
         [
@@ -533,18 +559,25 @@ export default Vue.extend({
       ];
       this.isEndReading = true;
       if (this.readingsData.length && this.newExamData) {
-        //TODO::return full data
-        ipc.send("create:exam", {
+        console.log("currentTiming", this.currentTiming);
+        const data = {
           ...this.newExamData,
           ...{
             weights_data: this.readingsData,
             patient_id: this.selectedPatient.id
+            //duration: this.currentTiming
           }
-        });
+        };
+        ipc.send("create:exam", data);
         ipc.once("create:exam:result", (event, res) => {
-          console.log(res);
+          console.log(data, res);
+          //TODO::proper date format
           if (res) {
-            this.addExam(res);
+            this.addExam({
+              ...data,
+              created_at: new Date().toISOString(),
+              id: res[0]
+            });
           }
         });
         ipc.once("create:exam:error", (event, er) => {
@@ -552,6 +585,13 @@ export default Vue.extend({
         });
       }
       console.log("stopStreaming", this.newExamData);
+    },
+    showNewExamDialog() {
+      if (!this.selectedPatient) {
+        alert("Select a patient first");
+        return;
+      }
+      this.showExamDialog = true;
     },
     startStreaming() {
       console.log("start streaming");
