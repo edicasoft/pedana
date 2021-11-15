@@ -11,8 +11,6 @@
             height="calc(100vh - 290px)"
             :headers="headers"
             :items="patients"
-            :options.sync="options"
-            :server-items-length="totalPatients"
             :loading="loading"
             :single-select="true"
             :item-class="rowClass"
@@ -320,10 +318,10 @@ export default Vue.extend({
           text: "Patient",
           align: "start",
           value: "fullname",
-          sortable: false
+          sortable: true
         },
-        { text: "Sex", value: "sex", sortable: false },
-        { text: "Latest Exam", value: "latest_exam", sortable: false },
+        { text: "Sex", value: "sex", sortable: true },
+        { text: "Latest Exam", value: "latest_exam", sortable: true },
         { text: "", value: "actions", sortable: false }
       ],
       editedIndex: -1,
@@ -336,8 +334,7 @@ export default Vue.extend({
     };
   },
   mounted() {
-    if (this.selectedPatient) this.selected.push(this.selectedPatient);
-    //this.getDataFromApi();
+    this.getDataFromApi();
   },
   computed: {
     ...mapState("patients", ["selectedPatient"]),
@@ -410,7 +407,10 @@ export default Vue.extend({
       ipcRenderer.once("get:patients:result", (event, result) => {
         console.log("get:patients:result", result);
         this.loading = false;
-        if (result) this.patients = result;
+        if (result) {
+          this.patients = result;
+          if (this.selectedPatient) this.selected.push(this.selectedPatient);
+        }
       });
       ipcRenderer.once("get:patients:error", (event, er) => {
         console.log(er);

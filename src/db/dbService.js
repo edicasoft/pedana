@@ -25,9 +25,26 @@ export default class DbService {
     });
 
     ipc.on("get:patients", (event, data) => {
+      console.log(event, data);
       knex
         .from("patient")
-        .select("*")
+        .select(
+          "patient.id",
+          "patient.fullname",
+          "patient.sex",
+          "patient.title",
+          "patient.date_of_birth",
+          "exam.created_at"
+        )
+        .leftJoin("exam", "patient.id", "=", "exam.patient_id")
+        .max("exam.created_at as latest_exam")
+        .groupBy(
+          "patient.id",
+          "patient.fullname",
+          "patient.sex",
+          "patient.title",
+          "patient.date_of_birth"
+        )
         .then(rows => {
           win.webContents.send("get:patients:result", rows);
         })
@@ -77,6 +94,7 @@ export default class DbService {
         .from("exam")
         .where({ patient_id })
         .select("*")
+        .orderBy("created_at", "desc")
         .then(rows => {
           win.webContents.send("get:exams:result", rows);
         })

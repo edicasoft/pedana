@@ -72,11 +72,10 @@
 </template>
 <script>
 import Vue from "vue";
-import { mapState, mapActions } from "vuex";
+import { mapState } from "vuex";
 import { examTypes } from "@/common/constants.js";
 import ExamDialog from "@/components/exams/ExamDialog.vue";
 import { ipcRenderer } from "electron";
-import _ from "lodash";
 /*eslint-disable*/
 export default Vue.extend({
   props: ["value", "isReady", "patient"],
