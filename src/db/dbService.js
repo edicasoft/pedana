@@ -24,9 +24,9 @@ export default class DbService {
       }
     });
 
-    ipc.on("get:patients", (event, data) => {
-      console.log(event, data);
-      knex
+    ipc.on("get:patients", (event, { search, starts_with } = {}) => {
+      console.log(search, starts_with);
+      let query = knex
         .from("patient")
         .select(
           "patient.id",
@@ -44,7 +44,14 @@ export default class DbService {
           "patient.sex",
           "patient.title",
           "patient.date_of_birth"
-        )
+        );
+      if (search) {
+        query.where("patient.fullname", "like", `%${search}%`);
+      }
+      if (starts_with) {
+        query.where("patient.fullname", "like", `${starts_with}%`);
+      }
+      query
         .then(rows => {
           win.webContents.send("get:patients:result", rows);
         })
@@ -105,15 +112,26 @@ export default class DbService {
     ipc.on("create:exam", (event, data) => {
       knex("exam")
         .insert(data)
+        .then(id => {
+          if (id) {
+            return getExam(id);
+          }
+        })
         .then(rows => {
+          console.log("get:exam", rows);
           if (rows && rows.length) {
-            win.webContents.send("create:exam:result", rows);
+            win.webContents.send("create:exam:result", rows[0]);
           }
         })
         .catch(err => {
           win.webContents.send("create:exam:error", err);
         });
     });
+    function getExam(id) {
+      return knex("exam")
+        .select("*")
+        .where({ id });
+    }
 
     ipc.on("update:exam", (event, { id, data }) => {
       knex("exam")

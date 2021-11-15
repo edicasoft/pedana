@@ -161,6 +161,7 @@
               <v-toolbar flat>
                 <v-text-field
                   v-model="search"
+                  @input="onSearch"
                   append-icon="mdi-magnify"
                   label="Search"
                   single-line
@@ -367,6 +368,9 @@ export default Vue.extend({
   methods: {
     ...mapActions("patients", ["selectPatient"]),
     ...mapActions("exams", ["setExams"]),
+    onSearch: _.debounce(function(search) {
+      this.getDataFromApi({ search });
+    }, 1000),
     onGetExamsList(e) {
       this.exams = e;
     },
@@ -397,13 +401,16 @@ export default Vue.extend({
     },
     filterByLetter(letter) {
       console.log("filterByLetter", letter);
+      this.getDataFromApi({ starts_with: letter });
     },
-    clearFilters() {},
-    getDataFromApi() {
+    clearFilters() {
+      this.getDataFromApi();
+    },
+    getDataFromApi({ search, starts_with } = {}) {
       if (this.loading) return;
       const { sortBy, sortDesc, page, itemsPerPage } = this.options;
       this.loading = true;
-      ipcRenderer.send("get:patients");
+      ipcRenderer.send("get:patients", { search, starts_with });
       ipcRenderer.once("get:patients:result", (event, result) => {
         console.log("get:patients:result", result);
         this.loading = false;

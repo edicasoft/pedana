@@ -570,15 +570,9 @@ export default Vue.extend({
         };
         ipc.send("create:exam", data);
         ipc.once("create:exam:result", (event, res) => {
-          console.log("create:exam:result", data, res);
-          //TODO::proper date format
+          console.log("create:exam:result", res);
           if (res) {
-            const dateIso = new Date().toISOString().replace("T", " ");
-            this.addExam({
-              ...data,
-              created_at: dateIso.substring(0, dateIso.indexOf('.')),
-              id: res[0]
-            });
+            this.addExam(res);
           }
         });
         ipc.once("create:exam:error", (event, er) => {

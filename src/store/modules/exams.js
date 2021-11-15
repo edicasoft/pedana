@@ -12,6 +12,12 @@ function splitArrayIntoChunksOfLen(arr, len) {
   }
   return chunks;
 }
+function convertWeights(weights_data = "") {
+  return splitArrayIntoChunksOfLen(
+    weights_data.split(",").map(el => parseFloat(el)),
+    6
+  );
+}
 const getters = {};
 const mutations = {
   SET_SELECTED_EXAMS(store, val) {
@@ -21,17 +27,14 @@ const mutations = {
   SET_EXAMS(store, val) {
     if (val && val.length) {
       val.forEach(
-        exam =>
-          (exam.weights_data = splitArrayIntoChunksOfLen(
-            exam.weights_data.split(",").map(el => parseFloat(el)),
-            6
-          ))
+        exam => (exam.weights_data = convertWeights(exam.weights_data))
       );
     }
     console.log("SET_EXAMS", val);
     store.exams = val;
   },
   ADD_EXAM(store, val) {
+    val.weights_data = convertWeights(val);
     store.exams.unshift(val);
   }
 };
