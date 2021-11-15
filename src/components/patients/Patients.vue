@@ -184,14 +184,14 @@
                       readonly
                       v-bind="attrs"
                       v-on="on"
-                      @click:clear="dateFilter = null"
+                      @click:clear="clearExamDateFilter"
                       single-line
                       hide-details
                     ></v-text-field>
                   </template>
                   <v-date-picker
                     v-model="dateFilter"
-                    @change="saveExamDateFilter"
+                    @change="onFilterByExamDate"
                   ></v-date-picker>
                 </v-menu>
                 <!-- END FILTER BY EXAM DATE -->
@@ -330,6 +330,7 @@ export default Vue.extend({
       menu: false,
       activePicker: null,
       dateFilter: null,
+      letter: null,
       menuFilter: false,
       exams: []
     };
@@ -368,6 +369,10 @@ export default Vue.extend({
   methods: {
     ...mapActions("patients", ["selectPatient"]),
     ...mapActions("exams", ["setExams"]),
+    clearExamDateFilter() {
+      this.dateFilter = null;
+      this.getDataFromApi();
+    },
     onSearch: _.debounce(function(search) {
       this.getDataFromApi({ search });
     }, 1000),
@@ -377,8 +382,10 @@ export default Vue.extend({
     saveBirthday(date) {
       this.$refs.menu.save(date);
     },
-    saveExamDateFilter(date) {
-      this.$refs.menuFilter.save(date);
+    onFilterByExamDate(exam_date) {
+      this.$refs.menuFilter.save(exam_date);
+      console.log(exam_date);
+      this.getDataFromApi({ exam_date });
       //TODO::filter by exam date
     },
     cancelSelection() {
@@ -401,16 +408,21 @@ export default Vue.extend({
     },
     filterByLetter(letter) {
       console.log("filterByLetter", letter);
+      this.letter = letter;
       this.getDataFromApi({ starts_with: letter });
     },
     clearFilters() {
       this.getDataFromApi();
     },
-    getDataFromApi({ search, starts_with } = {}) {
+    getDataFromApi({ search, starts_with, exam_date } = {}) {
       if (this.loading) return;
       const { sortBy, sortDesc, page, itemsPerPage } = this.options;
       this.loading = true;
-      ipcRenderer.send("get:patients", { search, starts_with });
+      ipcRenderer.send("get:patients", {
+        search: search || this.search,
+        starts_with: starts_with || this.letter,
+        exam_date: exam_date || this.dateFilter
+      });
       ipcRenderer.once("get:patients:result", (event, result) => {
         console.log("get:patients:result", result);
         this.loading = false;

@@ -24,8 +24,8 @@ export default class DbService {
       }
     });
 
-    ipc.on("get:patients", (event, { search, starts_with } = {}) => {
-      console.log(search, starts_with);
+    ipc.on("get:patients", (event, { search, starts_with, exam_date } = {}) => {
+      console.log(search, starts_with, exam_date);
       let query = knex
         .from("patient")
         .select(
@@ -33,11 +33,9 @@ export default class DbService {
           "patient.fullname",
           "patient.sex",
           "patient.title",
-          "patient.date_of_birth",
-          "exam.created_at"
+          "patient.date_of_birth"
         )
         .leftJoin("exam", "patient.id", "=", "exam.patient_id")
-        .max("exam.created_at as latest_exam")
         .groupBy(
           "patient.id",
           "patient.fullname",
@@ -45,12 +43,25 @@ export default class DbService {
           "patient.title",
           "patient.date_of_birth"
         );
+      query.max("exam.created_at as latest_exam");
+
       if (search) {
         query.where("patient.fullname", "like", `%${search}%`);
       }
       if (starts_with) {
         query.where("patient.fullname", "like", `${starts_with}%`);
       }
+      if (exam_date) {
+        query.whereExists(function() {
+          this.select("created_at")
+            .from("exam")
+            .whereRaw(
+              `patient.id=patient_id and created_at BETWEEN DATE('${exam_date}') AND DATE('${exam_date}', '+1 day')`
+            );
+        });
+        //query.where("exam.created_at", "like", `%${exam_date}%`);
+      }
+      console.log(query.toSQL().toNative());
       query
         .then(rows => {
           win.webContents.send("get:patients:result", rows);
