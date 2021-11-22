@@ -88,12 +88,17 @@ export default Vue.extend({
             x: this.rightBarycenter.xVals[i],
             y: this.rightBarycenter.yVals[i]
           },
-          "green"
+          "rgb(167, 169, 172)"
         );
       }
     },
     drawConnectBarycenters() {
-      this.c.drawLine(this.leftBarycenter, this.rightBarycenter, "red");
+      this.c.drawLine(
+        this.leftBarycenter,
+        this.rightBarycenter,
+        "rgb(245, 130, 65)",
+        4
+      );
     },
     moveBarycenters() {
       //console.log("moveBarycenters");

@@ -42,9 +42,11 @@ export default class Canvas {
     this.setScale(1, -1);
   }
 
-  drawLine(point1: Point, point2: Point, color: string): void {
+  drawLine(point1: Point, point2: Point, color: string, lineWidth = 1): void {
     this.ctx.beginPath();
     this.ctx.strokeStyle = color;
+    this.ctx.lineWidth = lineWidth;
+
     this.ctx.moveTo(point1.x, point1.y);
     this.ctx.lineTo(point2.x, point2.y);
     this.ctx.stroke();

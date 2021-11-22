@@ -89,8 +89,7 @@ export default Vue.extend({
         const color = this.colors[i];
 
         const barycenter = new Barycenter(
-          leftPlatformCells.concat(rightPlatformCells),
-          color
+          leftPlatformCells.concat(rightPlatformCells)
         );
         this.calcBarycenterCoordinates(barycenter, this.exams[i].weights_data);
 

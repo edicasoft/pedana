@@ -1,10 +1,10 @@
-const radius = 10;
 const Hz = 10;
 import { Point } from "@/entities/Point";
+import Canvas from "@/entities/Canvas";
+
 export default class Barycenter {
   x: number;
   y: number;
-  color: string;
   cells: Point[];
   xVals: Array<number>;
   yVals: Array<number>;
@@ -15,10 +15,11 @@ export default class Barycenter {
   maxX: number;
   minX: number;
   minY: number;
-  constructor(cells: Point[], color: string) {
+  image: string;
+  constructor(cells: Point[], image = "barycenter") {
+    // console.log("constructor", image);
     this.x = 0;
     this.y = 0;
-    this.color = color;
     this.cells = cells;
     this.xVals = [];
     this.yVals = [];
@@ -29,6 +30,7 @@ export default class Barycenter {
     this.maxX = 0;
     this.minY = 0;
     this.minX = 0;
+    this.image = image;
   }
   move(weights: number[]) {
     //console.log("weights", weights);
@@ -53,33 +55,64 @@ export default class Barycenter {
     //console.log("resetDataToIndex", this.weights);
   }
 
-  drawOld(ctx: CanvasRenderingContext2D) {
+  drawOld(c: Canvas) {
+    const image = c.images.get(
+      `img/balls/old-${this.image}.png`
+    ) as HTMLImageElement;
+
     for (let i = 0; i < this.xVals.length; i++) {
-      ctx.save();
-      ctx.fillStyle = "#C0C0C0";
-      ctx.beginPath();
-      ctx.shadowBlur = 3;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 1;
-      ctx.shadowColor = "#615e5e";
-      ctx.arc(this.xVals[i], this.yVals[i], radius, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.closePath();
-      ctx.restore();
+      c.ctx.save();
+      c.ctx.translate(this.xVals[i], this.yVals[i]);
+      c.ctx.drawImage(
+        image,
+        -image.width / 2,
+        -image.height / 2,
+        image.width,
+        image.height
+      );
+      c.ctx.restore();
+
+      // ctx.save();
+      // ctx.fillStyle = "#C0C0C0";
+      // ctx.beginPath();
+      // ctx.shadowBlur = 3;
+      // ctx.shadowOffsetX = 0;
+      // ctx.shadowOffsetY = 1;
+      // ctx.shadowColor = "#615e5e";
+      // ctx.arc(this.xVals[i], this.yVals[i], radius, 0, 2 * Math.PI);
+      // ctx.fill();
+      // ctx.closePath();
+      // ctx.restore();
     }
   }
-  draw(ctx: CanvasRenderingContext2D) {
-    ctx.save();
-    ctx.fillStyle = this.color;
-    ctx.beginPath();
-    ctx.shadowBlur = 5;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 1;
-    ctx.shadowColor = "black";
-    ctx.arc(this.x, this.y, radius, 0, 2 * Math.PI);
-    ctx.fill();
-    ctx.closePath();
-    ctx.restore();
+  draw(c: Canvas) {
+    // console.log("draw", c.images, `img/balls/${this.image}.png`);
+
+    const image = c.images.get(
+      `img/balls/${this.image}.png`
+    ) as HTMLImageElement;
+    // console.log("draw", c.images, `img/balls/${this.image}.png`);
+    c.ctx.save();
+    c.ctx.translate(this.x, this.y);
+    c.ctx.drawImage(
+      image,
+      -image.width / 2,
+      -image.height / 2,
+      image.width,
+      image.height
+    );
+    c.ctx.restore();
+    // ctx.save();
+    // ctx.fillStyle = this.color;
+    // ctx.beginPath();
+    // ctx.shadowBlur = 5;
+    // ctx.shadowOffsetX = 0;
+    // ctx.shadowOffsetY = 1;
+    // ctx.shadowColor = "black";
+    // ctx.arc(this.x, this.y, radius, 0, 2 * Math.PI);
+    // ctx.fill();
+    // ctx.closePath();
+    // ctx.restore();
   }
   calculateWeightenedSum(coordinateName: "x" | "y", weights: number[]) {
     let sum = 0;
@@ -156,7 +189,7 @@ export default class Barycenter {
     this.weights = [];
   }
   getHistory() {
-    console.log(this.xVals);
+    // console.log(this.xVals);
     return this.xVals.map((x, i) => ({ x, y: this.yVals[i] }));
   }
 }

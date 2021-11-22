@@ -1,7 +1,8 @@
 import { Point } from "@/entities/Point";
 import Canvas from "@/entities/Canvas";
 
-const size = 30;
+const width = 55;
+const height = 47;
 export class Cell {
   x: number;
   y: number;
@@ -24,7 +25,7 @@ export class Cell {
     c.ctx.translate(this.x, this.y);
     c.ctx.rotate((angle * Math.PI) / 180);
 
-    c.ctx.drawImage(image, -size / 2, -size / 2, size, size);
+    c.ctx.drawImage(image, -width / 2, -height / 2, width, height);
     c.ctx.restore();
   }
   getDeviation(

@@ -693,14 +693,14 @@ export default Vue.extend({
         this.saveBarycentersHistory();
 
         this.drawConnectBarycentersHistory();
-        this.leftBarycenter.drawOld(this.ctx);
-        this.generalBarycenter.drawOld(this.ctx);
-        this.rightBarycenter.drawOld(this.ctx);
+        this.leftBarycenter.drawOld(this.c);
+        this.generalBarycenter.drawOld(this.c);
+        this.rightBarycenter.drawOld(this.c);
 
         this.drawConnectBarycenters();
-        this.leftBarycenter.draw(this.ctx);
-        this.generalBarycenter.draw(this.ctx);
-        this.rightBarycenter.draw(this.ctx);
+        this.leftBarycenter.draw(this.c);
+        this.generalBarycenter.draw(this.c);
+        this.rightBarycenter.draw(this.c);
       } catch (e) {
         this.error = true;
         console.error(e);

@@ -26,10 +26,12 @@ import BackgroundLayer from "@/components/pedana/BackgroundLayer.vue";
 import Barycenter from "@/entities/Barycenter";
 export const generalBarycenter = new Barycenter(
   leftPlatformCells.concat(rightPlatformCells),
-  "red"
+  `general-barycenter`,
+  50,
+  48
 );
-export const leftBarycenter = new Barycenter(leftPlatformCells, "gold");
-export const rightBarycenter = new Barycenter(rightPlatformCells, "gold");
+export const leftBarycenter = new Barycenter(leftPlatformCells);
+export const rightBarycenter = new Barycenter(rightPlatformCells);
 import { displayNumber } from "@/common/helpers";
 
 import pedanaCanvasMixin from "@/mixins/PedanaCanvasMixin.vue";
@@ -92,14 +94,14 @@ export default {
 
         this.drawConnectBarycentersHistory();
 
-        this.leftBarycenter.drawOld(this.ctx);
-        this.generalBarycenter.drawOld(this.ctx);
-        this.rightBarycenter.drawOld(this.ctx);
+        this.leftBarycenter.drawOld(this.c);
+        this.generalBarycenter.drawOld(this.c);
+        this.rightBarycenter.drawOld(this.c);
 
         this.drawConnectBarycenters();
-        this.leftBarycenter.draw(this.ctx);
-        this.generalBarycenter.draw(this.ctx);
-        this.rightBarycenter.draw(this.ctx);
+        this.leftBarycenter.draw(this.c);
+        this.generalBarycenter.draw(this.c);
+        this.rightBarycenter.draw(this.c);
         // if (this.resize) {
         //   setTimeout(() => {
         //     this.result = this.combineCanvasesToImage(0.94);
