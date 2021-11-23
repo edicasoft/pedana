@@ -1,20 +1,25 @@
 <template>
   <v-main>
-    <v-app-bar dark>
+    <v-app-bar dark color="primary">
       <!--- Streaming from Pedana Play Control --->
       <template v-if="isReady">
         <v-btn
           v-if="isEndStreaming"
           @click="showNewExamDialog"
           class="mx-2"
-          small
+          color="primary darken-1"
         >
           <v-icon left>
             mdi-play
           </v-icon>
           New Exam
         </v-btn>
-        <v-btn v-else @click="toggleStreaming" class="mx-2" small>
+        <v-btn
+          v-else
+          @click="toggleStreaming"
+          class="mx-2"
+          color="primary darken-1"
+        >
           <v-icon left>mdi-pause </v-icon>
           STOP
         </v-btn>
@@ -48,7 +53,10 @@
       >
 
       <v-spacer></v-spacer>
-      <v-btn class="ml-2" @click="showPatientsDialog = true"
+      <v-btn
+        class="ml-2"
+        @click="showPatientsDialog = true"
+        color="primary darken-1"
         ><v-icon left>mdi-account-group</v-icon>Patients</v-btn
       >
       <!-- Charts Buttons -->
@@ -129,7 +137,7 @@
               </v-toolbar>
               <!--- END CONTROLS --->
 
-              <!--- CANVAS --->
+              <!--- PEDANA CANVAS --->
               <v-sheet class="viewport mx-auto" :width="width" :height="height">
                 <BackgroundLayer
                   :width="width"
@@ -138,55 +146,14 @@
                 />
                 <canvas id="pedana-main"> </canvas>
               </v-sheet>
+              <v-sheet class="mx-auto mt-5" :width="width">
+                <RightLeftDiff
+                  :left="displayNumber(leftPlatformTotalWeight)"
+                  :right="displayNumber(rightPlatformTotalWeight)"
+                  :id="diffCanvasId"
+              /></v-sheet>
               <!--- END CANVAS --->
 
-              <!--- WEIGHTS --->
-              <v-sheet :width="width" class="viewport mx-auto">
-                <div class="d-flex justify-space-around align-center">
-                  <div class="text-left w-100">
-                    Left: <b>{{ displayNumber(leftPlatformTotalWeight) }}</b>
-                  </div>
-                  <div class="d-flex align-items-center align-center">
-                    <v-icon
-                      color="red"
-                      v-if="leftPlatformTotalWeight > rightPlatformTotalWeight"
-                    >
-                      mdi-menu-left
-                    </v-icon>
-
-                    <div class="text-center w-100">
-                      Diff:
-                      <b>{{
-                        displayNumber(
-                          Math.abs(
-                            rightPlatformTotalWeight - leftPlatformTotalWeight
-                          )
-                        )
-                      }}</b>
-                    </div>
-                    <v-icon
-                      large
-                      color="red"
-                      v-if="rightPlatformTotalWeight > leftPlatformTotalWeight"
-                    >
-                      mdi-menu-right</v-icon
-                    >
-                  </div>
-
-                  <div class="text-right w-100">
-                    Right: <b>{{ displayNumber(rightPlatformTotalWeight) }}</b>
-                  </div>
-                </div>
-
-                <!-- <div>
-            <span class="mt-5"
-              >Total:
-              {{
-                (leftPlatformTotalWeight + rightPlatformTotalWeight).toFixed(2)
-              }}</span
-            >
-          </div> -->
-              </v-sheet>
               <v-toolbar v-if="readingsData.length" dense flat>
                 <v-btn icon @click="print">
                   <v-icon>mdi-printer</v-icon>
@@ -198,7 +165,6 @@
             </v-list>
           </v-card>
         </v-col>
-        <!--- END WEIGHTS --->
 
         <v-col>
           <ExamsList
@@ -264,7 +230,7 @@ import ExportToFileBtn from "@/components/file/ExportToFileBtn.vue";
 import _ from "lodash";
 import pedanaCanvasMixin from "@/mixins/PedanaCanvasMixin.vue";
 import Vue from "vue";
-
+import RightLeftDiff from "./RightLeftDiff.vue";
 /* eslint-disable */
 const electron = window.require("electron"),
   ipc = electron.ipcRenderer;
@@ -288,7 +254,8 @@ export default Vue.extend({
     ConnectingDialog,
     ExamDialog,
     ExamsList,
-    Patients
+    Patients,
+    RightLeftDiff
   },
   data: () => ({
     showExamDialog: false,
@@ -316,6 +283,7 @@ export default Vue.extend({
     ctx: null,
     c: null,
     backgroundCanvasId: "background-layer",
+    diffCanvasId: "diff",
     generalBarycenter,
     leftBarycenter,
     rightBarycenter,

@@ -1,5 +1,10 @@
 <template>
-  <v-btn @click="exportToFile" :loading="isProcessing" :disabled="isProcessing">
+  <v-btn
+    color="primary darken-1"
+    @click="exportToFile"
+    :loading="isProcessing"
+    :disabled="isProcessing"
+  >
     <v-icon left>mdi-export</v-icon>
     EXPORT
   </v-btn>

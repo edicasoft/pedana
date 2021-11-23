@@ -1,5 +1,10 @@
 <template>
-  <v-btn @click="importFile" :loading="isProcessing" :disabled="isProcessing">
+  <v-btn
+    color="primary darken-1"
+    @click="importFile"
+    :loading="isProcessing"
+    :disabled="isProcessing"
+  >
     <v-icon left>mdi-import</v-icon>
     IMPORT
   </v-btn>

@@ -36,7 +36,8 @@ const images = [
   "img/balls/barycenter.png",
   "img/balls/general-barycenter.png",
   "img/balls/old-general-barycenter.png",
-  "img/balls/old-barycenter.png"
+  "img/balls/old-barycenter.png",
+  "img/pedana-bg.png"
 ];
 const Hz = 10;
 const pedanaWidth = 470;

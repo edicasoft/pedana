@@ -38,11 +38,15 @@ export default Vue.extend({
       //TODO::destroy canvas
       const width = pedanaWidth;
       const height = pedanaHeight;
-      const printC = new Canvas("print", width, height);
+      const printC = new Canvas("print", width, height + 40 + 30);
       printC.clear();
       const bg = document.getElementById(this.backgroundCanvasId);
+      const diff = document.getElementById(this.diffCanvasId);
+      console.log(diff);
       printC.ctx.drawImage(bg, 0, 0, width, height);
       printC.ctx.drawImage(this.c.canvas, 0, 0, width, height);
+      printC.ctx.drawImage(diff, 0, height + 30, width, 40);
+
       return printC.canvas.toDataURL();
     },
     saveAsPdf() {

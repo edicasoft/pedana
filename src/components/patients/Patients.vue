@@ -26,7 +26,6 @@
                     <v-btn
                       color="primary"
                       dark
-                      small
                       class="mb-2"
                       v-bind="attrs"
                       v-on="on"
@@ -117,18 +116,18 @@
                         </v-container>
                       </v-card-text>
 
-                      <v-card-actions>
-                        <v-spacer></v-spacer>
-                        <v-btn color="blue darken-1" text @click="cancel">
-                          Cancel
-                        </v-btn>
+                      <v-card-actions class="pa-5">
                         <v-btn
-                          color="blue darken-1"
-                          text
+                          color="primary"
                           type="submit"
                           :disabled="!valid"
+                          class="px-5"
                         >
                           Save
+                        </v-btn>
+                        <v-spacer></v-spacer>
+                        <v-btn text @click="cancel">
+                          Cancel
                         </v-btn>
                       </v-card-actions>
                     </v-card>
@@ -201,7 +200,7 @@
                 <v-btn
                   @click="clearFilters"
                   small
-                  color="blue"
+                  color="primary"
                   text
                   class="text-capitalize"
                   >All</v-btn

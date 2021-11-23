@@ -18,7 +18,7 @@
       </template> -->
       <template v-slot:top v-if="isReady">
         <v-toolbar flat height="40">
-          <v-btn @click="newExam" color="primary" dark small>
+          <v-btn @click="newExam" color="primary" dark>
             <v-icon left>mdi-play </v-icon>
             New Exam
           </v-btn>

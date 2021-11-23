@@ -22,31 +22,35 @@ export default Vue.extend({
   name: "BackgrounfLayer",
   props: ["width", "height", "id"],
   mounted() {
-    c = new Canvas(this.id, pedanaWidth, pedanaHeight);
+    c = new Canvas(this.id, pedanaWidth, pedanaHeight, [`img/pedana-bg.png`]);
     //this.$emit("canvasCreated", c);
     ctx = c.ctx;
-    this.drawBg();
+    c.preloadImages(this.drawBg);
+
+    //this.drawBg();
   },
   methods: {
     drawBg() {
-      const background = new Image();
-      background.src = "img/pedana-bg.png";
+      const background = c.images.get(`img/pedana-bg.png`);
+      if (!background) return;
+      //const background = new Image();
+      // background.src = "img/pedana-bg.png";
 
       // Make sure the image is loaded first otherwise nothing will draw.
-      background.onload = () => {
-        ctx.drawImage(
-          background,
-          0,
-          0,
-          background.width,
-          background.height,
-          0,
-          0,
-          pedanaWidth,
-          pedanaHeight
-        );
-        this.draw();
-      };
+      // background.onload = () => {
+      c.ctx.drawImage(
+        background,
+        0,
+        0,
+        background.width,
+        background.height,
+        0,
+        0,
+        pedanaWidth,
+        pedanaHeight
+      );
+      this.draw();
+      //};
     },
 
     drawXAxis(): void {

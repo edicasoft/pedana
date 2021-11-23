@@ -10,6 +10,12 @@
       />
       <canvas :id="`pedana-${idx}`"> </canvas>
     </v-sheet>
+    <v-sheet class="mx-auto mt-5" :width="width">
+      <RightLeftDiff
+        :left="displayNumber(leftPlatformTotalWeight)"
+        :right="displayNumber(rightPlatformTotalWeight)"
+        :id="diffCanvasId"
+    /></v-sheet>
     <!--- END CANVAS --->
   </div>
 </template>
@@ -23,6 +29,7 @@ import {
   pedanaWidth
 } from "@/common/constants.js";
 import BackgroundLayer from "@/components/pedana/BackgroundLayer.vue";
+import RightLeftDiff from "@/components/pedana/RightLeftDiff.vue";
 import Barycenter from "@/entities/Barycenter";
 export const generalBarycenter = new Barycenter(
   leftPlatformCells.concat(rightPlatformCells),
@@ -38,7 +45,8 @@ import pedanaCanvasMixin from "@/mixins/PedanaCanvasMixin.vue";
 export default {
   mixins: [pedanaCanvasMixin],
   components: {
-    BackgroundLayer
+    BackgroundLayer,
+    RightLeftDiff
   },
   props: ["exam", "idx", "patient"],
   data: () => ({
@@ -57,6 +65,9 @@ export default {
   computed: {
     backgroundCanvasId() {
       return `pedana-bg-${this.idx}`;
+    },
+    diffCanvasId() {
+      return `pedana-diff-${this.idx}`;
     },
     readingsData() {
       return this.exam.weights_data;
