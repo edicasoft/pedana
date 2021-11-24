@@ -1,13 +1,18 @@
 <template>
-  <v-dialog :value="value" :style="{ zIndex: 1000 }" fullscreen persistent>
-    <v-card class="pa-3">
-      <div class="d-flex align-center justify-space-between pb-3">
-        <v-card-title class="pt-0 pb-0">Main</v-card-title>
-        <v-btn @click="close" icon>
-          <v-icon color="error">mdi-close-circle</v-icon></v-btn
-        >
+  <v-dialog :value="value" :style="{ zIndex: 1000 }" persistent fullscreen>
+    <v-card class="pa-3 pb-10 screen-bg">
+      <div class="d-flex align-center justify-space-between pb-3 px-5">
+        <v-card-title>Main Chart</v-card-title>
+        <v-card-subtitle class="mt-3 subtitle-1 primary--text">
+          <b>{{ selectedPatient.fullname }}</b> {{ exam.exam_type }} -
+          {{ exam.created_at }}
+        </v-card-subtitle>
+        <v-btn @click="close" color="primary" class="px-5">
+          Close
+        </v-btn>
       </div>
       <line-chart
+        class="mx-auto white"
         :style="{
           position: 'relative',
           display: 'flex',
@@ -44,7 +49,7 @@ export default Vue.extend({
   components: {
     LineChart
   },
-  props: ["value"],
+  props: ["value", "exam"],
   data() {
     return {
       datacollection: {} as ChartData,
@@ -127,10 +132,10 @@ export default Vue.extend({
       const idealLeft = [
         {
           label: "Ideal Left",
-          borderColor: "blue",
-          pointBackgroundColor: "blue",
+          borderColor: "rgb(167, 169, 172)",
+          pointBackgroundColor: "rgb(167, 169, 172)",
           fill: false,
-          borderWidth: 1,
+          borderWidth: 2,
           pointRadius: 0,
           data: [
             {
@@ -148,10 +153,10 @@ export default Vue.extend({
       const idealRight = [
         {
           label: "Ideal Right",
-          borderColor: "blue",
-          pointBackgroundColor: "blue",
+          borderColor: "rgb(167, 169, 172)",
+          pointBackgroundColor: "rgb(167, 169, 172)",
           fill: false,
-          borderWidth: 1,
+          borderWidth: 2,
           pointRadius: 0,
           data: [
             {
@@ -167,8 +172,8 @@ export default Vue.extend({
       ];
       const intersectLineStyle = {
         label: "",
-        borderColor: "#18dbfb",
-        pointBackgroundColor: "#18dbfb",
+        borderColor: "#27a3a6",
+        pointBackgroundColor: "#27a3a6",
         pointRadius: 0,
         fill: false,
         borderWidth: 1
@@ -179,30 +184,30 @@ export default Vue.extend({
         datasets: [
           {
             label: "X",
-            borderColor: "black",
+            borderColor: "#005264",
             pointRadius: 0,
             fill: false,
             data: [
               { x: -max - this.margin, y: 0 },
               { x: max + this.margin, y: 0 }
             ],
-            borderWidth: 1
+            borderWidth: 2
           },
           {
             label: "Y",
-            borderColor: "black",
+            borderColor: "#005264",
             pointRadius: 0,
             fill: false,
             data: [
               { x: 0, y: max + this.margin },
               { x: 0, y: -max - this.margin }
             ],
-            borderWidth: 1
+            borderWidth: 2
           },
           {
             label: "Left Barycenter",
-            borderColor: "blue",
-            pointBackgroundColor: "blue",
+            borderColor: "#008bc4",
+            pointBackgroundColor: "#008bc4",
             pointRadius: 0,
             fill: false,
             data: this.leftBarycenterHistory,
@@ -210,8 +215,8 @@ export default Vue.extend({
           },
           {
             label: "General Barycenter",
-            borderColor: "red",
-            pointBackgroundColor: "red",
+            borderColor: "#f58241",
+            pointBackgroundColor: "#f58241",
             pointRadius: 0,
             fill: false,
             data: this.generalBarycenterHistory,
@@ -219,8 +224,8 @@ export default Vue.extend({
           },
           {
             label: "Right Barycenter",
-            borderColor: "blue",
-            pointBackgroundColor: "blue",
+            borderColor: "#008bc4",
+            pointBackgroundColor: "#008bc4",
             pointRadius: 0,
             fill: false,
             data: this.rightBarycenterHistory,
@@ -282,8 +287,8 @@ export default Vue.extend({
           },
           {
             label: "",
-            borderColor: "pink",
-            pointBackgroundColor: "pink",
+            borderColor: "rgb(243, 203,45)",
+            pointBackgroundColor: "rgb(243, 203,45)",
             pointRadius: 0,
             fill: false,
             borderWidth: 1,
@@ -300,8 +305,8 @@ export default Vue.extend({
           },
           {
             label: "",
-            borderColor: "pink",
-            pointBackgroundColor: "pink",
+            borderColor: "rgb(243, 203,45)",
+            pointBackgroundColor: "rgb(243, 203,45)",
             pointRadius: 0,
             fill: false,
             borderWidth: 1,
@@ -335,7 +340,8 @@ export default Vue.extend({
       "generalBarycenterHistory",
       "leftBarycenterHistory",
       "rightBarycenterHistory"
-    ])
+    ]),
+    ...mapState("patients", ["selectedPatient"])
   }
 });
 </script>

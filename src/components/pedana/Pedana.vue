@@ -7,7 +7,7 @@
           v-if="isEndStreaming"
           @click="showNewExamDialog"
           class="mx-2"
-          color="primary darken-1"
+          color="secondary darken-1"
         >
           <v-icon left>
             mdi-play
@@ -76,7 +76,7 @@
             <v-list subheader two-line flat>
               <v-subheader
                 >Current Exam
-                <b v-if="exam">
+                <b v-if="exam" class="primary--text">
                   : {{ exam.exam_type }} - {{ exam.created_at }}</b
                 ></v-subheader
               >
@@ -93,48 +93,87 @@
             Reset
           </v-btn> -->
               <!-- CHARTS BUTTONS -->
-              <v-toolbar v-if="readingsData.length" flat>
-                <v-btn @click="showMainChart = true" class="mr-3" small>
+              <v-toolbar v-if="readingsData.length" flat height="50">
+                <v-btn
+                  @click="showMainChart = true"
+                  class="mr-3"
+                  small
+                  color="primary"
+                >
                   Main
                 </v-btn>
-                <v-btn @click="showTorsionChart = true" class="mr-3" small>
+                <v-btn
+                  @click="showTorsionChart = true"
+                  class="mr-3"
+                  small
+                  color="primary"
+                >
                   Torsion
                 </v-btn>
-                <v-btn @click="showGeneralChart = true" class="mr-3" small
+                <v-btn
+                  @click="showGeneralChart = true"
+                  class="mr-3"
+                  small
+                  color="primary"
                   >General</v-btn
                 >
-                <v-btn @click="showLeftRightChart = true" small
+                <v-btn @click="showLeftRightChart = true" small color="primary"
                   >Right & Left</v-btn
                 >
               </v-toolbar>
               <!-- CONTROLS -->
-              <v-toolbar flat>
-                <template v-if="readingsData.length">
-                  <!-- Back -->
-                  <v-btn icon @click="back" :disabled="readingsIdx <= 0"
-                    ><v-icon>mdi-step-backward</v-icon></v-btn
-                  >
-                  <!-- Read from File Play Control -->
-                  <v-btn @click="start" icon>
-                    <v-icon>{{
-                      isPlaying && readingsIdx > 0 ? "mdi-pause" : "mdi-play"
-                    }}</v-icon>
-                  </v-btn>
-                  <!-- Forward -->
-                  <v-btn
-                    icon
-                    @click="next"
-                    :disabled="readingsIdx >= readingsData.length - 1"
-                    ><v-icon>mdi-step-forward</v-icon></v-btn
-                  >
-                </template>
+              <v-sheet class="d-flex justify-space-between">
+                <v-toolbar flat>
+                  <template v-if="readingsData.length">
+                    <!-- Back -->
+                    <v-btn
+                      icon
+                      @click="back"
+                      :disabled="readingsIdx <= 0"
+                      color="secondary"
+                      ><v-icon large>mdi-skip-previous-circle</v-icon></v-btn
+                    >
+                    <!-- Read from File Play Control -->
+                    <v-btn @click="start" icon color="secondary">
+                      <v-icon large>{{
+                        isPlaying && readingsIdx > 0
+                          ? "mdi-pause-circle"
+                          : "mdi-play-circle"
+                      }}</v-icon>
+                    </v-btn>
+                    <!-- Forward -->
+                    <v-btn
+                      color="secondary"
+                      icon
+                      @click="next"
+                      :disabled="readingsIdx >= readingsData.length - 1"
+                      ><v-icon large> mdi-skip-next-circle</v-icon></v-btn
+                    >
+                  </template>
 
-                <!--- Timer --->
-                <template v-if="readingsIdx > 0">
-                  <v-icon color="green" dark>mdi-timer-outline</v-icon>
-                  {{ currentTiming }}
-                </template>
-              </v-toolbar>
+                  <!--- Timer --->
+                  <template v-if="readingsIdx > 0">
+                    <v-icon color="success" dark class="ml-5"
+                      >mdi-timer-outline</v-icon
+                    >
+                    <h3 class="primary--text">{{ currentTiming }}</h3>
+                  </template>
+                </v-toolbar>
+                <v-toolbar
+                  v-if="readingsData.length"
+                  dense
+                  flat
+                  class="d-flex justify-end"
+                >
+                  <v-btn icon @click="print" large color="primary">
+                    <v-icon>mdi-printer</v-icon>
+                  </v-btn>
+                  <v-btn icon @click="saveAsPdf" large color="primary">
+                    <v-icon>mdi-content-save</v-icon>
+                  </v-btn>
+                </v-toolbar>
+              </v-sheet>
+
               <!--- END CONTROLS --->
 
               <!--- PEDANA CANVAS --->
@@ -153,15 +192,6 @@
                   :id="diffCanvasId"
               /></v-sheet>
               <!--- END CANVAS --->
-
-              <v-toolbar v-if="readingsData.length" dense flat>
-                <v-btn icon @click="print">
-                  <v-icon>mdi-printer</v-icon>
-                </v-btn>
-                <v-btn icon @click="saveAsPdf">
-                  <v-icon>mdi-content-save</v-icon>
-                </v-btn>
-              </v-toolbar>
             </v-list>
           </v-card>
         </v-col>
@@ -176,7 +206,7 @@
       </v-row>
     </v-container>
     <TorsionChart v-if="showTorsionChart" :value.sync="showTorsionChart" />
-    <MainChart v-if="showMainChart" :value.sync="showMainChart" />
+    <MainChart v-if="showMainChart" :value.sync="showMainChart" :exam="exam" />
     <GeneralBarycenterChart
       v-if="showGeneralChart"
       :value.sync="showGeneralChart"

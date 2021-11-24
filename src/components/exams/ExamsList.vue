@@ -29,7 +29,7 @@
       subheader
       two-line
       flat
-      :style="{ overflow: 'auto', maxHeight: 'calc(100vh - 125px)' }"
+      :style="{ overflow: 'auto', maxHeight: 'calc(100vh - 150px)' }"
     >
       <v-list-item v-for="exam in items" :key="exam.id">
         <v-list-item-action>
@@ -49,7 +49,7 @@
         </v-list-item-content>
         <v-list-item-action>
           <v-btn icon @click="play(exam)">
-            <v-icon color="green lighten-1">mdi-play-circle</v-icon>
+            <v-icon color="secondary">mdi-play-circle</v-icon>
           </v-btn>
         </v-list-item-action>
       </v-list-item>

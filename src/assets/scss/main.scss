@@ -13,7 +13,13 @@
   opacity: 0.5;
 }
 .chartjs-render-monitor {
-  // background-image: url("chart.png");
+  //background-image: url("BACKGROUND_Medium.png");
+  //background-image: url("BACKGROUND_Dark.png");
+  //background-image: url("BACKGROUND_Light.png");
+}
+.screen-bg {
+  background: url("BACKGROUND_Light.png") no-repeat;
+  background-size: cover;
 }
 .v-snack__wrapper {
   margin: 0px;
