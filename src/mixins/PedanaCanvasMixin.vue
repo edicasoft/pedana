@@ -6,12 +6,15 @@ import { total } from "@/common/helpers";
 import {
   leftPlatformCells,
   rightPlatformCells,
+  leftDisplayCells,
+  rightDisplayCells,
   pedanaWidth,
   pedanaHeight
 } from "@/common/constants.js";
 import { Cell } from "@/entities/Cell";
 import Canvas from "@/entities/Canvas";
 const cells = leftPlatformCells.concat(rightPlatformCells);
+const cellsDisplay = leftDisplayCells.concat(rightDisplayCells);
 import Vue from "vue";
 import { ipcRenderer } from "electron";
 
@@ -42,7 +45,7 @@ export default Vue.extend({
       printC.clear();
       const bg = document.getElementById(this.backgroundCanvasId);
       const diff = document.getElementById(this.diffCanvasId);
-      console.log(diff);
+      console.log("combineCanvasesToImage");
       printC.ctx.drawImage(bg, 0, 0, width, height);
       printC.ctx.drawImage(this.c.canvas, 0, 0, width, height);
       printC.ctx.drawImage(diff, 0, height + 30, width, 40);
@@ -113,33 +116,35 @@ export default Vue.extend({
     },
     displayWeights() {
       if (this.weights.length === 0) return;
-      this.ctx.fillStyle = "black";
-      this.ctx.font = "16px Arial";
+      this.ctx.fillStyle = "#005264";
+      this.ctx.font = "bold 16px Arial";
       this.ctx.save();
       for (let i = 0; i < cells.length; i++) {
         this.$nextTick(() => {
-          const cell = new Cell(cells[i], this.weights[i]);
+          const cell = new Cell(cells[i], this.weights[i], cellsDisplay[i]);
           cell.draw(this.c, this.totalWeight);
         });
 
-        let x = this.width / 2 + cells[i].x;
-        let y = this.height / 2 - cells[i].y;
-        if (cells[i].y < 0) {
-          y += 20;
-          //y < 0, x > 0
-          if (cells[i].x > 0) x += 20;
-        } else {
-          //y > 0, x > 0
-          y -= 20;
-          if (cells[i].x > 0) x -= 20;
+        const x = this.width / 2 + cells[i].x;
+        const y = this.height / 2 - cells[i].y;
+
+        if (i === 0 || i === 3) {
+          y -= 35;
+          x -= 18;
         }
-        if (cells[i].x < 0) {
-          x -= 30;
-          //y < 0, x < 0,
-          if (cells[i].y < 0) x -= 20;
-          //y > 0, x < 0
-          else x += 15;
+        if (i === 1) {
+          y -= 33;
+          x += 10;
         }
+        if (i === 4) {
+          y -= 34;
+          x -= 48;
+        }
+        if (i === 2 || i === 5) {
+          y -= 10;
+        }
+        if (i === 2) x -= 40;
+        if (i === 5) x += 5;
         this.ctx.fillText(this.displayNumber(this.weights[i]).toString(), x, y);
       }
       this.ctx.restore();

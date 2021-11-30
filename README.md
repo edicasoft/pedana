@@ -1,7 +1,9 @@
 # pedana-electron-app
+```
+node v14.7.0 (npm v6.14.8)
+```
 
 ## Project setup
-
 ```
 npm install
 ```

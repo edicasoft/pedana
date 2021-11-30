@@ -46,7 +46,7 @@ async function createWindow() {
   const pedana = new Device();
 
   pedana.on("data", data => {
-    // console.log("data:", data);
+    //console.log("data:", data);
     win.webContents.send("data", data);
   });
 

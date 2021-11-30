@@ -1,12 +1,10 @@
 <template>
   <canvas :id="id"> </canvas>
 </template>
-<script lang="ts">
+<script>
 import Canvas from "@/entities/Canvas";
 import Vue from "vue";
 import {
-  leftPlatformCells,
-  rightPlatformCells,
   canvasSmoothCoef,
   idealBarycenterLeftX,
   idealBarycenterRightX,
@@ -14,31 +12,31 @@ import {
   pedanaHeight
 } from "@/common/constants.js";
 const arrowLength = 5;
-const cells = leftPlatformCells.concat(rightPlatformCells);
-let c: Canvas;
-let ctx: CanvasRenderingContext2D;
 
 export default Vue.extend({
-  name: "BackgrounfLayer",
+  name: "BackgroundLayer",
   props: ["width", "height", "id"],
+  data: () => ({ c: null }),
   mounted() {
-    c = new Canvas(this.id, pedanaWidth, pedanaHeight, [`img/pedana-bg.png`]);
+    this.c = new Canvas(this.id, pedanaWidth, pedanaHeight, [
+      `img/pedana-bg.png`
+    ]);
     //this.$emit("canvasCreated", c);
-    ctx = c.ctx;
-    c.preloadImages(this.drawBg);
+    this.c.preloadImages(this.drawBg);
 
     //this.drawBg();
   },
   methods: {
     drawBg() {
-      const background = c.images.get(`img/pedana-bg.png`);
+      console.log("drawBg", this.id, this.c);
+      const background = this.c.images.get(`img/pedana-bg.png`);
       if (!background) return;
       //const background = new Image();
       // background.src = "img/pedana-bg.png";
 
       // Make sure the image is loaded first otherwise nothing will draw.
       // background.onload = () => {
-      c.ctx.drawImage(
+      this.c.ctx.drawImage(
         background,
         0,
         0,
@@ -53,11 +51,11 @@ export default Vue.extend({
       //};
     },
 
-    drawXAxis(): void {
+    drawXAxis() {
       const y = this.height / 2 + canvasSmoothCoef;
       const from = { x: 0, y };
       const to = { x: this.width - arrowLength, y };
-      c.drawLine(from, to, "rgb(0, 82, 100)", 2);
+      this.c.drawLine(from, to, "rgb(0, 82, 100)", 2);
 
       // c.drawArrowhead(from, to, arrowLength);
 
@@ -66,11 +64,11 @@ export default Vue.extend({
       //   y: to.y - 8
       // });
     },
-    drawYAxis(): void {
+    drawYAxis() {
       const x = this.width / 2 + canvasSmoothCoef;
       const from = { x, y: 0 + arrowLength };
       const to = { x, y: this.height };
-      c.drawLine(from, to, "rgb(0, 82, 100)", 2);
+      this.c.drawLine(from, to, "rgb(0, 82, 100)", 2);
 
       // c.drawArrowhead(to, from, arrowLength);
       // c.drawText("Y", {
@@ -100,7 +98,7 @@ export default Vue.extend({
     markIdealBarycenters() {
       const lineLength = 250;
       let x = idealBarycenterLeftX;
-      c.drawLine(
+      this.c.drawLine(
         { x, y: -lineLength },
         { x, y: lineLength },
         "rgb(167, 169, 172)",
@@ -108,20 +106,20 @@ export default Vue.extend({
       );
 
       x = idealBarycenterRightX;
-      c.drawLine(
+      this.c.drawLine(
         { x, y: -lineLength },
         { x, y: lineLength },
         "rgb(167, 169, 172)",
         2
       );
     },
-    draw(): void {
-      ctx.save();
-      c.transdormCoordinates();
+    draw() {
+      this.c.ctx.save();
+      this.c.transdormCoordinates();
       //this.drawLeftPlatform();
       //this.drawRightPlatform();
       this.markIdealBarycenters();
-      ctx.restore();
+      this.c.ctx.restore();
       this.drawXAxis();
       this.drawYAxis();
     }

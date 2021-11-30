@@ -235,7 +235,13 @@
 import Canvas from "@/entities/Canvas";
 
 import { displayNumber } from "@/common/helpers";
-import { images, Hz, pedanaHeight, pedanaWidth } from "@/common/constants.js";
+import {
+  images,
+  Hz,
+  pedanaHeight,
+  pedanaWidth,
+  data
+} from "@/common/constants.js";
 import { mapState, mapActions } from "vuex";
 import BackgroundLayer from "@/components/pedana/BackgroundLayer.vue";
 import {
@@ -300,7 +306,7 @@ export default Vue.extend({
     error: false,
     isPlaying: false,
     readingsIdx: -1,
-    readingsData: [],
+    readingsData: data,
     isEndReading: false,
     isConnected: false,
     isEndStreaming: true,

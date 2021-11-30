@@ -1,17 +1,17 @@
 <template>
   <v-dialog :value="value" fullscreen :style="{ zIndex: 1000 }" persistent>
     <v-card class="pa-3">
-      <v-toolbar dense flat>
-        <v-btn icon @click="print">
-          <v-icon>mdi-printer</v-icon>
+      <v-toolbar dense flat class="pt-3 mb-10">
+        <v-btn @click="print" color="primary">
+          <v-icon left>mdi-printer</v-icon> Print
         </v-btn>
-        <v-btn icon @click="saveAsPdf">
-          <v-icon>mdi-content-save</v-icon>
+        <v-btn @click="saveAsPdf" color="primary" class="ml-5">
+          <v-icon left>mdi-content-save</v-icon> Save
         </v-btn>
         <v-spacer />
-        <v-btn @click="close" icon>
-          <v-icon color="error">mdi-close-circle</v-icon></v-btn
-        >
+        <v-btn @click="close" color="primary" class="px-5">
+          Close
+        </v-btn>
       </v-toolbar>
       <div
         v-if="value"

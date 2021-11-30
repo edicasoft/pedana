@@ -1,15 +1,20 @@
 import { Point } from "@/entities/Point";
 import Canvas from "@/entities/Canvas";
 
-const width = 55;
-const height = 47;
+// const width = 55;
+// const height = 47;
 export class Cell {
   x: number;
   y: number;
+  displayX: number;
+  displayY: number;
+
   weight: number;
-  constructor(center: Point, weight: number) {
+  constructor(center: Point, weight: number, display: Point) {
     this.x = center.x;
     this.y = center.y;
+    this.displayX = display.x;
+    this.displayY = display.y;
     this.weight = weight;
   }
 
@@ -22,10 +27,16 @@ export class Cell {
 
     const angle = deviation.direction === "up" ? 180 : 0;
     c.ctx.save();
-    c.ctx.translate(this.x, this.y);
+    c.ctx.translate(this.displayX, this.displayY);
     c.ctx.rotate((angle * Math.PI) / 180);
 
-    c.ctx.drawImage(image, -width / 2, -height / 2, width, height);
+    c.ctx.drawImage(
+      image,
+      -image.width / 2,
+      -image.height / 2,
+      image.width,
+      image.height
+    );
     c.ctx.restore();
   }
   getDeviation(

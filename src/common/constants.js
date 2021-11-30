@@ -26,6 +26,35 @@ const rightPlatformCells = [
     y: -255
   }
 ];
+const leftDisplayCells = [
+  {
+    x: -61,
+    y: 193
+  },
+  {
+    x: -191,
+    y: 55
+  },
+  {
+    x: -48,
+    y: -197
+  }
+];
+const rightDisplayCells = [
+  {
+    x: 61,
+    y: 193
+  },
+  {
+    x: 192,
+    y: 55
+  },
+  {
+    x: 49,
+    y: -197
+  }
+];
+
 const canvasSmoothCoef = 0.5;
 const idealBarycenterLeftX = -102.3333;
 const idealBarycenterRightX = 102.3333;
@@ -132,6 +161,8 @@ const examTypes = [
 export {
   leftPlatformCells,
   rightPlatformCells,
+  leftDisplayCells,
+  rightDisplayCells,
   canvasSmoothCoef,
   idealBarycenterLeftX,
   idealBarycenterRightX,
