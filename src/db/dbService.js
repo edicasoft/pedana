@@ -26,6 +26,8 @@ export default class DbService {
 
     ipc.on("get:patients", (event, { search, starts_with, exam_date } = {}) => {
       console.log(search, starts_with, exam_date);
+      console.log("path to db: ", userData);
+
       let query = knex
         .from("patient")
         .select(

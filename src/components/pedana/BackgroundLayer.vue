@@ -6,8 +6,8 @@ import Canvas from "@/entities/Canvas";
 import Vue from "vue";
 import {
   canvasSmoothCoef,
-  idealBarycenterLeftX,
-  idealBarycenterRightX,
+  // idealBarycenterLeftX,
+  // idealBarycenterRightX,
   pedanaWidth,
   pedanaHeight
 } from "@/common/constants.js";
@@ -95,30 +95,30 @@ export default Vue.extend({
     //   ctx.stroke();
     // },
 
-    markIdealBarycenters() {
-      const lineLength = 250;
-      let x = idealBarycenterLeftX;
-      this.c.drawLine(
-        { x, y: -lineLength },
-        { x, y: lineLength },
-        "rgb(167, 169, 172)",
-        2
-      );
+    // markIdealBarycenters() {
+    //   const lineLength = 250;
+    //   let x = idealBarycenterLeftX;
+    //   this.c.drawLine(
+    //     { x, y: -lineLength },
+    //     { x, y: lineLength },
+    //     "rgb(167, 169, 172)",
+    //     2
+    //   );
 
-      x = idealBarycenterRightX;
-      this.c.drawLine(
-        { x, y: -lineLength },
-        { x, y: lineLength },
-        "rgb(167, 169, 172)",
-        2
-      );
-    },
+    //   x = idealBarycenterRightX;
+    //   this.c.drawLine(
+    //     { x, y: -lineLength },
+    //     { x, y: lineLength },
+    //     "rgb(167, 169, 172)",
+    //     2
+    //   );
+    // },
     draw() {
       this.c.ctx.save();
       this.c.transdormCoordinates();
       //this.drawLeftPlatform();
       //this.drawRightPlatform();
-      this.markIdealBarycenters();
+      //this.markIdealBarycenters();
       this.c.ctx.restore();
       this.drawXAxis();
       this.drawYAxis();

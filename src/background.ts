@@ -21,7 +21,7 @@ protocol.registerSchemesAsPrivileged([
 let win = null;
 
 async function createWindow() {
-  // Create the browser window.
+  //    Create the browser window.
   win = new BrowserWindow({
     width: 1400,
     height: 800,
@@ -213,7 +213,7 @@ ipc.on("canvas:print", (event, data, fullname) => {
     });
   });
 });
-// Exit cleanly on request from parent process in development mode.
+//  Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {
   if (process.platform === "win32") {
     process.on("message", data => {

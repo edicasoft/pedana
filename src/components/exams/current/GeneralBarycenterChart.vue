@@ -1,6 +1,6 @@
 <template>
   <v-dialog :value="value" :style="{ zIndex: 1000 }" fullscreen persistent>
-    <v-card class="pa-3">
+    <v-card class="pa-3  screen-bg">
       <div class="d-flex align-center justify-space-between pb-3">
         <v-card-title class="pt-0 pb-0">General Barycenter</v-card-title>
         <v-btn @click="close" icon>
@@ -11,6 +11,7 @@
       <v-row>
         <v-col>
           <line-chart
+            class="white mx-auto pa-3"
             :style="{
               height: '600px',
               position: 'relative',
@@ -21,16 +22,18 @@
           ></line-chart>
         </v-col>
         <v-col>
-          <div>
-            Ammq:
-            <strong>{{ Ammq }}</strong>
-          </div>
-          <div>
-            Rfor: <strong>{{ Rfor }}</strong>
-          </div>
-          <div>
-            Vvar: <strong>{{ Vvar }}</strong>
-          </div>
+          <v-card class="pa-5 white" width="300">
+            <div>
+              Ammq:
+              <strong>{{ Ammq }}</strong>
+            </div>
+            <div>
+              Rfor: <strong>{{ Rfor }}</strong>
+            </div>
+            <div>
+              Vvar: <strong>{{ Vvar }}</strong>
+            </div>
+          </v-card>
         </v-col>
       </v-row>
     </v-card>

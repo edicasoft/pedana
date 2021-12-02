@@ -125,26 +125,29 @@ export default Vue.extend({
           cell.draw(this.c, this.totalWeight);
         });
 
-        const x = this.width / 2 + cells[i].x;
-        const y = this.height / 2 - cells[i].y;
+        const x = this.width / 2 + cellsDisplay[i].x;
+        const y = this.height / 2 - cellsDisplay[i].y;
 
         if (i === 0 || i === 3) {
-          y -= 35;
-          x -= 18;
+          y -= 33;
+          x -= 19;
         }
         if (i === 1) {
-          y -= 33;
-          x += 10;
+          y -= 34;
+          x -= 20;
         }
         if (i === 4) {
-          y -= 34;
-          x -= 48;
+          y -= 35;
+          x -= 17;
         }
         if (i === 2 || i === 5) {
-          y -= 10;
+          y += 45;
         }
-        if (i === 2) x -= 40;
-        if (i === 5) x += 5;
+        if (i === 2) x -= 19;
+        if (i === 5) {
+          x -= 17;
+          y += 1;
+        }
         this.ctx.fillText(this.displayNumber(this.weights[i]).toString(), x, y);
       }
       this.ctx.restore();

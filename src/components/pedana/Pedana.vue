@@ -38,11 +38,7 @@
         @onLoading="onLoading"
         class="ml-2"
       />
-      <ExportToFileBtn
-        v-if="readingsData.length && isEndStreaming"
-        :data="readingsData"
-        class="ml-2"
-      />
+      <ExportToFileBtn v-if="isEndStreaming" class="ml-2" />
       <!-- <v-btn @click="showExamDialog = true">New Exam</v-btn> -->
 
       <v-spacer></v-spacer>
@@ -235,13 +231,7 @@
 import Canvas from "@/entities/Canvas";
 
 import { displayNumber } from "@/common/helpers";
-import {
-  images,
-  Hz,
-  pedanaHeight,
-  pedanaWidth,
-  data
-} from "@/common/constants.js";
+import { images, Hz, pedanaHeight, pedanaWidth } from "@/common/constants.js";
 import { mapState, mapActions } from "vuex";
 import BackgroundLayer from "@/components/pedana/BackgroundLayer.vue";
 import {
@@ -306,12 +296,11 @@ export default Vue.extend({
     error: false,
     isPlaying: false,
     readingsIdx: -1,
-    readingsData: data,
+    readingsData: [],
     isEndReading: false,
     isConnected: false,
     isEndStreaming: true,
 
-    //TODO::
     isReady: true,
     pedanaError: "",
     Hz: Hz,
@@ -338,7 +327,9 @@ export default Vue.extend({
       this.pedanaError = "";
       this.isConnected = args;
       if (!args) {
-        this.isReady = false;
+
+        //TODO::false
+        this.isReady = true;
       }
       console.log("is-connected", args);
     });
@@ -568,8 +559,8 @@ export default Vue.extend({
           ...this.newExamData,
           ...{
             weights_data: this.readingsData,
-            patient_id: this.selectedPatient.id
-            //duration: this.currentTiming
+            patient_id: this.selectedPatient.id,
+            duration: this.currentTiming
           }
         };
         ipc.send("create:exam", data);
