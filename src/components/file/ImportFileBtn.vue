@@ -2,8 +2,8 @@
   <v-btn
     color="primary darken-1"
     @click="importFile"
-    :loading="isProcessing"
-    :disabled="isProcessing"
+    :loading="isLoading"
+    :disabled="isLoading"
   >
     <v-icon left>mdi-import</v-icon>
     IMPORT
@@ -12,15 +12,18 @@
 <script>
 const app = window.require("electron").remote;
 const dialog = app.dialog;
-
+import { ipcRenderer } from "electron";
+import { mapState, mapActions } from "vuex";
 const fs = window.require("fs");
 export default {
-  data() {
-    return {
-      isProcessing: false
-    };
+  computed: {
+    ...mapState("pedana", ["isLoading"])
   },
   methods: {
+    ...mapActions("pedana", ["setIsLoading"]),
+    ...mapActions("patients", ["selectPatient"]),
+    ...mapActions("exams", ["setSelectedExams"]),
+
     importFile() {
       dialog
         .showOpenDialog({
@@ -35,31 +38,54 @@ export default {
           ) {
             return;
           }
-          this.isProcessing = true;
-          this.$emit("onLoading", true);
+          this.setIsLoading(true);
 
           fs.readFile(result.filePaths[0], "utf-8", (err, data) => {
             if (err) {
               alert("An error ocurred reading the file :" + err.message);
               return;
             }
-            const res = data
-              .toString()
-              .split(/[\r\n]+/)
-              .map(item => {
-                const arr = item.split(",");
-                return arr.map(el => parseFloat(el));
-              });
+            const res = JSON.parse(data);
+            ipcRenderer.send("import:exams", res);
+
+            ipcRenderer.once("import:exams:error", (event, er) => {
+              console.log("import:exams:error", er);
+              this.setIsLoading(false);
+              alert(er);
+            });
+
+            ipcRenderer.once("import:exams:result", (event, res) => {
+              console.log("import:exams:result", res);
+              console.log(res);
+              this.setIsLoading(false);
+              setTimeout(
+                () =>
+                  alert(
+                    `Imported successfuly! \n Patients created: ${res.createdPatients} \n Exams created: ${res.createdExams} \n `
+                  ),
+                300
+              );
+              this.selectPatient(null);
+              this.setSelectedExams([]);
+              this.$emit("imported");
+            });
+
+            // const res = data
+            //   .toString()
+            //   .split(/[\r\n]+/)
+            //   .map(item => {
+            //     const arr = item.split(",");
+            //     return arr.map(el => parseFloat(el));
+            //   });
             /*eslint-disable*/
-            this.$emit("importData", { weights_data: res });
-            this.isProcessing = false;
-            this.$emit("onLoading", false);
+            // this.$emit("importData", { weights_data: res });
 
             // console.log(res);
           });
         })
         .catch(err => {
           console.log(err);
+          this.setIsLoading(false);
         });
       // dialog.showOpenDialog(fileNames => {
       //   console.log(fileNames);

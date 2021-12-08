@@ -6,8 +6,8 @@
         v-on="on"
         class="ml-3"
         color="primary darken-1"
-        :loading="isProcessing"
-        :disabled="isProcessing"
+        :loading="isLoading"
+        :disabled="isLoading"
       >
         <v-icon left>mdi-export</v-icon>
         EXPORT
@@ -35,45 +35,32 @@
 <script>
 const app = window.require("electron").remote;
 const dialog = app.dialog;
-import { mapState } from "vuex";
-import { slugify } from "@/common/helpers";
+import { mapState, mapActions } from "vuex";
+import { slugify, prepareDataToExport } from "@/common/helpers";
+import { ipcRenderer } from "electron";
 
 const fs = window.require("fs");
 export default {
   data() {
     return {
-      isProcessing: false,
       data: []
     };
   },
   computed: {
     ...mapState("patients", ["selectedPatient"]),
+    ...mapState("pedana", ["isLoading"]),
     ...mapState("exams", ["selectedExams", "exams"])
   },
   methods: {
+    ...mapActions("pedana", ["setIsLoading"]),
     exportPatient() {
       console.log("exportPatient", this.exams);
       if (!this.selectedPatient) return alert("Patient is not selected");
       if (!this.exams.length) return alert("No exams");
-      /*eslint-disable*/
-      const content = [
-        {
-          title: this.selectedPatient.title,
-          fullname: this.selectedPatient.fullname,
-          sex: this.selectedPatient.sex,
-          date_of_birth: this.selectedPatient.date_of_birth,
-          exams: this.exams.map(item => ({
-            exam_type: item.exam_type,
-            duration: item.duration,
-            description: item.description,
-            notes: item.notes,
-            weights_data: item.weights_data,
-            created_at: item.created_at
-          }))
-        }
-      ];
+
+      const content = prepareDataToExport(this.selectedPatient, this.exams);
       this.exportToFile(
-        JSON.stringify(content),
+        JSON.stringify([content]),
         `${this.selectedPatient.fullname}-all-`
       );
     },
@@ -82,28 +69,39 @@ export default {
       if (!this.selectedExams.length) return alert("No exams selected");
       console.log("exportSelectedExams", this.selectedExams);
 
-      const content = [
-        {
-          title: this.selectedPatient.title,
-          fullname: this.selectedPatient.fullname,
-          sex: this.selectedPatient.sex,
-          date_of_birth: this.selectedPatient.date_of_birth,
-          exams: this.selectedExams.map(item => ({
-            exam_type: item.exam_type,
-            duration: item.duration,
-            description: item.description,
-            notes: item.notes,
-            weights_data: item.weights_data,
-            created_at: item.created_at
-          }))
-        }
-      ];
+      const content = prepareDataToExport(
+        this.selectedPatient,
+        this.selectedExams
+      );
       this.exportToFile(
-        JSON.stringify(content),
+        JSON.stringify([content]),
         `${this.selectedPatient.fullname}-selected-`
       );
     },
+    onExportError(er) {
+      console.log("exportAll:patients:error", er);
+      this.setIsLoading(false);
+      this.$nextTick(() => alert(er));
+    },
     exportAll() {
+      ipcRenderer.send("get:patients");
+      this.setIsLoading(true);
+
+      ipcRenderer.once("get:patients:error", (event, er) =>
+        this.onExportError(er)
+      );
+      ipcRenderer.once("export:exams:error", (event, er) =>
+        this.onExportError(er)
+      );
+      ipcRenderer.once("get:patients:result", (event, res) => {
+        console.log("exportAll:patients:result", res);
+        ipcRenderer.send("export:exams", res);
+      });
+      ipcRenderer.once("export:exams:result", (event, res) => {
+        console.log("export:exams:result", res);
+        this.exportToFile(JSON.stringify(res), `db-`);
+      });
+
       console.log("exportAll");
     },
     exportToFile(content, fileNameStart) {
@@ -135,19 +133,18 @@ export default {
           if (res.canceled || !res.filePath) {
             return;
           }
-          this.isProcessing = true;
 
           fs.writeFile(res.filePath, content, err => {
-            this.isProcessing = false;
-
             if (err) {
               alert("An error ocurred creating the file " + err.message);
             }
-
-            alert("The file has been succesfully saved");
+            this.setIsLoading(false);
+            setTimeout(() => alert("Exported successfully!"), 500);
+            //alert("The file has been succesfully saved");
           });
         })
         .catch(err => {
+          this.setIsLoading(false);
           console.log(err);
         });
     }

@@ -72,10 +72,11 @@
 </template>
 <script>
 import Vue from "vue";
-import { mapState } from "vuex";
+import { mapState, mapActions } from "vuex";
 import { examTypes } from "@/common/constants.js";
 import ExamDialog from "@/components/exams/ExamDialog.vue";
 import { ipcRenderer } from "electron";
+
 /*eslint-disable*/
 export default Vue.extend({
   props: ["value", "isReady", "patient"],
@@ -103,7 +104,7 @@ export default Vue.extend({
   },
   computed: {
     examTypes: () => examTypes,
-    ...mapState("exams", ["exams"])
+    ...mapState("exams", ["exams", "selectedExams"])
   },
   watch: {
     "patient.id": {
@@ -115,16 +116,16 @@ export default Vue.extend({
     dialogDelete(val) {
       val || this.closeDelete();
     },
-    // exams: {
-    //   handler(val) {
-    //     console.log("watch exams", val);
-    //     this.items = _.cloneDeep(val);
-    //   },
-    //   immediate: true
-    // }
+    exams: {
+      handler(val) {
+        console.log("watch exams", val);
+        this.items = _.cloneDeep(val);
+      },
+      immediate: true
+    }
   },
   methods: {
-    // ...mapActions("exams", ["setExams"]),
+    ...mapActions("exams", ["deleteExam", "updateExam", "setExams"]),
     getData() {
       if (this.loading) return;
       this.loading = true;
@@ -134,7 +135,7 @@ export default Vue.extend({
         this.loading = false;
         if (result) {
           this.items = result;
-          this.$emit("exams", result);
+          this.setExams(result);
         }
       });
       ipcRenderer.once("get:exams:error", (event, er) => {
@@ -158,8 +159,20 @@ export default Vue.extend({
     },
 
     deleteItemConfirm() {
-      this.items.splice(this.editedIndex, 1);
-      this.closeDelete();
+      this.loading = true;
+      ipcRenderer.send("delete:exam", this.editedItem.id);
+      ipcRenderer.once("delete:exam:result", (event, result) => {
+        console.log("delete:exam:result", result, this.editedItem);
+        this.deleteExam(this.editedItem);
+        this.loading = false;
+        this.items.splice(this.editedIndex, 1);
+        this.closeDelete();
+      });
+      ipcRenderer.once("delete:exam:error", (event, er) => {
+        console.log(er);
+        this.loading = false;
+        this.closeDelete();
+      });
     },
 
     closeDelete() {
@@ -176,7 +189,10 @@ export default Vue.extend({
     save(data) {
       console.log("save", data, this.editedIndex);
       if (this.editedIndex > -1) {
-        if (data) this.$set(this.items, this.editedIndex, data);
+        if (data) {
+          this.$set(this.items, this.editedIndex, data);
+          this.updateExam(data);
+        }
         this.cancel();
       }
     }

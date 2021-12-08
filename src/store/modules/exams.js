@@ -1,23 +1,11 @@
 /* eslint-disable */
+import Vue from "vue";
+import { parsetWeights } from "@/common/helpers";
 const state = {
   selectedExams: [],
   exams: []
 };
-function splitArrayIntoChunksOfLen(arr, len) {
-  var chunks = [],
-    i = 0,
-    n = arr.length;
-  while (i < n) {
-    chunks.push(arr.slice(i, (i += len)));
-  }
-  return chunks;
-}
-function convertWeights(weights_data = "") {
-  return splitArrayIntoChunksOfLen(
-    weights_data.split(",").map(el => parseFloat(el)),
-    6
-  );
-}
+
 const getters = {};
 const mutations = {
   SET_SELECTED_EXAMS(store, val) {
@@ -27,15 +15,30 @@ const mutations = {
   SET_EXAMS(store, val) {
     if (val && val.length) {
       val.forEach(
-        exam => (exam.weights_data = convertWeights(exam.weights_data))
+        exam => (exam.weights_data = parsetWeights(exam.weights_data))
       );
     }
     console.log("SET_EXAMS", val);
     store.exams = val;
   },
   ADD_EXAM(store, val) {
-    val.weights_data = convertWeights(val);
+    val.weights_data = parsetWeights(val);
     store.exams.unshift(val);
+  },
+  DELETE_EXAM(store, val) {
+    const idx = store.exams.findIndex(item => item.id === val.id);
+    const idxSelected = store.selectedExams.findIndex(
+      item => item.id === val.id
+    );
+    console.log("DELETE_EXAM", idx, idxSelected);
+    if (idx >= 0) store.exams.splice(idx, 1);
+    if (idxSelected >= 0) store.selectedExams.splice(idxSelected, 1);
+  },
+  UPDATE_EXAM(store, val) {
+    const idx = store.exams.findIndex(item => item.id === val.id);
+    console.log("UPDATE_EXAM", idx);
+    val.weights_data = parsetWeights(val.weights_data);
+    if (idx >= 0) Vue.set(store.exams, idx, val);
   }
 };
 const actions = {
@@ -48,6 +51,14 @@ const actions = {
   addExam({ commit }, payload) {
     commit("ADD_EXAM", payload);
     commit("SET_SELECTED_EXAMS", [payload]);
+  },
+  deleteExam({ commit }, payload) {
+    commit("DELETE_EXAM", payload);
+    //commit("SET_SELECTED_EXAMS", [payload]);
+  },
+  updateExam({ commit }, payload) {
+    commit("UPDATE_EXAM", payload);
+    //commit("SET_SELECTED_EXAMS", [payload]);
   }
 };
 export default {

@@ -53,8 +53,9 @@ async function createWindow() {
   pedana.on("connect", data => {
     console.log("connect:", data);
     win.webContents.send("is-connected", true);
-    //TODO::remove timeout
-    setTimeout(pedana.startReading, 2000);
+    pedana.startReading;
+
+    //setTimeout(pedana.startReading, 2000);
     // setTimeout(pedana.haltReading, 12000);
   });
 

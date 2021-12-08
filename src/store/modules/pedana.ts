@@ -5,7 +5,8 @@ const state = {
   weightsHistory: [],
   generalBarycenterHistory: [],
   leftBarycenterHistory: [],
-  rightBarycenterHistory: []
+  rightBarycenterHistory: [],
+  isLoading: false
 };
 const getters = {};
 const mutations = {
@@ -35,6 +36,9 @@ const mutations = {
     state.generalBarycenterHistory.push(general);
     state.leftBarycenterHistory.push(left);
     state.rightBarycenterHistory.push(right);
+  },
+  SET_IS_LOADING(state, val) {
+    state.isLoading = val;
   }
 };
 const actions = {
@@ -65,6 +69,9 @@ const actions = {
   setMeasurements({ commit }, payload) {
     console.log("setMeasurements");
     commit("SET_WEIGHTS", payload);
+  },
+  setIsLoading({ commit }, payload) {
+    commit("SET_IS_LOADING", payload);
   }
 };
 export default {

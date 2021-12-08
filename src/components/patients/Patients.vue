@@ -23,15 +23,26 @@
               <v-toolbar flat height="40">
                 <v-dialog v-model="dialog" max-width="500px">
                   <template v-slot:activator="{ on, attrs }">
-                    <v-btn
-                      color="primary"
-                      dark
-                      class="mb-2"
-                      v-bind="attrs"
-                      v-on="on"
-                    >
-                      New Patient
-                    </v-btn>
+                    <div class="d-flex justify-space-between w-100">
+                      <v-btn
+                        color="primary"
+                        dark
+                        class="mb-2"
+                        v-bind="attrs"
+                        v-on="on"
+                      >
+                        New Patient
+                      </v-btn>
+                      <v-spacer />
+                      <div class="mb-2">
+                        <ImportFileBtn
+                          v-if="isEndStreaming"
+                          class="ml-2"
+                          @imported="onDataImported"
+                        />
+                        <ExportToFileBtn v-if="isEndStreaming" />
+                      </div>
+                    </div>
                   </template>
                   <v-form
                     ref="form"
@@ -90,6 +101,8 @@
                                 <template v-slot:activator="{ on, attrs }">
                                   <v-text-field
                                     v-model="editedItem.date_of_birth"
+                                    :rules="[rules.required]"
+                                    required
                                     label="Date of Birth"
                                     prepend-icon="mdi-calendar"
                                     readonly
@@ -253,7 +266,6 @@
           <ExamsList
             v-if="selected.length"
             @newExam="newExam"
-            @exams="onGetExamsList"
             :patient="selected[0]"
             :isReady="isReady"
           />
@@ -267,12 +279,15 @@ import Vue from "vue";
 import { mapActions, mapState } from "vuex";
 import ExamsList from "@/components/patients/ExamsList.vue";
 import { ipcRenderer } from "electron";
-
+import ImportFileBtn from "@/components/file/ImportFileBtn.vue";
+import ExportToFileBtn from "@/components/file/ExportToFileBtn.vue";
 /*eslint-disable*/
 export default Vue.extend({
-  props: ["value", "isReady"],
+  props: ["value", "isReady", "isEndStreaming"],
   components: {
-    ExamsList
+    ExamsList,
+    ImportFileBtn,
+    ExportToFileBtn
   },
   data() {
     return {
@@ -330,8 +345,7 @@ export default Vue.extend({
       activePicker: null,
       dateFilter: null,
       letter: null,
-      menuFilter: false,
-      exams: []
+      menuFilter: false
     };
   },
   mounted() {
@@ -362,12 +376,19 @@ export default Vue.extend({
     },
     dialogDelete(val) {
       val || this.closeDelete();
+    },
+    selected(val, oldVal) {
+      if (
+        (val.length && oldVal.length && val[0] !== oldVal[0]) ||
+        (val.length && !oldVal.length)
+      ) {
+        this.selectPatient(val[0]);
+      }
     }
   },
 
   methods: {
     ...mapActions("patients", ["selectPatient"]),
-    ...mapActions("exams", ["setExams"]),
     clearExamDateFilter() {
       this.dateFilter = null;
       this.getDataFromApi();
@@ -375,9 +396,6 @@ export default Vue.extend({
     onSearch: _.debounce(function(search) {
       this.getDataFromApi({ search });
     }, 1000),
-    onGetExamsList(e) {
-      this.exams = e;
-    },
     saveBirthday(date) {
       this.$refs.menu.save(date);
     },
@@ -385,7 +403,6 @@ export default Vue.extend({
       this.$refs.menuFilter.save(exam_date);
       console.log(exam_date);
       this.getDataFromApi({ exam_date });
-      //TODO::filter by exam date
     },
     cancelSelection() {
       this.selected = [];
@@ -395,7 +412,6 @@ export default Vue.extend({
     submitSelection() {
       if (this.selected.length) {
         this.selectPatient(this.selected[0]);
-        this.setExams(this.exams);
         this.close();
       }
     },
@@ -411,6 +427,9 @@ export default Vue.extend({
       this.getDataFromApi({ starts_with: letter });
     },
     clearFilters() {
+      this.search = "";
+      this.dateFilter = null;
+      this.letter = null;
       this.getDataFromApi();
     },
     getDataFromApi({ search, starts_with, exam_date } = {}) {
@@ -521,8 +540,12 @@ export default Vue.extend({
         ipcRenderer.once("update:patient:result", (event, result) => {
           console.log("update:patient:result", result, this.editedItem);
           this.loading = false;
-          if (result)
+          if (result) {
             this.$set(this.patients, this.editedIndex, this.editedItem);
+            if (this.selectPatient.id === result.id) {
+              this.selectPatient(result);
+            }
+          }
           this.cancel();
         });
         ipcRenderer.once("update:patient:error", (event, er) => {
@@ -544,6 +567,8 @@ export default Vue.extend({
         });
         ipcRenderer.once("create:patient:error", (event, er) => {
           console.log(er);
+          if (er.toString().includes("UNIQUE constraint failed"))
+            alert("Patient with this fullname and birth date already exists");
           this.loading = false;
           this.cancel();
         });
@@ -554,6 +579,10 @@ export default Vue.extend({
     },
     rowClass(item) {
       if (this.loading) return "is-disabled";
+    },
+    onDataImported() {
+      this.selected = [];
+      this.getDataFromApi();
     }
   }
 });

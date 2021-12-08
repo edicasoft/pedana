@@ -1,4 +1,3 @@
-//TODO::deselect patient if it was deleted
 /* eslint-disable */
 const state = {
   selectedPatient: null

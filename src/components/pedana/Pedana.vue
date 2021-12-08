@@ -34,8 +34,7 @@
 
       <ImportFileBtn
         v-if="isEndStreaming"
-        @importData="onImportExam"
-        @onLoading="onLoading"
+        @imported="onDataImported"
         class="ml-2"
       />
       <ExportToFileBtn v-if="isEndStreaming" class="ml-2" />
@@ -212,11 +211,14 @@
       :value.sync="showLeftRightChart"
     />
     <!-- END CHARTS  -->
+    <!-- TODO::move  isReady, isEndStreaming etc. states of pedana to vuex store -->
     <Patients
       v-if="showPatientsDialog"
       :value.sync="showPatientsDialog"
       @newExam="showNewExamDialog"
+      @imported="onDataImported"
       :isReady="isReady"
+      :isEndStreaming="isEndStreaming"
     />
 
     <v-overlay :value="isLoading">
@@ -304,7 +306,6 @@ export default Vue.extend({
     isReady: true,
     pedanaError: "",
     Hz: Hz,
-    isLoading: false,
     ctx: null,
     c: null,
     backgroundCanvasId: "background-layer",
@@ -327,9 +328,7 @@ export default Vue.extend({
       this.pedanaError = "";
       this.isConnected = args;
       if (!args) {
-
-        //TODO::false
-        this.isReady = true;
+        this.isReady = false;
       }
       console.log("is-connected", args);
     });
@@ -353,7 +352,7 @@ export default Vue.extend({
     });
   },
   computed: {
-    ...mapState("pedana", ["weights", "weightsHistory"]),
+    ...mapState("pedana", ["weights", "weightsHistory", "isLoading"]),
     ...mapState("patients", ["selectedPatient"]),
     ...mapState("exams", ["exams", "selectedExams"]),
     patient() {
@@ -398,7 +397,17 @@ export default Vue.extend({
     }
   },
   methods: {
-    ...mapActions("exams", ["addExam"]),
+    ...mapActions("exams", ["addExam", "setSelectedExams"]),
+    ...mapActions("patients", ["selectPatient"]),
+    displayNumber,
+    ...mapActions("pedana", [
+      "getMeasurements",
+      "addBarycentersToHistory",
+      "setWeights",
+      "simulateReadFromPedana",
+      "rewindData",
+      "setMeasurements"
+    ]),
     onPlayExam(exam) {
       this.onImportExam(exam, this.start);
     },
@@ -415,9 +424,6 @@ export default Vue.extend({
         this.newExamData = _.cloneDeep(exam);
         this.startStreaming();
       }
-    },
-    onLoading(e) {
-      this.isLoading = e;
     },
     loadExam(exam, callback) {
       this.exam = _.cloneDeep(exam);
@@ -447,17 +453,6 @@ export default Vue.extend({
       this.loadExam(exam, callback);
       this.setSelectedExams([exam]);
     },
-    displayNumber,
-    ...mapActions("pedana", [
-      "getMeasurements",
-      "addBarycentersToHistory",
-      "setWeights",
-      "simulateReadFromPedana",
-      "rewindData",
-      "setMeasurements"
-    ]),
-    ...mapActions("exams", ["setSelectedExams"]),
-
     back() {
       if (this.readingsIdx <= 0) return;
       this.pause();
@@ -494,64 +489,7 @@ export default Vue.extend({
     stopStreaming() {
       this.isEndStreaming = true;
       //TODO::uncomment, test, duration eventually should be the actual number of seconds passed
-      // this.readingsData = _.cloneDeep(this.weightsHistory);
-      this.readingsData = [
-        [
-          8.0859375,
-          11.54296875,
-          11.81640625,
-          11.42578125,
-          13.0859375,
-          14.3359375
-        ],
-        [
-          8.0078125,
-          11.23046875,
-          12.67578125,
-          10.99609375,
-          12.34375,
-          14.98046875
-        ],
-        [
-          10.01953125,
-          15.09765625,
-          5.95703125,
-          14.8828125,
-          18.88671875,
-          6.97265625
-        ],
-        [
-          9.82421875,
-          14.6484375,
-          7.3828125,
-          14.12109375,
-          17.16796875,
-          8.84765625
-        ],
-        [
-          9.47265625,
-          13.61328125,
-          9.62890625,
-          13.1640625,
-          15.56640625,
-          10.25390625
-        ],
-        [8.828125, 12.34375, 11.484375, 11.81640625, 13.7890625, 12.75390625],
-        [8.4375, 11.77734375, 12.34375, 10.91796875, 12.59765625, 14.16015625],
-        [
-          9.19921875,
-          13.7109375,
-          7.2265625,
-          14.5703125,
-          18.06640625,
-          8.57421875
-        ],
-        [8.80859375, 12.9296875, 8.8671875, 14.140625, 17.0703125, 9.9609375],
-        [8.49609375, 12.109375, 10.91796875, 12.578125, 15.078125, 12.1875],
-        [8.3203125, 11.71875, 12.28515625, 11.3671875, 13.3203125, 13.84765625],
-        [8.18359375, 11.54296875, 13.125, 10.5859375, 12.28515625, 14.453125],
-        [9.27734375, 13.53515625, 8.65234375, 13.73046875, 16.875, 9.53125]
-      ];
+      this.readingsData = _.cloneDeep(this.weightsHistory);
       this.isEndReading = true;
       if (this.readingsData.length && this.newExamData) {
         console.log("currentTiming", this.currentTiming);
@@ -700,6 +638,9 @@ export default Vue.extend({
         this.error = true;
         console.error(e);
       }
+    },
+    onDataImported() {
+      this.showPatientsDialog = true;
     }
   }
 });

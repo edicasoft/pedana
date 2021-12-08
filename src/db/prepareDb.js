@@ -27,6 +27,12 @@ export class PrepareDatabase {
           .references("id")
           .inTable("patient")
           .onDelete("cascade");
+      })
+      .alterTable("patient", function(t) {
+        t.unique(["fullname", "date_of_birth"]);
+      })
+      .alterTable("exam", function(t) {
+        t.unique(["patient_id", "created_at", "exam_type"]);
       });
 
     return result;
