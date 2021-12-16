@@ -62,7 +62,7 @@ export default Vue.extend({
   mounted() {
     console.log(this.id);
 
-    this.c = new Canvas(this.id, pedanaWidth, 40, ["img/triangle-red.png"]);
+    this.c = new Canvas(this.id, pedanaWidth, 40, ["img/triangle-orange.png"]);
     this.c.preloadImages(this.draw);
 
     console.log(this.c);
@@ -77,20 +77,20 @@ export default Vue.extend({
   methods: {
     drawTrianlge() {
       if (this.left == this.right) return;
-      const image = this.c.images.get(`img/triangle-red.png`);
+      const image = this.c.images.get(`img/triangle-orange.png`);
       console.log(image);
 
       this.c.ctx.save();
+      const width = 26;
+      const height = 23;
       if (this.right > this.left) {
-        this.c.ctx.translate(pedanaWidth / 2 + 50, 13);
-        this.c.ctx.rotate((90 * Math.PI) / 180);
+        this.c.ctx.translate(pedanaWidth / 2 + 90, 13);
+        this.c.ctx.rotate(Math.PI / 180);
       } else if (this.left > this.right) {
-        this.c.ctx.translate(pedanaWidth / 2 - 60, 13);
-        this.c.ctx.rotate((-90 * Math.PI) / 180);
+        this.c.ctx.translate(pedanaWidth / 2 - 90, 13);
+        this.c.ctx.rotate((-180 * Math.PI) / 180);
       }
 
-      const width = 21;
-      const height = 18;
       this.c.ctx.drawImage(image, -width / 2, -height / 2, width, height);
       this.c.ctx.restore();
     },
@@ -98,32 +98,60 @@ export default Vue.extend({
       if (this.difference == null) return;
       this.c.clear();
       this.c.drawText(
-        `Left: ${this.left}`,
+        `Left: `,
         {
           x: 20,
           y: 20
         },
         "black",
-        "18px Arial"
+        "600 16px Arial"
       );
       this.c.drawText(
-        `Diff: ${displayNumber(this.difference)}`,
+        `${this.left}`,
         {
-          x: pedanaWidth / 2 - 40,
+          x: 60,
           y: 20
         },
         "black",
-        "18px Arial"
+        "16px Arial"
+      );
+      this.c.drawText(
+        `Overload: `,
+        {
+          x: pedanaWidth / 2 - 50,
+          y: 20
+        },
+        "black",
+        "600 16px Arial"
+      );
+      this.c.drawText(
+        `${displayNumber(this.difference)}`,
+        {
+          x: pedanaWidth / 2 + 30,
+          y: 20
+        },
+        "black",
+        "16px Arial"
       );
       this.drawTrianlge();
+
       this.c.drawText(
-        `Right: ${this.right}`,
+        `Right: `,
         {
-          x: pedanaWidth - 120,
+          x: pedanaWidth - 110,
           y: 20
         },
         "black",
-        "18px Arial"
+        "600 16px Arial"
+      );
+      this.c.drawText(
+        `${this.right}`,
+        {
+          x: pedanaWidth - 60,
+          y: 20
+        },
+        "black",
+        "16px Arial"
       );
       console.log("draw");
     }

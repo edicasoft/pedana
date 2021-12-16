@@ -303,7 +303,7 @@ export default Vue.extend({
     isConnected: false,
     isEndStreaming: true,
 
-    isReady: true,
+    isReady: false,
     pedanaError: "",
     Hz: Hz,
     ctx: null,

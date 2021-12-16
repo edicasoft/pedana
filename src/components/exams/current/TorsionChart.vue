@@ -1,16 +1,17 @@
 <template>
   <v-dialog :value="value" :style="{ zIndex: 1000 }" fullscreen persistent>
-    <v-card class="pa-3">
-      <div class="d-flex align-center justify-space-between pb-3">
-        <v-card-title class="pt-0 pb-0">Torsion</v-card-title>
-        <v-btn @click="close" icon>
-          <v-icon color="error">mdi-close-circle</v-icon></v-btn
-        >
+    <v-card class="pa-3 screen-bg">
+      <div class="d-flex align-center justify-space-between pb-3 px-5">
+        <v-card-title class="display-1  primary--text">Torsion</v-card-title>
+        <v-btn @click="close" color="primary" class="px-5">
+          Close
+        </v-btn>
       </div>
 
       <v-row>
         <v-col>
           <line-chart
+            class="mx-auto white chart--white"
             :style="{
               position: 'relative',
               display: 'flex',
@@ -25,13 +26,16 @@
         </v-col>
       </v-row>
 
-      <div class="pa-5">
+      <div class="pa-5 mx-auto w-100" :style="{ maxWidth: '1000px' }">
         <!-- <div>
           Angle opposite of X-axis:
           <strong>{{ oppositeXAngle.toFixed(2) }}</strong>
         </div> -->
-        <div>
-          Angle next to X-axis: <strong>{{ nextToXAngle.toFixed(2) }}</strong>
+        <div class="chart-subtitle">
+          Angle next to X-axis
+          <strong class="ml-3 chart-value info--text">{{
+            nextToXAngle.toFixed(2)
+          }}</strong>
         </div>
       </div>
     </v-card>
@@ -116,8 +120,8 @@ export default Vue.extend({
       this.y2 = rightBarycenter.calculateBy();
       const intersectLineStyle = {
         label: "",
-        borderColor: "blue",
-        pointBackgroundColor: "blue",
+        borderColor: "#27a3a6",
+        pointBackgroundColor: "#27a3a6",
         pointRadius: 0,
         fill: false,
         borderWidth: 1,
@@ -136,11 +140,11 @@ export default Vue.extend({
       const axes = [
         {
           label: "X",
-          borderColor: "black",
-          pointBackgroundColor: "black",
+          borderColor: "#005264",
+          pointBackgroundColor: "#005264",
           pointRadius: 0,
           fill: false,
-          borderWidth: 1,
+          borderWidth: 2,
           data: [
             {
               x: -maxX,
@@ -154,10 +158,10 @@ export default Vue.extend({
         },
         {
           label: "Y",
-          borderColor: "black",
-          pointBackgroundColor: "black",
+          borderColor: "#005264",
+          pointBackgroundColor: "#005264",
           fill: false,
-          borderWidth: 1,
+          borderWidth: 2,
           pointRadius: 0,
           data: [
             {
@@ -174,10 +178,10 @@ export default Vue.extend({
 
       const ideal = [
         {
-          borderColor: "orange",
-          pointBackgroundColor: "orange",
+          borderColor: "rgb(167, 169, 172)",
+          pointBackgroundColor: "rgb(167, 169, 172)",
           fill: false,
-          borderWidth: 1,
+          borderWidth: 2,
           pointRadius: 0,
           data: [
             {
@@ -191,10 +195,10 @@ export default Vue.extend({
           ]
         },
         {
-          borderColor: "orange",
-          pointBackgroundColor: "orange",
+          borderColor: "rgb(167, 169, 172)",
+          pointBackgroundColor: "rgb(167, 169, 172)",
           fill: false,
-          borderWidth: 1,
+          borderWidth: 2,
           pointRadius: 0,
           data: [
             {
@@ -267,11 +271,11 @@ export default Vue.extend({
           },
           {
             label: "",
-            borderColor: "blue",
-            pointBackgroundColor: "blue",
+            borderColor: "#008bc4",
+            pointBackgroundColor: "#008bc4",
             pointRadius: 0,
             fill: false,
-            borderWidth: 1,
+            borderWidth: 2,
             data: [
               {
                 x: this.x1,

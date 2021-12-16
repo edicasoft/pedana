@@ -38,11 +38,14 @@ function splitArrayIntoChunksOfLen(arr, len) {
   }
   return chunks;
 }
-export const parsetWeights = (weightsData = "") =>
-  splitArrayIntoChunksOfLen(
+export const parsetWeights = (weightsData = "") => {
+  console.log(weightsData);
+  if (Array.isArray(weightsData)) return weightsData;
+  return splitArrayIntoChunksOfLen(
     weightsData.split(",").map(el => parseFloat(el)),
     6
   );
+};
 export const prepareDataToExport = (patient, exams) => {
   /*eslint-disable*/
   return {

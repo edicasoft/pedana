@@ -65,6 +65,7 @@ const images = [
   `img/triangle-red.png`,
   `img/triangle-green.png`,
   "img/triangle-yellow.png",
+  "img/triangle-orange.png",
   "img/balls/barycenter.png",
   "img/balls/general-barycenter.png",
   "img/balls/old-general-barycenter.png",

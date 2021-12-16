@@ -1,9 +1,11 @@
 <template>
   <v-dialog :value="value" :style="{ zIndex: 1000 }" persistent fullscreen>
-    <v-card class="pa-3 pb-10 screen-bg">
+    <v-card class="pa-3 screen-bg">
       <div class="d-flex align-center justify-space-between pb-3 px-5">
-        <v-card-title>Main Chart</v-card-title>
-        <v-card-subtitle class="mt-3 subtitle-1 primary--text">
+        <v-card-title class="primary--text"
+          ><h2 class="display-1">Main Chart</h2></v-card-title
+        >
+        <v-card-subtitle class="mt-3 title primary--text">
           <b>{{ selectedPatient.fullname }}</b> {{ exam.exam_type }} -
           {{ exam.created_at }}
         </v-card-subtitle>
@@ -12,14 +14,14 @@
         </v-btn>
       </div>
       <line-chart
-        class="mx-auto white"
+        class="mx-auto white chart--white"
         :style="{
           position: 'relative',
           display: 'flex',
           alignItems: 'center',
           overflow: 'hidden',
           height: '600px',
-          width: '800px'
+          width: '1000px'
         }"
         :chart-data="datacollection"
         :options="options"

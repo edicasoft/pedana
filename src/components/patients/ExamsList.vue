@@ -3,7 +3,7 @@
     <v-subheader v-if="patient">{{ patient.fullname }} exams</v-subheader>
     <v-data-table
       :headers="headers"
-      height="calc(100vh - 200px)"
+      height="calc(100vh - 100px)"
       :items="items"
       :items-per-page="-1"
       :loading="loading"

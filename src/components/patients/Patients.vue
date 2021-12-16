@@ -21,29 +21,21 @@
             <!-- NEW PATIENT -->
             <template v-slot:top>
               <v-toolbar flat height="40">
+                <div class="d-flex justify-space-between w-100">
+                  <v-btn @click="newPatient" color="primary" dark class="mb-2">
+                    New Patient
+                  </v-btn>
+                  <v-spacer />
+                  <div class="mb-2">
+                    <ImportFileBtn
+                      v-if="isEndStreaming"
+                      class="ml-2"
+                      @imported="onDataImported"
+                    />
+                    <ExportToFileBtn v-if="isEndStreaming" />
+                  </div>
+                </div>
                 <v-dialog v-model="dialog" max-width="500px">
-                  <template v-slot:activator="{ on, attrs }">
-                    <div class="d-flex justify-space-between w-100">
-                      <v-btn
-                        color="primary"
-                        dark
-                        class="mb-2"
-                        v-bind="attrs"
-                        v-on="on"
-                      >
-                        New Patient
-                      </v-btn>
-                      <v-spacer />
-                      <div class="mb-2">
-                        <ImportFileBtn
-                          v-if="isEndStreaming"
-                          class="ml-2"
-                          @imported="onDataImported"
-                        />
-                        <ExportToFileBtn v-if="isEndStreaming" />
-                      </div>
-                    </div>
-                  </template>
                   <v-form
                     ref="form"
                     lazy-validation
@@ -212,21 +204,25 @@
               <v-toolbar flat>
                 <v-btn
                   @click="clearFilters"
-                  small
-                  color="primary"
                   text
-                  class="text-capitalize"
+                  small
+                  dark
+                  class="text-capitalize mr-2"
+                  :class="
+                    !search && !dateFilter && !letter ? 'primary' : 'secondary'
+                  "
                   >All</v-btn
                 >
                 <v-btn
                   small
                   class="pa-0"
+                  :class="{ primary: letter === l }"
                   text
                   :style="{ minWidth: '25px' }"
-                  v-for="(letter, idx) in alphabet"
+                  v-for="(l, idx) in alphabet"
                   :key="idx"
-                  @click="filterByLetter(letter)"
-                  >{{ letter }}</v-btn
+                  @click="filterByLetter(l)"
+                  >{{ l }}</v-btn
                 >
               </v-toolbar>
             </template>
@@ -281,6 +277,7 @@ import ExamsList from "@/components/patients/ExamsList.vue";
 import { ipcRenderer } from "electron";
 import ImportFileBtn from "@/components/file/ImportFileBtn.vue";
 import ExportToFileBtn from "@/components/file/ExportToFileBtn.vue";
+import _ from "lodash";
 /*eslint-disable*/
 export default Vue.extend({
   props: ["value", "isReady", "isEndStreaming"],
@@ -340,7 +337,9 @@ export default Vue.extend({
         { text: "", value: "actions", sortable: false }
       ],
       editedIndex: -1,
-      editedItem: {},
+      editedItem: {
+        date_of_birth: null
+      },
       menu: false,
       activePicker: null,
       dateFilter: null,
@@ -389,6 +388,10 @@ export default Vue.extend({
 
   methods: {
     ...mapActions("patients", ["selectPatient"]),
+    newPatient() {
+      this.dialog = true;
+      if (this.$refs.form) this.$refs.form.reset();
+    },
     clearExamDateFilter() {
       this.dateFilter = null;
       this.getDataFromApi();
@@ -464,15 +467,17 @@ export default Vue.extend({
     },
     editItem(item) {
       if (this.loading) return;
+
       this.editedIndex = this.patients.indexOf(item);
-      this.editedItem = Object.assign({}, item);
+      this.editedItem = _.cloneDeep(item);
+
       this.dialog = true;
     },
 
     deleteItem(item) {
       if (this.loading) return;
       this.editedIndex = this.patients.indexOf(item);
-      this.editedItem = Object.assign({}, item);
+      this.editedItem = _.cloneDeep(item);
       this.dialogDelete = true;
     },
 
@@ -503,9 +508,8 @@ export default Vue.extend({
     cancel() {
       this.dialog = false;
       this.$nextTick(() => {
-        this.editedItem = {};
         this.editedIndex = -1;
-        this.$refs.form.reset();
+        this.editedItem = {};
       });
     },
 

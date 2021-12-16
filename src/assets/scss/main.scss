@@ -27,6 +27,44 @@
   min-width: 344px;
   padding: 0;
 }
-.w-100{
+.w-100 {
   width: 100%;
+}
+.v-application .white.chart--white {
+  border-color: #005264 !important;
+  border: 2px solid;
+}
+.semi-bold-text {
+  font-weight: 500 !important;
+}
+.bold-text {
+  font-weight: 600 !important;
+}
+.normal-text {
+  font-weight: 400 !important;
+}
+.chart-subtitle {
+  color: #005264;
+  font-size: 1.1rem;
+  line-height: 2rem;
+  letter-spacing: 0.0125em !important;
+  font-family: "Roboto", sans-serif !important;
+  font-weight: 400 !important;
+  &.first-col{
+    width: 210px;
+    display: inline-block;
+  }
+}
+.chart-value {
+  background: white;
+  text-align: center;
+  width: 160px;
+  font-size: 1.1rem;
+  display: inline-block;
+  font-weight: 600 !important;
+  padding: 0;
+  line-height: 1.5rem;
+}
+.v-dialog--fullscreen{
+  overflow-x: hidden;
 }

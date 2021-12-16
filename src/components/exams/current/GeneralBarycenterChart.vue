@@ -1,17 +1,19 @@
 <template>
   <v-dialog :value="value" :style="{ zIndex: 1000 }" fullscreen persistent>
-    <v-card class="pa-3  screen-bg">
-      <div class="d-flex align-center justify-space-between pb-3">
-        <v-card-title class="pt-0 pb-0">General Barycenter</v-card-title>
-        <v-btn @click="close" icon>
-          <v-icon color="error">mdi-close-circle</v-icon></v-btn
+    <v-card class="pa-3 screen-bg">
+      <div class="d-flex align-center justify-space-between pb-3 px-5">
+        <v-card-title class="display-1  primary--text"
+          >Center of Gravity</v-card-title
         >
+        <v-btn @click="close" color="primary" class="px-5">
+          Close
+        </v-btn>
       </div>
 
       <v-row>
         <v-col>
           <line-chart
-            class="white mx-auto pa-3"
+            class="chart--white white mx-auto pa-3"
             :style="{
               height: '600px',
               position: 'relative',
@@ -22,18 +24,22 @@
           ></line-chart>
         </v-col>
         <v-col>
-          <v-card class="pa-5 white" width="300">
-            <div>
-              Ammq:
-              <strong>{{ Ammq }}</strong>
+          <div>
+            <div class="chart-subtitle first-col">
+              Barycenter area mm<sup>2</sup>
             </div>
-            <div>
-              Rfor: <strong>{{ Rfor }}</strong>
+            <strong class="ml-3 chart-value info--text"> {{ Ammq }}</strong>
+          </div>
+          <div>
+            <div class="chart-subtitle first-col">
+              Oscilation relation
             </div>
-            <div>
-              Vvar: <strong>{{ Vvar }}</strong>
-            </div>
-          </v-card>
+            <strong class="ml-3 chart-value info--text">{{ Rfor }}</strong>
+          </div>
+          <div>
+            <div class="chart-subtitle first-col">Comfort level</div>
+            <strong class="ml-3 chart-value info--text">{{ Vvar }}</strong>
+          </div>
         </v-col>
       </v-row>
     </v-card>
@@ -100,8 +106,8 @@ export default Vue.extend({
       this.y1 = generalBarycenter.calculateBy();
       const intersectLineStyle = {
         label: "",
-        borderColor: "blue",
-        pointBackgroundColor: "blue",
+        borderColor: "#27a3a6",
+        pointBackgroundColor: "#27a3a6",
         pointRadius: 0,
         fill: false,
         borderWidth: 1,
@@ -114,11 +120,11 @@ export default Vue.extend({
       const axes = [
         {
           label: "X",
-          borderColor: "black",
-          pointBackgroundColor: "black",
+          borderColor: "#005264",
+          pointBackgroundColor: "#005264",
           pointRadius: 0,
           fill: false,
-          borderWidth: 1,
+          borderWidth: 2,
           data: [
             {
               x: -maxX,
@@ -132,10 +138,10 @@ export default Vue.extend({
         },
         {
           label: "Y",
-          borderColor: "black",
-          pointBackgroundColor: "black",
+          borderColor: "#005264",
+          pointBackgroundColor: "#005264",
           fill: false,
-          borderWidth: 1,
+          borderWidth: 2,
           pointRadius: 0,
           data: [
             {
@@ -155,12 +161,12 @@ export default Vue.extend({
         datasets: [
           {
             label: "General Barycenter",
-            borderColor: "red",
-            pointBackgroundColor: "red",
+            borderColor: "#f58241",
+            pointBackgroundColor: "#f58241",
             pointRadius: 0,
             fill: false,
             data: this.generalBarycenterHistory,
-            borderWidth: 1
+            borderWidth: 2
           },
           ...axes,
           {

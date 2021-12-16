@@ -9,8 +9,8 @@ export default Vue.extend({
       colors,
       intersectLineStyle: {
         label: "",
-        borderColor: "blue",
-        pointBackgroundColor: "blue",
+        borderColor: "#27a3a6",
+        pointBackgroundColor: "#27a3a6",
         pointRadius: 0,
         fill: false,
         borderWidth: 1,
@@ -28,11 +28,11 @@ export default Vue.extend({
     axesX() {
       return {
         label: "X",
-        borderColor: "black",
-        pointBackgroundColor: "black",
+        borderColor: "#005264",
+        pointBackgroundColor: "#005264",
         pointRadius: 0,
         fill: false,
-        borderWidth: 1,
+        borderWidth: 2,
         data: [
           {
             x: -this.maxX,
@@ -50,10 +50,10 @@ export default Vue.extend({
         this.axesX,
         {
           label: "Y",
-          borderColor: "black",
-          pointBackgroundColor: "black",
+          borderColor: "#005264",
+          pointBackgroundColor: "#005264",
           fill: false,
-          borderWidth: 1,
+          borderWidth: 2,
           pointRadius: 0,
           data: [
             {

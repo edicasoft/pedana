@@ -1,18 +1,19 @@
 <template>
   <v-dialog :value="value" :style="{ zIndex: 1000 }" fullscreen persistent>
-    <v-card class="pa-3">
-      <div class="d-flex align-center justify-space-between pb-3">
-        <v-card-title class="pt-0 pb-0"
+    <v-card class="pa-3 screen-bg">
+      <div class="d-flex align-center justify-space-between pb-3 px-5">
+        <v-card-title class="display-1  primary--text"
           >Left and Right Barycenters</v-card-title
         >
-        <v-btn @click="close" icon>
-          <v-icon color="error">mdi-close-circle</v-icon></v-btn
-        >
+        <v-btn @click="close" color="primary" class="px-5">
+          Close
+        </v-btn>
       </div>
 
       <v-row>
         <v-col>
           <line-chart
+            class="mx-auto white chart--white"
             :style="{
               position: 'relative',
               width: '550px'
@@ -20,21 +21,37 @@
             :chart-data="datacollectionLeft"
             :options="optionsLeft"
           ></line-chart>
-          <v-sheet :max-width="500" class="px-7 py-3">
+          <div
+            class="mx-auto mt-5"
+            :style="{
+              width: '550px'
+            }"
+          >
             <div>
-              Ammq:
-              <strong>{{ AmmqL }}</strong>
+              <div class="chart-subtitle first-col">
+                Barycenter area mm<sup>2</sup>
+              </div>
+              <strong class="ml-3 chart-value info--text">{{ AmmqL }}</strong>
             </div>
+
             <div>
-              Rfor: <strong>{{ RforL }}</strong>
+              <div class="chart-subtitle first-col">
+                Oscilation relation
+              </div>
+              <strong class="ml-3 chart-value info--text">{{ RforL }}</strong>
             </div>
+
             <div>
-              Vvar: <strong>{{ VvarL }}</strong>
+              <div class="chart-subtitle first-col">
+                Comfort level
+              </div>
+              <strong class="ml-3 chart-value info--text">{{ VvarL }}</strong>
             </div>
-          </v-sheet>
+          </div>
         </v-col>
         <v-col>
           <line-chart
+            class="mx-auto white chart--white"
             :style="{
               position: 'relative',
               width: '550px'
@@ -42,18 +59,33 @@
             :chart-data="datacollectionRight"
             :options="optionsRight"
           ></line-chart>
-          <v-sheet :max-width="500" class="px-7 py-3">
+          <div
+            class="mt-5 mx-auto"
+            :style="{
+              width: '550px'
+            }"
+          >
             <div>
-              Ammq:
-              <strong>{{ AmmqR }}</strong>
+              <div class="chart-subtitle first-col">
+                Barycenter area mm<sup>2</sup>
+              </div>
+              <strong class="ml-3 chart-value info--text">{{ AmmqR }}</strong>
             </div>
+
             <div>
-              Rfor: <strong>{{ RforR }}</strong>
+              <div class="chart-subtitle first-col">
+                Oscilation relation
+              </div>
+              <strong class="ml-3 chart-value info--text">{{ RforR }}</strong>
             </div>
+
             <div>
-              Vvar: <strong>{{ VvarR }}</strong>
+              <div class="chart-subtitle first-col">
+                Comfort level
+              </div>
+              <strong class="ml-3 chart-value info--text">{{ VvarR }}</strong>
             </div>
-          </v-sheet>
+          </div>
         </v-col>
       </v-row>
     </v-card>
@@ -209,10 +241,10 @@ export default Vue.extend({
       const axesYLeft = [
         {
           label: "Y",
-          borderColor: "black",
-          pointBackgroundColor: "black",
+          borderColor: "#005264",
+          pointBackgroundColor: "#005264",
           fill: false,
-          borderWidth: 1,
+          borderWidth: 2,
           pointRadius: 0,
           data: [
             {
@@ -229,10 +261,10 @@ export default Vue.extend({
       const axesYRight = [
         {
           label: "X",
-          borderColor: "black",
-          pointBackgroundColor: "black",
+          borderColor: "#005264",
+          pointBackgroundColor: "#005264",
           fill: false,
-          borderWidth: 1,
+          borderWidth: 2,
           pointRadius: 0,
           data: [
             {
@@ -252,8 +284,8 @@ export default Vue.extend({
         datasets: [
           {
             label: "Left Barycenter",
-            borderColor: "blue",
-            pointBackgroundColor: "blue",
+            borderColor: "#008bc4",
+            pointBackgroundColor: "#008bc4",
             pointRadius: 0,
             fill: false,
             data: this.leftBarycenterHistory,
@@ -294,8 +326,8 @@ export default Vue.extend({
         datasets: [
           {
             label: "Right Barycenter",
-            borderColor: "blue",
-            pointBackgroundColor: "blue",
+            borderColor: "#008bc4",
+            pointBackgroundColor: "#008bc4",
             pointRadius: 0,
             fill: false,
             data: this.rightBarycenterHistory,
