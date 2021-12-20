@@ -28,19 +28,25 @@ export default function Device() {
   };
 
   this.platforms = {
-    pedana: null
+    left: null,
+    right: null
   };
 
   this.isPortConnected = portPath => {
-    return this.platforms.pedana && this.platforms.pedana.portPath == portPath;
+    const isLeft =
+      this.platforms.left && this.platforms.left.portPath == portPath;
+    const isRight =
+      this.platforms.right && this.platforms.right.portPath == portPath;
+    return isLeft || isRight;
   };
 
   this.addPlatform = platform => {
     console.log("adding platform", platform.platformCode);
     this.platforms[platform.platformCode] = platform;
-    if (!this._isConnected) {
-      this._isConnected = true;
-      console.log("added platform, sending onConnect event");
+    const _isConnected = this.isConnected;
+    this.isConnected = !!this.platforms.left && !!this.platforms.right;
+    console.log("added, isConnected=", this.isConnected);
+    if (_isConnected != this.isConnected) {
       this.emit("connect", "device connected");
     }
   };
@@ -48,7 +54,7 @@ export default function Device() {
   this.deletePlatform = platformCode => {
     this.platforms[platformCode] = null;
     const _isConnected = this.isConnected;
-    this.isConnected = false;
+    this.isConnected = !!this.platforms.left && !!this.platforms.right;
     if (_isConnected != this.isConnected) {
       this.emit("disconnect", "device disconnected");
       console.log("fired `disconnect` event");
@@ -59,10 +65,9 @@ export default function Device() {
   this.sendReadings = () => {
     if (this.isConnected) {
       // console.log("device.sendReadings");
-      const data = this.platforms.pedana.latestReadings;
-      // const data = this.platforms.left.latestReadings.concat(
-      //   this.platforms.right.latestReadings
-      // );
+      const data = this.platforms.left.latestReadings.concat(
+        this.platforms.right.latestReadings
+      );
       if (data.length == 6) {
         this.emit(
           "data",
@@ -75,10 +80,12 @@ export default function Device() {
   };
 
   this.startReading = () => {
-    this.platforms.pedana.startReading();
+    this.platforms.left.startReading();
+    this.platforms.right.startReading();
   };
   this.haltReading = () => {
-    this.platforms.pedana.haltReading();
+    this.platforms.left.haltReading();
+    this.platforms.right.haltReading();
   };
 
   this.initPlatform = async portPath => {
@@ -131,37 +138,25 @@ export default function Device() {
           // check if we received readings (device was already connected)
           if (/-?\d{5}!-?\d{5}!-?\d{5}/.test(ln)) {
             // pause and re-initialize
-            platform.port.write("h");
-            console.log("getting measurements in init state, pausing with `h`");
-            return;
+            //platform.port.write("h");
             //console.log("re-init with `rrr`");
             //console.log(`${platform.portPath}`, "pause with `h`");
             //return;
-            // reject("reconnect platform to re-initialize");
-            //platform.port.close();
-            //return;
+            reject("reconnect platform to re-initialize");
+            platform.port.close();
+            return;
           }
           if (ln == "e" || ln == "h") {
             // error state
-            platform.port.write("ppp"); // this works only for the whole pedana
-            console.log(
-              `${platform.portPath}`,
-              "getting error, re-init with `ppp`"
-            );
-            //reject("reconnect platform to re-initialize");
-            //platform.port.close();
+            // platform.port.write("rrr");
+            // console.log(`${platform.portPath}`, "re-init with `rrr`");
+            reject("reconnect platform to re-initialize");
+            platform.port.close();
             return;
           }
-          // if (ln == "l" || ln == "r") {
-          //   platform.handshakeChar = ln;
-          //   platform.platformCode = ln == "l" ? "left" : "right";
-          //   platform.status = "pause";
-          //   platform.port.write(platform.handshakeChar);
-          //   return resolve(platform);
-          // }
-          if (ln == "p") {
+          if (ln == "l" || ln == "r") {
             platform.handshakeChar = ln;
-            platform.platformCode = "pedana"; // the whole device
+            platform.platformCode = ln == "l" ? "left" : "right";
             platform.status = "pause";
             platform.port.write(platform.handshakeChar);
             return resolve(platform);
@@ -170,10 +165,9 @@ export default function Device() {
           platform.port.close();
           return;
         }
-        //
 
         if (
-          /-?\d{5}!-?\d{5}!-?\d{5}!-?\d{5}!-?\d{5}!-?\d{5}/.test(ln) &&
+          /-?\d{5}!-?\d{5}!-?\d{5}/.test(ln) &&
           platform.status == "readings"
         ) {
           platform.setReadings(ln);
@@ -198,15 +192,10 @@ export default function Device() {
 
       platform.setReadings = readings => {
         const _tmp = readings.split("!").map(s => parseInt(s));
-        platform.latestReadings = [
-          _tmp[2],
-          _tmp[0],
-          _tmp[1],
-          _tmp[5],
-          _tmp[3],
-          _tmp[4]
-        ];
-        this.sendReadings();
+        platform.latestReadings = [_tmp[2], _tmp[0], _tmp[1]];
+        if (platform.platformCode == "left") {
+          this.sendReadings();
+        }
       };
     });
   };
